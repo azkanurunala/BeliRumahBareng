@@ -17,7 +17,7 @@ export async function getRecommendationsAction(
     return { success: true, data: recommendations };
   } catch (error) {
     console.error(error);
-    return { success: false, error: "Failed to get recommendations." };
+    return { success: false, error: "Gagal mendapatkan rekomendasi." };
   }
 }
 
@@ -31,6 +31,6 @@ export async function getMatchmakingAction(
     return { success: true, data: { ...matches, matchedUserIds } };
   } catch (error) {
     console.error(error);
-    return { success: false, error: "Failed to find matches." };
+    return { success: false, error: "Gagal menemukan pasangan." };
   }
 }

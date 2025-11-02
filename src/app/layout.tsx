@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'CoBuy - Collective Property Investment',
-  description: 'A platform for collective property buying, making property ownership more accessible.',
+  title: 'CoBuy - Investasi Properti Kolektif',
+  description: 'Platform untuk pembelian properti kolektif, membuat kepemilikan properti lebih mudah diakses.',
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="id">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

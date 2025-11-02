@@ -41,7 +41,7 @@ export const mockProperties: Property[] = [
     name: 'Flat Co-Build di Jakarta Pusat',
     description: 'Miliki satu lantai di gedung flat modern yang akan kita bangun bersama di jantung kota Jakarta. Investasi cerdas untuk hunian vertikal.',
     price: 3200000000,
-    location: 'Central Jakarta, DKI Jakarta',
+    location: 'Jakarta Pusat, DKI Jakarta',
     imageUrl: getImage('property-5').url,
     imageHint: getImage('property-5').hint,
     type: 'co-building',
@@ -72,10 +72,10 @@ export const mockUsers: User[] = [
     avatarHint: getImage('user-1').hint,
     profile: {
       locationPreference: 'Surabaya',
-      priceRange: '300-600 million IDR',
-      investmentGoals: 'First home ownership',
-      financialCapacity: '500 million IDR',
-      timeHorizon: 'Long-term (10+ years)',
+      priceRange: '300-600 juta IDR',
+      investmentGoals: 'Kepemilikan rumah pertama',
+      financialCapacity: '500 juta IDR',
+      timeHorizon: 'Jangka panjang (10+ tahun)',
     },
   },
   {
@@ -85,10 +85,10 @@ export const mockUsers: User[] = [
     avatarHint: getImage('user-2').hint,
     profile: {
       locationPreference: 'Bandung',
-      priceRange: '250-400 million IDR',
-      investmentGoals: 'Rental income',
-      financialCapacity: '300 million IDR',
-      timeHorizon: 'Medium-term (5-10 years)',
+      priceRange: '250-400 juta IDR',
+      investmentGoals: 'Pendapatan sewa',
+      financialCapacity: '300 juta IDR',
+      timeHorizon: 'Jangka menengah (5-10 tahun)',
     },
   },
   {
@@ -98,10 +98,10 @@ export const mockUsers: User[] = [
     avatarHint: getImage('user-3').hint,
     profile: {
       locationPreference: 'Bandung',
-      priceRange: '250-450 million IDR',
-      investmentGoals: 'Capital appreciation',
-      financialCapacity: '350 million IDR',
-      timeHorizon: 'Medium-term (5-10 years)',
+      priceRange: '250-450 juta IDR',
+      investmentGoals: 'Apresiasi modal',
+      financialCapacity: '350 juta IDR',
+      timeHorizon: 'Jangka menengah (5-10 tahun)',
     },
   },
   {
@@ -111,10 +111,10 @@ export const mockUsers: User[] = [
     avatarHint: getImage('user-4').hint,
     profile: {
       locationPreference: 'Yogyakarta',
-      priceRange: '400-800 million IDR',
-      investmentGoals: 'Business use (shophouse)',
-      financialCapacity: '700 million IDR',
-      timeHorizon: 'Long-term (10+ years)',
+      priceRange: '400-800 juta IDR',
+      investmentGoals: 'Penggunaan bisnis (ruko)',
+      financialCapacity: '700 juta IDR',
+      timeHorizon: 'Jangka panjang (10+ tahun)',
     },
   },
   {
@@ -124,10 +124,10 @@ export const mockUsers: User[] = [
     avatarHint: getImage('user-5').hint,
     profile: {
       locationPreference: 'Bandung',
-      priceRange: '200-400 million IDR',
-      investmentGoals: 'Long-term investment',
-      financialCapacity: '300 million IDR',
-      timeHorizon: 'Long-term (10+ years)',
+      priceRange: '200-400 juta IDR',
+      investmentGoals: 'Investasi jangka panjang',
+      financialCapacity: '300 juta IDR',
+      timeHorizon: 'Jangka panjang (10+ tahun)',
     },
   },
   {
@@ -137,17 +137,17 @@ export const mockUsers: User[] = [
     avatarHint: getImage('user-6').hint,
     profile: {
       locationPreference: 'Bandung',
-      priceRange: '300-500 million IDR',
-      investmentGoals: 'Future personal use',
-      financialCapacity: '400 million IDR',
-      timeHorizon: 'Medium-term (5-10 years)',
+      priceRange: '300-500 juta IDR',
+      investmentGoals: 'Penggunaan pribadi di masa depan',
+      financialCapacity: '400 juta IDR',
+      timeHorizon: 'Jangka menengah (5-10 tahun)',
     },
   },
 ];
 
 export const mockProject: Project = {
     id: 'proj-001',
-    propertyName: 'Cluster House Co-Buy in Sidoarjo',
+    propertyName: 'Co-Buy Rumah Cluster di Sidoarjo',
     propertyImageUrl: getImage('property-4').url,
     propertyImageHint: getImage('property-4').hint,
     members: [mockUsers[0], mockUsers[1], mockUsers[2], mockUsers[3]],
@@ -158,13 +158,13 @@ export const mockProject: Project = {
         closing: 0,
     },
     documents: [
-        { id: 'doc-01', name: 'Co-Ownership Agreement', status: 'Pending' },
-        { id: 'doc-02', name: 'Property Title (Sertifikat Hak Milik)', status: 'Verified' },
-        { id: 'doc-03', name: 'KYC Forms (All members)', status: 'Pending' },
+        { id: 'doc-01', name: 'Perjanjian Kepemilikan Bersama', status: 'Menunggu' },
+        { id: 'doc-02', name: 'Sertifikat Hak Milik Properti', status: 'Terverifikasi' },
+        { id: 'doc-03', name: 'Formulir KYC (Semua anggota)', status: 'Menunggu' },
     ],
     messages: [
-        { userId: 'user-002', message: 'Hi everyone! Glad to be part of this project.', timestamp: '10:30 AM' },
-        { userId: 'user-001', message: 'Me too! The location looks great.', timestamp: '10:31 AM' },
-        { userId: 'user-003', message: 'I have reviewed the agreement. Looks good to me.', timestamp: '11:15 AM' },
+        { userId: 'user-002', message: 'Hai semuanya! Senang menjadi bagian dari proyek ini.', timestamp: '10:30' },
+        { userId: 'user-001', message: 'Saya juga! Lokasinya kelihatan bagus.', timestamp: '10:31' },
+        { userId: 'user-003', message: 'Saya sudah meninjau perjanjiannya. Terlihat bagus bagi saya.', timestamp: '11:15' },
     ]
 };

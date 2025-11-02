@@ -23,12 +23,12 @@ import type { PersonalizedPropertyRecommendationsOutput } from '@/ai/flows/perso
 import { useToast } from '@/hooks/use-toast';
 
 const FormSchema = z.object({
-  location: z.string().min(2, { message: 'Location must be at least 2 characters.' }),
-  minPrice: z.coerce.number().min(0, { message: 'Minimum price must be positive.' }),
-  maxPrice: z.coerce.number().min(0, { message: 'Maximum price must be positive.' }),
-  investmentGoals: z.string().min(10, { message: 'Goals must be at least 10 characters.' }),
+  location: z.string().min(2, { message: 'Lokasi harus memiliki minimal 2 karakter.' }),
+  minPrice: z.coerce.number().min(0, { message: 'Harga minimum harus positif.' }),
+  maxPrice: z.coerce.number().min(0, { message: 'Harga maksimum harus positif.' }),
+  investmentGoals: z.string().min(10, { message: 'Tujuan harus memiliki minimal 10 karakter.' }),
 }).refine(data => data.maxPrice > data.minPrice, {
-    message: "Maximum price must be greater than minimum price.",
+    message: "Harga maksimum harus lebih besar dari harga minimum.",
     path: ["maxPrice"],
 });
 
@@ -43,7 +43,7 @@ export default function Recommendations() {
       location: 'Surabaya',
       minPrice: 300000000,
       maxPrice: 800000000,
-      investmentGoals: 'A first home for my young family with long-term capital appreciation.',
+      investmentGoals: 'Rumah pertama untuk keluarga muda saya dengan apresiasi modal jangka panjang.',
     },
   });
 
@@ -62,7 +62,7 @@ export default function Recommendations() {
         toast({
             variant: "destructive",
             title: "Error",
-            description: result.error || "An unknown error occurred.",
+            description: result.error || "Terjadi kesalahan yang tidak diketahui.",
         });
     }
     setIsLoading(false);
@@ -78,7 +78,7 @@ export default function Recommendations() {
   return (
     <div className="space-y-6 rounded-lg border p-4">
       <p className="text-muted-foreground">
-        Enter your preferences below and our AI will find properties that are a great fit for you.
+        Masukkan preferensi Anda di bawah ini dan AI kami akan menemukan properti yang cocok untuk Anda.
       </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -88,9 +88,9 @@ export default function Recommendations() {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preferred Location</FormLabel>
+                  <FormLabel>Lokasi Pilihan</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Jakarta, Bandung" {...field} />
+                    <Input placeholder="cth., Jakarta, Bandung" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -102,9 +102,9 @@ export default function Recommendations() {
                 name="minPrice"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Min Price (IDR)</FormLabel>
+                    <FormLabel>Harga Min (IDR)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g., 300000000" {...field} />
+                        <Input type="number" placeholder="cth., 300000000" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -115,9 +115,9 @@ export default function Recommendations() {
                 name="maxPrice"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Max Price (IDR)</FormLabel>
+                    <FormLabel>Harga Max (IDR)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="e.g., 1000000000" {...field} />
+                        <Input type="number" placeholder="cth., 1000000000" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -130,12 +130,12 @@ export default function Recommendations() {
             name="investmentGoals"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Investment Goals</FormLabel>
+                <FormLabel>Tujuan Investasi</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Long-term rental, first home" {...field} />
+                  <Input placeholder="cth., Sewa jangka panjang, rumah pertama" {...field} />
                 </FormControl>
                 <FormDescription>
-                  Describe what you're looking for in a property.
+                  Jelaskan apa yang Anda cari dalam sebuah properti.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -143,7 +143,7 @@ export default function Recommendations() {
           />
           <Button type="submit" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-            Generate Recommendations
+            Hasilkan Rekomendasi
           </Button>
         </form>
       </Form>
@@ -151,13 +151,13 @@ export default function Recommendations() {
       {isLoading && (
          <div className="mt-6 text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2 text-muted-foreground">Our AI is searching for your perfect property...</p>
+            <p className="mt-2 text-muted-foreground">AI kami sedang mencari properti sempurna untuk Anda...</p>
          </div>
       )}
 
       {recommendations.length > 0 && (
         <div className="mt-6 space-y-4">
-          <h3 className="text-lg font-semibold">Here are your top recommendations:</h3>
+          <h3 className="text-lg font-semibold">Berikut adalah rekomendasi teratas untuk Anda:</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {recommendations.map(rec => (
               <Card key={rec.propertyId} className='overflow-hidden'>
@@ -173,7 +173,7 @@ export default function Recommendations() {
                     <p className="font-semibold text-primary">{formatPrice(rec.propertyPrice)}</p>
                     <div className="text-right">
                         <p className="font-bold text-green-600">{rec.suitabilityScore}/100</p>
-                        <p className="text-xs text-muted-foreground">Suitability</p>
+                        <p className="text-xs text-muted-foreground">Kecocokan</p>
                     </div>
                   </div>
                 </CardContent>

@@ -45,12 +45,12 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
                     />
                 </div>
                 <div className='p-6 md:col-span-3'>
-                    <Badge>In Progress</Badge>
+                    <Badge>Sedang Berjalan</Badge>
                     <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
                         {project.propertyName}
                     </h1>
                     <p className="mt-2 text-muted-foreground">
-                        Welcome to your collaborative project dashboard. Track progress, manage documents, and communicate with your group here.
+                        Selamat datang di dasbor proyek kolaboratif Anda. Lacak kemajuan, kelola dokumen, dan berkomunikasi dengan grup Anda di sini.
                     </p>
                 </div>
             </div>
@@ -59,37 +59,37 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
         {/* Project Progress */}
         <Card>
           <CardHeader>
-            <CardTitle>Project Progress</CardTitle>
-            <CardDescription>Overall status of your co-buy project.</CardDescription>
+            <CardTitle>Kemajuan Proyek</CardTitle>
+            <CardDescription>Status keseluruhan dari proyek co-buy Anda.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className='flex justify-between text-sm'>
-                <p>KYC Verification</p>
+                <p>Verifikasi KYC</p>
                 <p className='font-medium'>{project.progress.kyc}%</p>
               </div>
-              <Progress value={project.progress.kyc} aria-label={`${project.progress.kyc}% KYC verified`} />
+              <Progress value={project.progress.kyc} aria-label={`${project.progress.kyc}% KYC terverifikasi`} />
             </div>
             <div className="space-y-2">
               <div className='flex justify-between text-sm'>
-                <p>Group Funding</p>
+                <p>Pendanaan Grup</p>
                 <p className='font-medium'>{project.progress.funding}%</p>
               </div>
-              <Progress value={project.progress.funding} aria-label={`${project.progress.funding}% funded`} />
+              <Progress value={project.progress.funding} aria-label={`${project.progress.funding}% didanai`} />
             </div>
             <div className="space-y-2">
               <div className='flex justify-between text-sm'>
-                <p>Legal & Documentation</p>
+                <p>Legal & Dokumentasi</p>
                 <p className='font-medium'>{project.progress.legal}%</p>
               </div>
-              <Progress value={project.progress.legal} aria-label={`${project.progress.legal}% legal complete`} />
+              <Progress value={project.progress.legal} aria-label={`${project.progress.legal}% legal selesai`} />
             </div>
              <div className="space-y-2">
               <div className='flex justify-between text-sm'>
-                <p>Closing</p>
+                <p>Penutupan</p>
                 <p className='font-medium'>{project.progress.closing}%</p>
               </div>
-              <Progress value={project.progress.closing} aria-label={`${project.progress.closing}% complete`} />
+              <Progress value={project.progress.closing} aria-label={`${project.progress.closing}% selesai`} />
             </div>
           </CardContent>
         </Card>
@@ -97,18 +97,18 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
         {/* Document Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Documents</CardTitle>
+            <CardTitle>Dokumen</CardTitle>
             <CardDescription>
-              Manage and sign shared legal documents.
+              Kelola dan tanda tangani dokumen legal bersama.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Document Name</TableHead>
+                  <TableHead>Nama Dokumen</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -116,13 +116,13 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium flex items-center gap-2"><FileText size={16} /> {doc.name}</TableCell>
                     <TableCell>
-                      <Badge variant={doc.status === 'Verified' ? 'default' : doc.status === 'Signed' ? 'secondary' : 'outline'}>
+                      <Badge variant={doc.status === 'Terverifikasi' ? 'default' : doc.status === 'Tertanda' ? 'secondary' : 'outline'}>
                         {doc.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {doc.status === 'Pending' && <Button size="sm">Sign Now</Button>}
-                      {doc.status !== 'Pending' && <Button size="sm" variant="outline">View</Button>}
+                      {doc.status === 'Menunggu' && <Button size="sm">Tanda Tangan</Button>}
+                      {doc.status !== 'Menunggu' && <Button size="sm" variant="outline">Lihat</Button>}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -136,8 +136,8 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
         {/* Project Members */}
         <Card>
           <CardHeader>
-            <CardTitle>Project Members</CardTitle>
-            <CardDescription>{project.members.length} people in this group</CardDescription>
+            <CardTitle>Anggota Proyek</CardTitle>
+            <CardDescription>{project.members.length} orang di grup ini</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             {project.members.map((member) => (
@@ -156,7 +156,7 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
         <Card className="flex h-[34rem] flex-col">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MessageCircle /> Group Chat
+              <MessageCircle /> Obrolan Grup
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 p-0">
@@ -191,14 +191,14 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
           </CardContent>
           <CardFooter className="border-t p-2">
             <div className="flex w-full items-center gap-2">
-                <Input placeholder="Type a message..." className="flex-1" />
+                <Input placeholder="Ketik pesan..." className="flex-1" />
                 <Button type="submit" size="icon">
                     <Send className="h-4 w-4" />
-                    <span className="sr-only">Send</span>
+                    <span className="sr-only">Kirim</span>
                 </Button>
                 <Button variant="ghost" size="icon">
                     <Paperclip className="h-4 w-4" />
-                    <span className="sr-only">Attach file</span>
+                    <span className="sr-only">Lampirkan file</span>
                 </Button>
             </div>
           </CardFooter>

@@ -44,7 +44,7 @@ export type Project = {
   documents: {
     id: string;
     name: string;
-    status: 'Pending' | 'Signed' | 'Verified';
+    status: 'Menunggu' | 'Tertanda' | 'Terverifikasi';
   }[];
   messages: {
     userId: string;

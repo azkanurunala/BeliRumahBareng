@@ -11,15 +11,15 @@ export default function Dashboard() {
         <TabsList className="grid w-full grid-cols-3 md:w-fit">
           <TabsTrigger value="projects">
             <Home className="mr-2 h-4 w-4" />
-            My Projects
+            Proyek Saya
           </TabsTrigger>
           <TabsTrigger value="discover">
             <Search className="mr-2 h-4 w-4" />
-            Discover
+            Jelajahi
           </TabsTrigger>
           <TabsTrigger value="partners">
             <Users className="mr-2 h-4 w-4" />
-            Find Partners
+            Cari Rekan
           </TabsTrigger>
         </TabsList>
         <TabsContent value="projects" className="mt-6">

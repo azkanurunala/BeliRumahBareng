@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useActionState } from 'react';
-import Image from 'next/image';
-import { Loader2, Users, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { useActionState } from 'react';
+import { Loader2, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { mockUsers } from '@/lib/mock-data';
-import type { User, UserProfile } from '@/lib/types';
 import { getMatchmakingAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -46,7 +45,7 @@ export default function Matchmaking() {
         toast({
             variant: "destructive",
             title: "Error",
-            description: result.error || "An unknown error occurred.",
+            description: result.error || "Terjadi kesalahan yang tidak diketahui.",
         });
     }
 
@@ -60,9 +59,9 @@ export default function Matchmaking() {
     <div className="space-y-6 rounded-lg border p-4">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
-          <h4 className="font-semibold">Your Profile</h4>
+          <h4 className="font-semibold">Profil Anda</h4>
           <p className="text-sm text-muted-foreground">
-            The AI will find partners based on your investment preferences.
+            AI akan menemukan rekan berdasarkan preferensi investasi Anda.
           </p>
           <Card className="mt-4">
             <CardHeader className="flex flex-row items-center gap-4">
@@ -72,20 +71,20 @@ export default function Matchmaking() {
               </Avatar>
               <div>
                 <CardTitle className="text-base">{currentUser.name}</CardTitle>
-                <CardDescription>Current User</CardDescription>
+                <CardDescription>Pengguna Saat Ini</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-1 text-xs">
-              <p><strong>Goals:</strong> {currentUser.profile.investmentGoals}</p>
-              <p><strong>Location:</strong> {currentUser.profile.locationPreference}</p>
-              <p><strong>Budget:</strong> {currentUser.profile.priceRange}</p>
+              <p><strong>Tujuan:</strong> {currentUser.profile.investmentGoals}</p>
+              <p><strong>Lokasi:</strong> {currentUser.profile.locationPreference}</p>
+              <p><strong>Anggaran:</strong> {currentUser.profile.priceRange}</p>
             </CardContent>
           </Card>
         </div>
         <div className="md:col-span-2">
-          <h4 className="font-semibold">Potential Partners</h4>
+          <h4 className="font-semibold">Calon Rekan</h4>
           <p className="text-sm text-muted-foreground">
-            A list of other users on the platform looking to co-buy.
+            Daftar pengguna lain di platform yang ingin melakukan co-buy.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {otherUsers.map(user => (
@@ -104,16 +103,16 @@ export default function Matchmaking() {
       <form action={formAction}>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-          Find Best Matches
+          Temukan Rekan Terbaik
         </Button>
       </form>
 
       {state.success && state.data && (
         <div className="mt-6 space-y-4">
-            <h3 className="text-lg font-semibold">AI Matchmaking Results</h3>
+            <h3 className="text-lg font-semibold">Hasil Pencarian AI</h3>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-base">Top Matches for You</CardTitle>
+                    <CardTitle className="text-base">Rekan Paling Cocok untuk Anda</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {matchedUsers && matchedUsers.length > 0 ? matchedUsers.map(user => user && (
@@ -123,14 +122,14 @@ export default function Matchmaking() {
                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                          </Avatar>
                          <p className="mt-2 text-sm font-medium">{user.name}</p>
-                         <Badge variant="outline" className="mt-1 text-green-600 border-green-200">Good Match</Badge>
+                         <Badge variant="outline" className="mt-1 text-green-600 border-green-200">Sangat Cocok</Badge>
                        </div>
                     )) : (
-                        <p className="text-muted-foreground col-span-full">No ideal matches found at this time.</p>
+                        <p className="text-muted-foreground col-span-full">Tidak ada rekan yang cocok ditemukan saat ini.</p>
                     )}
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-2 bg-secondary/30 p-4">
-                    <p className="text-sm font-semibold">AI Reasoning:</p>
+                    <p className="text-sm font-semibold">Alasan dari AI:</p>
                     <p className="text-sm text-muted-foreground italic">"{state.data.reasoning}"</p>
                 </CardFooter>
             </Card>

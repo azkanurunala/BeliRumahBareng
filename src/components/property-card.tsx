@@ -31,7 +31,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       case 'co-owning':
         return 'Patungan Lahan';
       default:
-        return 'Ready for Co-Buy';
+        return 'Siap Co-Buy';
     }
   };
 
@@ -65,9 +65,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             <p className="text-lg font-bold text-primary">{formattedPrice}</p>
         </div>
         <Link href={`/property/${property.id}`} passHref>
-          <Button asChild>
-            <span>View Details</span>
-          </Button>
+          <Button>Lihat Detail</Button>
         </Link>
       </CardFooter>
     </Card>
