@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    --background: 210 100% 97%; /* #F0F8FF */
+    --background: 210 100% 98%; /* Lighter than F0F8FF for a cleaner look */
     --foreground: 224 71% 4%;
 
     --card: 0 0% 100%;
@@ -17,7 +17,7 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 204 70% 53%; /* A good, accessible blue */
+    --primary: 217 91% 60%; /* #3B82F6 - A strong, trustworthy blue */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
@@ -34,7 +34,7 @@ body {
 
     --border: 210 40% 89.8%;
     --input: 210 40% 94%;
-    --ring: 204 70% 53%;
+    --ring: 217 91% 60%;
 
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
@@ -62,7 +62,7 @@ body {
     --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 204 70% 53%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 215 28% 17%;
@@ -79,7 +79,7 @@ body {
     
     --border: 215 28% 17%;
     --input: 215 28% 17%;
-    --ring: 204 70% 53%;
+    --ring: 217 91% 60%;
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
