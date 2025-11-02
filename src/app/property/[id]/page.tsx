@@ -1,8 +1,12 @@
+
+'use client';
+
+import { useState } from 'react';
 import { mockProperties, mockUsers } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,9 +21,25 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label }s from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const property = mockProperties.find((p) => p.id === params.id);
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const { toast } = useToast();
 
   if (!property) {
     notFound();
@@ -29,33 +49,26 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
 
   const unitPrices = Array.from({ length: property.totalUnits }, (_, i) => {
     let weight;
-    // Co-Building: Higher floors are more expensive, so we make lower floors more expensive here.
-    // The most expensive is the ground floor (i=0).
     const floorWeight = isCoBuilding ? (property.totalUnits - i -1) * 0.05 : (i * 0.02);
 
     weight = 1.0 + floorWeight;
     
-    if (isCoBuilding && i === 0) { // Make ground floor significantly more expensive
+    if (isCoBuilding && i === 0) {
       weight = 1.0 + ((property.totalUnits - 1) * 0.05) + 0.10;
-    } else if(isCoBuilding) { // Other floors
+    } else if(isCoBuilding) {
        weight = 1.0 + (property.totalUnits - 1 - i) * 0.05;
-    } else { // Co-Owning Land
+    } else {
        weight = 1.0 + (i * 0.02);
     }
     
-    // Reverse logic for co-building: floor 1 (index 0) is most expensive.
     if(isCoBuilding) {
         const basePricePerUnit = property.price / property.totalUnits;
-        // Example: 10% premium for ground floor, then 5% less for each floor up.
-        // This is a simple model. A real app might have more complex pricing.
         const premium = (property.totalUnits - 1 - i) * 0.05;
         return basePricePerUnit * (1 + premium);
 
     }
 
-    // Simple differentiation for land plots
     return (property.price / property.totalUnits) * weight;
-
   });
 
 
@@ -98,11 +111,26 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
 
   const getUnitSize = (index: number) => {
     if (isCoBuilding || !property.unitSize) return null;
-    // Simple logic to vary size slightly, making it more realistic
     const baseSize = property.unitSize;
-    const variation = (index - Math.floor(property.totalUnits / 2)) * 2; // e.g., -8, -6, ... 0, ... 6, 8
+    const variation = (index - Math.floor(property.totalUnits / 2)) * 2;
     return baseSize + variation;
   }
+  
+  const handleJoinProject = () => {
+    if (!selectedUnit) {
+      toast({
+        variant: "destructive",
+        title: "Pilihan Dibutuhkan",
+        description: `Silakan pilih ${property.unitName} yang Anda inginkan.`,
+      });
+      return;
+    }
+    
+    toast({
+      title: "Berhasil Bergabung (Simulasi)",
+      description: `Anda telah memilih ${property.unitName} ${selectedUnit}. Tim kami akan segera menghubungi Anda untuk langkah selanjutnya.`,
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -167,7 +195,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                 </CardContent>
               </Card>
               {property.planningInfo && (
-                <Card>
+                <Card className="mt-8">
                   <CardHeader>
                     <CardTitle>Perencanaan & Detail Proyek</CardTitle>
                   </CardHeader>
@@ -249,9 +277,64 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                     </AccordionItem>
                   </Accordion>
 
-                  <Button size="lg" className="w-full">
-                    {getButtonText()}
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="lg" className="w-full">
+                        {getButtonText()}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[480px]">
+                      <DialogHeader>
+                        <DialogTitle>Gabung Proyek: {property.name}</DialogTitle>
+                        <DialogDescription>
+                          Pilih {property.unitName.toLowerCase()} yang Anda minati. Tim kami akan menghubungi Anda untuk proses verifikasi dan pendanaan.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <RadioGroup onValueChange={setSelectedUnit} className="max-h-60 overflow-y-auto pr-4">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-10"></TableHead>
+                                <TableHead>{property.unitName}</TableHead>
+                                { !isCoBuilding && <TableHead>Luas</TableHead> }
+                                <TableHead className="text-right">Estimasi Harga</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {unitPrices.map((price, index) => (
+                                <TableRow key={index} className="cursor-pointer" onClick={() => setSelectedUnit((index + 1).toString())}>
+                                  <TableCell>
+                                    <RadioGroupItem value={(index + 1).toString()} id={`unit-${index + 1}`} />
+                                  </TableCell>
+                                  <TableCell className="font-medium">{`${property.unitName} ${index + 1}`}</TableCell>
+                                  { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)}{property.unitMeasure}</TableCell>}
+                                  <TableCell className="text-right">{formatPrice(price)}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </RadioGroup>
+                        <div className='mt-4 space-y-3 rounded-lg border bg-secondary/50 p-4'>
+                          <h4 className='font-semibold text-sm'>Langkah Selanjutnya</h4>
+                          <ul className='space-y-2 text-xs text-muted-foreground'>
+                            <li className='flex items-start gap-2'><CheckCircle size={14} className='text-green-500 mt-0.5' /><div><strong>Verifikasi KYC:</strong> Tim kami akan memverifikasi identitas Anda.</div></li>
+                            <li className='flex items-start gap-2'><CheckCircle size={14} className='text-green-500 mt-0.5' /><div><strong>Pendanaan:</strong> Anda akan diundang untuk melakukan pembayaran sesuai jadwal.</div></li>
+                            <li className='flex items-start gap-2'><CheckCircle size={14} className='text-green-500 mt-0.5' /><div><strong>Legal & Dokumen:</strong> Proses penandatanganan dokumen kepemilikan bersama.</div></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Batal</Button>
+                        </DialogClose>
+                        <DialogClose asChild>
+                           <Button onClick={handleJoinProject}>Konfirmasi & Gabung</Button>
+                        </DialogClose>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
                    <p className="text-xs text-center text-muted-foreground">
                     Dengan bergabung, Anda menyetujui syarat dan ketentuan kepemilikan bersama.
                   </p>
@@ -284,3 +367,5 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
     </div>
   );
 }
+
+    
