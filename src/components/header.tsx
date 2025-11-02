@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Bell, CircleUser } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { CoBuyLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,11 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
@@ -48,7 +54,7 @@ export default function Header() {
               href={link.href}
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
-                pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+                isClient && pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
               )}
             >
               {link.label}

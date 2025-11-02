@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Search, Users, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 const navLinks = [
   { href: '/discover', label: 'Jelajahi', icon: Search },
@@ -14,6 +15,11 @@ const navLinks = [
 
 export default function MobileNav() {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur-sm md:hidden">
@@ -24,7 +30,7 @@ export default function MobileNav() {
             href={link.href}
             className={cn(
               "flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
-              pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground hover:text-primary"
+              isClient && pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground hover:text-primary"
             )}
           >
             <link.icon className="h-5 w-5" />
