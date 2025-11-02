@@ -6,9 +6,9 @@ export default function DiscoverTab() {
   return (
     <Card>
         <CardHeader>
-            <CardTitle>Curated Properties</CardTitle>
+            <CardTitle>Properti Terkurasi</CardTitle>
             <CardDescription>
-                Browse properties that have been verified and are ready for collective investment.
+                Jelajahi properti yang telah terverifikasi dan siap untuk investasi kolektif.
             </CardDescription>
         </CardHeader>
         <CardContent>

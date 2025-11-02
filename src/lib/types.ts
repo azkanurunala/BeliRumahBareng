@@ -6,8 +6,11 @@ export type Property = {
   location: string;
   imageUrl: string;
   imageHint: string;
-  type: 'co-building' | 'co-living';
-  units: number;
+  type: 'co-building' | 'co-owning';
+  totalUnits: number;
+  unitName: 'Lantai' | 'Kavling';
+  unitSize?: number; // e.g. 110
+  unitMeasure?: string; // e.g. m²
 };
 
 export type UserProfile = {

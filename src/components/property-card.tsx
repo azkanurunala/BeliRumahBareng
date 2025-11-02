@@ -22,7 +22,18 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-  }).format(property.price / property.units);
+  }).format(property.price / property.totalUnits);
+
+  const getBadgeText = () => {
+    switch (property.type) {
+      case 'co-building':
+        return 'Patungan Konstruksi';
+      case 'co-owning':
+        return 'Patungan Lahan';
+      default:
+        return 'Ready for Co-Buy';
+    }
+  };
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
@@ -39,17 +50,18 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       </CardHeader>
       <CardContent className="flex-grow p-4">
         <Badge variant="secondary" className="mb-2">
-          {property.type === 'co-building' ? 'Ready for Co-Building' : 'Ready for Co-Living'}
+          {getBadgeText()}
         </Badge>
         <CardTitle className="mb-1 text-lg font-semibold">{property.name}</CardTitle>
         <CardDescription className="flex items-center text-sm text-muted-foreground">
           <MapPin className="mr-1 h-4 w-4" />
           {property.location}
         </CardDescription>
+        <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{property.description}</p>
       </CardContent>
       <CardFooter className="flex items-center justify-between bg-secondary/30 p-4">
         <div>
-            <p className="text-xs text-muted-foreground">Starting from</p>
+            <p className="text-xs text-muted-foreground">Estimasi per {property.unitName}</p>
             <p className="text-lg font-bold text-primary">{formattedPrice}</p>
         </div>
         <Link href={`/property/${property.id}`} passHref>
