@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, CircleUser, Home, Search, Users, Sparkles } from 'lucide-react';
+import { Bell, CircleUser } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 import { CoBuyLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,12 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
@@ -42,7 +49,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
-          {navLinks.map((link) => (
+          {isClient && navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
