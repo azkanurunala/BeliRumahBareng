@@ -145,12 +145,21 @@ export const mockUsers: User[] = [
   },
 ];
 
+const sidoarjoProject = mockProperties[0];
+const sidoarjoMembers = [mockUsers[0], mockUsers[1], mockUsers[2], mockUsers[3]];
+
 export const mockProject: Project = {
     id: 'proj-001',
-    propertyName: 'Co-Buy Rumah Cluster di Sidoarjo',
-    propertyImageUrl: getImage('property-4').url,
-    propertyImageHint: getImage('property-4').hint,
-    members: [mockUsers[0], mockUsers[1], mockUsers[2], mockUsers[3]],
+    propertyId: sidoarjoProject.id,
+    propertyName: sidoarjoProject.name,
+    propertyImageUrl: sidoarjoProject.imageUrl,
+    propertyImageHint: sidoarjoProject.imageHint,
+    members: sidoarjoMembers,
+    unitAssignments: [
+      { userId: 'user-001', unitId: 1, price: 200000000, size: 102 },
+      { userId: 'user-002', unitId: 3, price: 208000000, size: 106 },
+      { userId: 'user-004', unitId: 5, price: 216000000, size: 110 },
+    ],
     progress: {
         kyc: 75,
         funding: 50,

@@ -29,12 +29,21 @@ export type User = {
   profile: UserProfile;
 };
 
+export type UnitAssignment = {
+  unitId: number;
+  userId: string;
+  price: number;
+  size?: number;
+};
+
 export type Project = {
   id: string;
+  propertyId: string;
   propertyName: string;
   propertyImageUrl: string;
   propertyImageHint: string;
   members: User[];
+  unitAssignments: UnitAssignment[];
   progress: {
     kyc: number;
     funding: number;

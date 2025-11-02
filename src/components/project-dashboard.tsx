@@ -24,12 +24,21 @@ import { FileText, MessageCircle, Paperclip, Send } from 'lucide-react';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
+import { mockProperties } from '@/lib/mock-data';
 
 type ProjectDashboardProps = {
   project: Project;
 };
 
 export default function ProjectDashboard({ project }: ProjectDashboardProps) {
+  const property = mockProperties.find(p => p.id === project.propertyId);
+
+  const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(price);
+
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
@@ -137,19 +146,48 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
         {/* Project Members */}
         <Card>
           <CardHeader>
-            <CardTitle>Anggota Proyek</CardTitle>
+            <CardTitle>Alokasi Unit Anggota</CardTitle>
             <CardDescription>{project.members.length} orang di grup ini</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            {project.members.map((member) => (
-              <Link href={`/profile/${member.id}`} key={member.id} className="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-muted/50">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={member.avatarUrl} alt={member.name} data-ai-hint={member.avatarHint} className="object-cover" />
-                  <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{member.name}</span>
-              </Link>
-            ))}
+          <CardContent>
+             <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Anggota</TableHead>
+                    <TableHead>Unit</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                   {project.members.map((member) => {
+                    const assignment = project.unitAssignments.find(a => a.userId === member.id);
+                    return (
+                       <TableRow key={member.id}>
+                         <TableCell>
+                            <Link href={`/profile/${member.id}`} className="flex items-center gap-2 rounded-lg transition-colors hover:bg-muted/50">
+                                <Avatar className="h-8 w-8">
+                                <AvatarImage src={member.avatarUrl} alt={member.name} data-ai-hint={member.avatarHint} className="object-cover" />
+                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-medium">{member.name}</span>
+                            </Link>
+                         </TableCell>
+                          <TableCell className="text-sm">
+                            {assignment ? (
+                              <div className="flex flex-col">
+                                <span className='font-semibold'>{property?.unitName} {assignment.unitId}</span>
+                                <span className='text-xs text-muted-foreground'>
+                                  {assignment.size ? `~${assignment.size}${property?.unitMeasure}` : formatPrice(assignment.price)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className='text-muted-foreground italic'>Belum memilih</span>
+                            )}
+                          </TableCell>
+                       </TableRow>
+                    );
+                   })}
+                </TableBody>
+             </Table>
           </CardContent>
         </Card>
       </div>
