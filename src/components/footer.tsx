@@ -28,16 +28,16 @@ export default function Footer() {
             <div>
               <h3 className="font-semibold">Legal</h3>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Syarat & Ketentuan</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Kebijakan Privasi</a></li>
+                <li><Link href="/terms" className="text-muted-foreground hover:text-primary">Syarat & Ketentuan</Link></li>
+                <li><Link href="/privacy" className="text-muted-foreground hover:text-primary">Kebijakan Privasi</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold">Perusahaan</h3>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Tentang Kami</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">Kontak</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary">FAQ</a></li>
+                <li><Link href="/about" className="text-muted-foreground hover:text-primary">Tentang Kami</Link></li>
+                <li><Link href="/contact" className="text-muted-foreground hover:text-primary">Kontak</Link></li>
+                <li><Link href="/faq" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
               </ul>
             </div>
           </div>
