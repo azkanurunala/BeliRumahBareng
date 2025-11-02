@@ -47,7 +47,7 @@ export default function Header() {
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
                 pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
               )}
             >
