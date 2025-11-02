@@ -32,7 +32,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label }s from '@/components/ui/label';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -367,5 +367,3 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
     </div>
   );
 }
-
-    
