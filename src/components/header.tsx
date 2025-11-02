@@ -12,6 +12,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from './ui/badge';
+import { mockUsers } from '@/lib/mock-data';
+
+const currentUser = mockUsers[0];
 
 export default function Header() {
   return (
@@ -63,9 +66,9 @@ export default function Header() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profil</DropdownMenuItem>
-            <DropdownMenuItem>Pengaturan</DropdownMenuItem>
-            <DropdownMenuItem>Dukungan</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/profile/${currentUser.id}`}>Profil</Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Keluar</DropdownMenuItem>
           </DropdownMenuContent>

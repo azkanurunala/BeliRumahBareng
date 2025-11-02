@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useActionState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { mockUsers } from '@/lib/mock-data';
@@ -66,7 +67,7 @@ export default function Matchmaking() {
           <Card className="mt-4">
             <CardHeader className="flex flex-row items-center gap-4">
               <Avatar>
-                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} data-ai-hint={currentUser.avatarHint} />
+                <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} data-ai-hint={currentUser.avatarHint} className="object-cover"/>
                 <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
@@ -88,14 +89,14 @@ export default function Matchmaking() {
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {otherUsers.map(user => (
-              <div key={user.id} className="flex flex-col items-center text-center">
+              <Link href={`/profile/${user.id}`} key={user.id} className="flex flex-col items-center text-center p-2 rounded-lg transition-colors hover:bg-muted/50">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} />
+                  <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} className="object-cover" />
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <p className="mt-2 text-sm font-medium">{user.name}</p>
                 <p className="text-xs text-muted-foreground">{user.profile.locationPreference}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -116,14 +117,14 @@ export default function Matchmaking() {
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {matchedUsers && matchedUsers.length > 0 ? matchedUsers.map(user => user && (
-                       <div key={user.id} className="flex flex-col items-center text-center p-2 rounded-lg border">
+                       <Link href={`/profile/${user.id}`} key={user.id} className="flex flex-col items-center text-center p-2 rounded-lg border transition-colors hover:bg-muted/50">
                          <Avatar className="h-16 w-16">
-                           <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} />
+                           <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} className="object-cover" />
                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                          </Avatar>
                          <p className="mt-2 text-sm font-medium">{user.name}</p>
                          <Badge variant="outline" className="mt-1 text-green-600 border-green-200">Sangat Cocok</Badge>
-                       </div>
+                       </Link>
                     )) : (
                         <p className="text-muted-foreground col-span-full">Tidak ada rekan yang cocok ditemukan saat ini.</p>
                     )}

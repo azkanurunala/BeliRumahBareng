@@ -1,7 +1,8 @@
 import { mockProperties, mockUsers } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Building, Users, BadgeCheck, Home, Square } from 'lucide-react';
+import Link from 'next/link';
+import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -106,6 +107,12 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
       <Header />
       <main className="flex-1 bg-muted/20">
         <div className="container mx-auto py-6 sm:py-10">
+          <div className='mb-4'>
+             <Link href="/" className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground'>
+               <ArrowLeft size={16} />
+               Kembali ke Jelajah
+            </Link>
+          </div>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card className="overflow-hidden">
@@ -218,7 +225,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {interestedUsers.map(user => (
-                     <div key={user.id} className="flex items-center gap-3">
+                     <Link href={`/profile/${user.id}`} key={user.id} className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/50">
                        <Avatar>
                          <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} className="object-cover"/>
                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
@@ -227,7 +234,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                          <p className="font-semibold">{user.name}</p>
                          <p className="text-xs text-muted-foreground">Ingin tinggal di {user.profile.locationPreference}</p>
                        </div>
-                     </div>
+                     </Link>
                   ))}
                 </CardContent>
               </Card>

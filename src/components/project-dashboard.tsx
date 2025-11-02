@@ -23,6 +23,7 @@ import type { Project } from '@/lib/types';
 import { FileText, MessageCircle, Paperclip, Send } from 'lucide-react';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
+import Link from 'next/link';
 
 type ProjectDashboardProps = {
   project: Project;
@@ -141,13 +142,13 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-4">
             {project.members.map((member) => (
-              <div key={member.id} className="flex items-center gap-2">
+              <Link href={`/profile/${member.id}`} key={member.id} className="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-muted/50">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={member.avatarUrl} alt={member.name} data-ai-hint={member.avatarHint} />
+                  <AvatarImage src={member.avatarUrl} alt={member.name} data-ai-hint={member.avatarHint} className="object-cover" />
                   <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium">{member.name}</span>
-              </div>
+              </Link>
             ))}
           </CardContent>
         </Card>
