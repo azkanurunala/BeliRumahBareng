@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import Header from '@/components/header';
 import MobileNav from '@/components/mobile-nav';
+import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
   title: 'BeliRumahBareng - Investasi Properti Kolektif',
@@ -24,9 +25,10 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <div className="flex min-h-screen w-full flex-col">
           <Header />
-          <main className="flex-1 pb-20 md:pb-0">
+          <main className="flex-1">
             {children}
           </main>
+          <Footer />
           <MobileNav />
         </div>
         <Toaster />
