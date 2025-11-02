@@ -151,58 +151,6 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
             ))}
           </CardContent>
         </Card>
-
-        {/* Group Chat */}
-        <Card className="flex h-[34rem] flex-col">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle /> Obrolan Grup
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 p-0">
-             <ScrollArea className="h-full px-6">
-                <div className="space-y-4">
-                {project.messages.map((msg, index) => {
-                    const member = project.members.find(m => m.id === msg.userId);
-                    const isCurrentUser = msg.userId === project.members[0].id; // Assuming current user is the first member
-                    return (
-                    <div key={index} className={`flex items-end gap-2 ${isCurrentUser ? 'justify-end' : ''}`}>
-                        {!isCurrentUser && (
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={member?.avatarUrl} data-ai-hint={member?.avatarHint} />
-                                <AvatarFallback>{member?.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                        )}
-                        <div className={`max-w-xs rounded-lg p-3 ${isCurrentUser ? 'rounded-br-none bg-primary text-primary-foreground' : 'rounded-bl-none bg-secondary'}`}>
-                            <p className="text-sm">{msg.message}</p>
-                            <p className={`text-xs mt-1 ${isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>{member?.name}, {msg.timestamp}</p>
-                        </div>
-                         {isCurrentUser && (
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage src={member?.avatarUrl} data-ai-hint={member?.avatarHint} />
-                                <AvatarFallback>{member?.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                        )}
-                    </div>
-                    )
-                })}
-                </div>
-            </ScrollArea>
-          </CardContent>
-          <CardFooter className="border-t p-2">
-            <div className="flex w-full items-center gap-2">
-                <Input placeholder="Ketik pesan..." className="flex-1" />
-                <Button type="submit" size="icon">
-                    <Send className="h-4 w-4" />
-                    <span className="sr-only">Kirim</span>
-                </Button>
-                <Button variant="ghost" size="icon">
-                    <Paperclip className="h-4 w-4" />
-                    <span className="sr-only">Lampirkan file</span>
-                </Button>
-            </div>
-          </CardFooter>
-        </Card>
       </div>
     </div>
   );
