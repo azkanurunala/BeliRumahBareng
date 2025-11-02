@@ -31,10 +31,10 @@ export default function HomePage() {
           )}
           <div className="relative z-20 max-w-2xl mx-auto px-4">
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-              Harga Properti Mahal? Beli Bareng Aja.
+              Kepemilikan Properti Jadi Lebih Mudah, Bersama-sama.
             </h1>
             <p className="mt-4 text-lg md:text-xl">
-              Lewati developer. Patungan beli tanah luas atau bangun properti bersama untuk wujudkan kepemilikan dengan harga jauh lebih terjangkau.
+              BeliRumahBareng membuka jalan baru untuk memiliki properti. Dengan patungan, Anda bisa membeli lahan luas atau membangun hunian dengan biaya yang jauh lebih terjangkau.
             </p>
             <Button asChild size="lg" className="mt-8">
               <Link href="/discover">
@@ -48,9 +48,9 @@ export default function HomePage() {
         <section id="how-it-works" className="py-12 md:py-24 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-xl mx-auto">
-              <h2 className="text-3xl font-bold">Solusi Cerdas Tanpa Developer</h2>
+              <h2 className="text-3xl font-bold">Bagaimana BeliRumahBareng Bekerja?</h2>
               <p className="mt-2 text-muted-foreground">
-                Miliki properti dengan cara yang lebih efisien dan hemat biaya.
+                Miliki properti impian Anda melalui tiga langkah sederhana.
               </p>
             </div>
             <div className="mt-12 grid gap-8 md:grid-cols-3">
