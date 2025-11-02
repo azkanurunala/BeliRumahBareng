@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function TermsPage() {
   return (
-    <div className="container mx-auto max-w-4xl py-6 sm:py-10">
+    <div className="container mx-auto max-w-4xl py-6 sm:py-10 px-4">
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Syarat & Ketentuan</CardTitle>

@@ -18,7 +18,7 @@ export default function AboutPage() {
 
       {/* Mission and Vision Section */}
       <section className="py-16 md:py-24">
-        <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center">
+        <div className="container mx-auto grid md:grid-cols-2 gap-12 items-center px-4">
           <div className="space-y-6">
             <h2 className="text-3xl font-bold">Misi Kami</h2>
             <p className="text-muted-foreground">

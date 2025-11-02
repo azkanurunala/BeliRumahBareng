@@ -7,7 +7,7 @@ import { Mail, Phone, MapPin } from 'lucide-react';
 
 export default function ContactPage() {
   return (
-    <div className="container mx-auto max-w-4xl py-6 sm:py-10">
+    <div className="container mx-auto max-w-4xl py-6 sm:py-10 px-4">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl">Hubungi Kami</CardTitle>
