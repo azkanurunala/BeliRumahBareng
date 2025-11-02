@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState } from 'react';
 import Image from 'next/image';
 import { Loader2, Users, Sparkles } from 'lucide-react';
-import { useFormState } from 'react-dom';
 
 import { Button } from '@/components/ui/button';
 import { mockUsers } from '@/lib/mock-data';
@@ -32,10 +31,10 @@ const initialState: MatchmakingState = {
 
 export default function Matchmaking() {
   const [isLoading, setIsLoading] = useState(false);
-  const [state, formAction] = useFormState(handleMatchmaking, initialState);
+  const [state, formAction] = useActionState(handleMatchmaking, initialState);
   const { toast } = useToast();
   
-  async function handleMatchmaking(): Promise<MatchmakingState> {
+  async function handleMatchmaking(previousState: MatchmakingState, formData: FormData): Promise<MatchmakingState> {
     setIsLoading(true);
     const input = {
       userProfile: currentUser.profile,
