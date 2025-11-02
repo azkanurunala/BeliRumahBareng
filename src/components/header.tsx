@@ -41,17 +41,23 @@ export default function Header() {
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex-col items-start gap-1">
+            <DropdownMenuItem asChild>
+              <Link href="/property/prop-001" className="flex-col items-start gap-1 cursor-pointer">
                 <p className='font-semibold'>Kecocokan Proyek Baru</p>
-                <p className='text-xs text-muted-foreground'>Sebuah lahan di Bekasi cocok dengan profil Anda.</p>
+                <p className='text-xs text-muted-foreground'>Sebuah lahan di Sidoarjo cocok dengan profil Anda.</p>
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex-col items-start gap-1">
+            <DropdownMenuItem asChild>
+              <Link href="/projects/proj-001" className="flex-col items-start gap-1 cursor-pointer">
                 <p className='font-semibold'>Pembaruan Dana Grup</p>
                 <p className='text-xs text-muted-foreground'>Proyek Sidoarjo Anda sekarang 50% didanai.</p>
+              </Link>
             </DropdownMenuItem>
              <DropdownMenuSeparator />
-             <DropdownMenuItem className='justify-center text-sm text-muted-foreground'>
-                Lihat semua notifikasi
+             <DropdownMenuItem asChild>
+                <Link href="/notifications" className='justify-center text-sm text-muted-foreground cursor-pointer'>
+                  Lihat semua notifikasi
+                </Link>
              </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
