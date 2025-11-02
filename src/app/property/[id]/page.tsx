@@ -72,11 +72,11 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
   const interestedUsers = mockUsers.slice(1, 4);
 
   const getBadgeText = () => {
-    return isCoBuilding ? 'Patungan Konstruksi' : 'Patungan Lahan';
+    return isCoBuilding ? 'Patungan Bangunan' : 'Patungan Lahan';
   };
 
   const getTitle = () => {
-    return isCoBuilding ? 'Gabung Grup Konstruksi' : 'Gabung Grup Patungan Lahan';
+    return isCoBuilding ? 'Gabung Grup Bangunan' : 'Gabung Grup Patungan Lahan';
   };
 
   const getDescription = () => {
@@ -86,11 +86,11 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
   };
 
   const getButtonText = () => {
-    return isCoBuilding ? 'Gabung Grup Konstruksi' : 'Gabung Grup Patungan';
+    return isCoBuilding ? 'Gabung Grup Bangunan' : 'Gabung Grup Patungan';
   };
   
   const getPropertyTypeDesc = () => {
-     if (isCoBuilding) return `Tanah & Proyek Konstruksi ${property.totalUnits} Lantai`;
+     if (isCoBuilding) return `Tanah & Proyek Bangunan ${property.totalUnits} Lantai`;
      return `Lahan Siap Bagi ${property.totalUnits} Kavling`;
   }
 

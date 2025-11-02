@@ -27,7 +27,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   const getBadgeText = () => {
     switch (property.type) {
       case 'co-building':
-        return 'Patungan Konstruksi';
+        return 'Patungan Bangunan';
       case 'co-owning':
         return 'Patungan Lahan';
       default:
