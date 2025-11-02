@@ -1,7 +1,7 @@
 import { mockProperties, mockUsers } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Building, Users, BadgeCheck, Home, User, Banknote, Landmark, Square, Layers } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, Square } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,14 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
      return `Lahan Siap Bagi ${property.totalUnits} Kavling`;
   }
 
+  const getUnitSize = (index: number) => {
+    if (isCoBuilding || !property.unitSize) return null;
+    // Simple logic to vary size slightly, making it more realistic
+    const baseSize = property.unitSize;
+    const variation = (index - Math.floor(property.totalUnits / 2)) * 2; // e.g., -8, -6, ... 0, ... 6, 8
+    return baseSize + variation;
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
@@ -106,7 +114,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                     src={property.imageUrl}
                     alt={property.name}
                     fill
-                    objectFit="cover"
+                    className="object-cover"
                     data-ai-hint={property.imageHint}
                   />
                 </div>
@@ -172,7 +180,16 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                             {unitPrices.map((price, index) => (
                               <TableRow key={index}>
                                 <TableCell className="font-medium">
-                                  {isCoBuilding ? `${property.unitName} ${index + 1}` : `${property.unitName} ${index + 1}`}
+                                  {isCoBuilding ? `${property.unitName} ${index + 1}` : 
+                                  <div className='flex flex-col'>
+                                    <span>{`${property.unitName} ${index + 1}`}</span>
+                                    {!isCoBuilding && property.unitSize && (
+                                      <span className='text-xs text-muted-foreground'>
+                                        ~{getUnitSize(index)}{property.unitMeasure}
+                                      </span>
+                                    )}
+                                  </div>
+                                  }
                                 </TableCell>
                                 <TableCell className="text-right font-semibold text-primary">{formatPrice(price)}</TableCell>
                               </TableRow>
@@ -180,7 +197,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                           </TableBody>
                         </Table>
                          <p className="text-xs text-muted-foreground mt-2 italic">
-                          *Harga bersifat estimasi dan dapat bervariasi tergantung posisi/ukuran final.
+                          *Harga dan luas bersifat estimasi dan dapat bervariasi tergantung posisi/ukuran final.
                         </p>
                       </AccordionContent>
                     </AccordionItem>
@@ -203,7 +220,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   {interestedUsers.map(user => (
                      <div key={user.id} className="flex items-center gap-3">
                        <Avatar>
-                         <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} />
+                         <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} className="object-cover"/>
                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                        </Avatar>
                        <div>
