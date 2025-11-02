@@ -30,8 +30,20 @@ export const mockProperties: Property[] = [
     planningInfo: {
       sitePlanUrl: getImage('site-plan-1').url,
       sitePlanHint: getImage('site-plan-1').hint,
-      developmentPlan: "Fase pertama adalah pematangan lahan dan pembuatan jalan utama. Fase kedua adalah pembagian kavling sesuai denah. Pemilik dapat mulai membangun setelah serah terima kavling. Akses jalan dan drainase utama akan disiapkan oleh pengelola proyek.",
-      environmentalAnalysis: "Lokasi bebas banjir dengan akses mudah ke jalan tol. Diperkirakan harga tanah akan naik 15% per tahun seiring pengembangan area komersial di dekatnya. Terdapat fasilitas umum seperti sekolah dan rumah sakit dalam radius 3 km.",
+      developmentPlan: `Proyek pengembangan lahan di Sidoarjo ini dirancang dengan pendekatan bertahap untuk memastikan kualitas dan efisiensi. Fase pertama akan berfokus pada persiapan infrastruktur dasar yang krusial. Ini mencakup pematangan lahan secara menyeluruh, pembersihan, dan perataan kontur tanah untuk memastikan setiap kavling berada pada elevasi yang optimal dan aman. Proses ini juga melibatkan pembuatan jalan utama dengan lebar 8 meter yang akan menjadi akses sentral di dalam area perumahan.
+
+Fase kedua adalah tahap realisasi kavling dan penyerahan kepada para pemilik. Setelah infrastruktur jalan utama dan saluran drainase primer selesai, tim akan melakukan pembagian kavling secara akurat sesuai dengan denah yang telah disetujui bersama. Setiap kavling akan memiliki patok batas yang jelas. Setelah proses administrasi dan serah terima selesai, para pemilik kavling diberikan kebebasan untuk memulai proses desain dan pembangunan rumah impian mereka masing-masing, sesuai dengan pedoman desain umum yang telah ditetapkan untuk menjaga keserasian lingkungan.
+
+Manajemen proyek akan bertanggung jawab penuh atas penyediaan semua fasilitas umum yang tertera dalam rencana. Ini termasuk instalasi jaringan listrik dan air bersih hingga ke depan setiap kavling, serta pembangunan sistem drainase sekunder yang terhubung ke saluran utama. Kami berkomitmen untuk memastikan semua infrastruktur ini siap sebelum atau bersamaan dengan selesainya pembangunan unit rumah pertama.
+
+Untuk menjaga nilai investasi dan kenyamanan jangka panjang, akan dibentuk sebuah badan pengelola lingkungan atau 'homeowners association' (HOA). Badan ini, yang terdiri dari perwakilan pemilik kavling, akan bertanggung jawab atas pemeliharaan fasilitas umum, pengelolaan kebersihan dan keamanan, serta penerapan aturan lingkungan. Iuran bulanan yang wajar akan ditetapkan bersama untuk mendanai operasional badan pengelola ini, memastikan lingkungan perumahan tetap asri, aman, dan terawat dengan baik.`,
+      environmentalAnalysis: `Lokasi properti ini telah melalui analisis hidrologi yang mendalam dan terbukti berada di zona bebas banjir. Kontur tanah yang sedikit lebih tinggi dari area sekitarnya serta adanya sistem drainase yang direncanakan secara matang memastikan aliran air hujan dapat dikelola dengan efektif, mengurangi risiko genangan air bahkan saat curah hujan tinggi. Keunggulan ini memberikan rasa aman dan jaminan investasi jangka panjang bagi para pemilik.
+
+Dari segi aksesibilitas, lokasi ini sangat strategis. Terletak hanya 10 menit dari gerbang tol Waru, properti ini menawarkan konektivitas yang sangat baik ke pusat kota Surabaya, bandara Juanda, dan kawasan industri di sekitarnya. Kemudahan akses ini tidak hanya mempersingkat waktu tempuh harian tetapi juga secara signifikan meningkatkan potensi apresiasi nilai properti di masa depan seiring dengan terus berkembangnya infrastruktur di koridor ini.
+
+Potensi pertumbuhan nilai investasi di area ini sangat menjanjikan. Analisis pasar properti menunjukkan tren kenaikan harga tanah rata-rata sebesar 15-20% per tahun, didorong oleh ekspansi area komersial dan residensial di sekitarnya. Beberapa pengembang besar telah memulai proyek di dekat lokasi, yang akan menciptakan efek ganda (multiplier effect) pada harga dan permintaan. Ini menjadikan pembelian kavling saat ini sebagai langkah investasi yang sangat cerdas.
+
+Kualitas hidup di sekitar lokasi didukung oleh ketersediaan fasilitas umum yang sangat lengkap. Dalam radius kurang dari 3 kilometer, terdapat beberapa sekolah unggulan, mulai dari tingkat dasar hingga menengah atas, serta institusi pendidikan tinggi. Fasilitas kesehatan seperti rumah sakit modern dan berbagai klinik spesialis juga mudah dijangkau. Selain itu, pusat perbelanjaan, pasar tradisional, dan area kuliner yang beragam memastikan semua kebutuhan harian dan gaya hidup dapat terpenuhi dengan mudah.`,
     }
   },
   {
@@ -52,8 +64,20 @@ export const mockProperties: Property[] = [
     planningInfo: {
       sitePlanUrl: getImage('floor-plan-1').url,
       sitePlanHint: getImage('floor-plan-1').hint,
-      developmentPlan: "Konstruksi akan dimulai setelah 70% pendanaan tercapai. Pembangunan diperkirakan memakan waktu 18 bulan. Gedung akan dilengkapi dengan basement parkir, area komersial di lantai dasar, dan 4 lantai hunian. Setiap anggota akan memiliki satu lantai.",
-      environmentalAnalysis: "Berada di pusat bisnis Bekasi dengan konektivitas transportasi publik yang baik. Potensi sewa tinggi karena permintaan dari pekerja kantoran di sekitar area tersebut. Fasilitas lengkap di sekitar gedung.",
+      developmentPlan: `Rencana pengembangan proyek apartemen ini akan dieksekusi setelah target pendanaan awal sebesar 70% dari total nilai proyek berhasil tercapai. Dana awal ini akan digunakan untuk akuisisi lahan secara penuh dan biaya perizinan awal, memberikan keamanan hukum bagi seluruh anggota grup. Proses penggalangan dana akan dilakukan secara transparan melalui rekening bersama (escrow account) yang diawasi oleh notaris independen.
+
+Setelah pendanaan dan legalitas lahan aman, tahap konstruksi akan segera dimulai. Perkiraan durasi pembangunan adalah sekitar 18 hingga 24 bulan, tergantung pada kondisi cuaca dan logistik. Kami telah menunjuk kontraktor bereputasi dengan rekam jejak terbukti dalam membangun hunian vertikal berkualitas. Proses pembangunan akan diawasi oleh tim pengawas independen untuk memastikan semua spesifikasi teknis dan standar keselamatan terpenuhi. Laporan kemajuan konstruksi akan dibagikan kepada anggota secara berkala.
+
+Desain gedung apartemen ini mengusung konsep modern-minimalis yang efisien. Gedung akan terdiri dari basement untuk area parkir yang aman, lantai dasar yang dialokasikan untuk fasilitas komersial seperti kafe atau minimarket untuk menambah kenyamanan penghuni, serta empat lantai hunian di atasnya. Setiap anggota grup co-build akan memiliki hak milik atas satu lantai penuh, memberikan privasi dan fleksibilitas untuk menata interior sesuai selera masing-masing.
+
+Fasilitas bersama akan menjadi nilai tambah utama dari proyek ini. Direncanakan akan ada sebuah rooftop garden yang dapat digunakan oleh semua penghuni untuk bersantai, sistem keamanan 24 jam dengan CCTV, serta lobi utama yang representatif. Pengelolaan gedung setelah selesai akan ditangani oleh badan pengelola profesional yang akan bertanggung jawab atas pemeliharaan, kebersihan, dan keamanan, memastikan nilai properti tetap terjaga dalam jangka panjang.`,
+      environmentalAnalysis: `Properti ini berlokasi di jantung kawasan pusat bisnis (CBD) Bekasi, sebuah area yang mengalami pertumbuhan pesat dalam satu dekade terakhir. Dikelilingi oleh gedung-gedung perkantoran, pusat perbelanjaan besar seperti Summarecon Mall Bekasi dan Metropolitan Mall, serta hotel-hotel ternama. Keberadaan di pusat aktivitas ekonomi ini menjamin permintaan sewa yang tinggi dan stabil, terutama dari kalangan profesional muda dan ekspatriat yang bekerja di area tersebut.
+
+Konektivitas transportasi menjadi salah satu keunggulan utama lokasi ini. Properti ini hanya berjarak beberapa menit dari stasiun LRT Bekasi Barat dan stasiun KRL Bekasi, memberikan akses mudah dan cepat menuju pusat Jakarta. Selain itu, akses ke Tol Jakarta-Cikampek juga sangat dekat, memudahkan perjalanan menggunakan kendaraan pribadi. Infrastruktur transportasi yang terintegrasi ini menjadikan lokasi sangat ideal bagi para komuter.
+
+Analisis pasar menunjukkan potensi imbal hasil sewa (rental yield) yang sangat menarik di area ini, diperkirakan berada di angka 6-8% per tahun. Permintaan unit hunian di pusat Bekasi terus meningkat, sementara pasokan unit berkualitas masih terbatas. Dengan memiliki satu lantai penuh, investor memiliki fleksibilitas untuk menyewakan sebagai satu unit besar atau membaginya menjadi beberapa unit lebih kecil (tergantung peraturan yang berlaku) untuk memaksimalkan pendapatan sewa.
+
+Dari sisi fasilitas pendukung, lokasi ini tidak perlu diragukan lagi. Berbagai fasilitas pendidikan dari sekolah internasional hingga universitas ternama berada dalam jangkauan. Rumah sakit besar dengan layanan lengkap seperti RS Mitra Keluarga dan RS Awal Bros juga sangat dekat. Kehadiran fasilitas-fasilitas ini tidak hanya meningkatkan kenyamanan hidup tetapi juga menjadi faktor penting yang mendorong apresiasi nilai properti di masa depan.`,
     }
   },
   {
