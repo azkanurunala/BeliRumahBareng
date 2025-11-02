@@ -1,4 +1,3 @@
-import Header from '@/components/header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell } from 'lucide-react';
 import Link from 'next/link';
@@ -32,8 +31,6 @@ const notifications = [
 
 export default function NotificationsPage() {
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <Header />
       <main className="flex-1 bg-muted/20">
         <div className="container mx-auto max-w-2xl py-6 sm:py-10">
           <Card>
@@ -62,6 +59,5 @@ export default function NotificationsPage() {
           </Card>
         </div>
       </main>
-    </div>
   );
 }
