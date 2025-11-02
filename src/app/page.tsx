@@ -31,10 +31,10 @@ export default function HomePage() {
           )}
           <div className="relative z-20 max-w-2xl mx-auto px-4">
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-              Miliki Properti Impian, Bersama-sama.
+              Harga Properti Mahal? Beli Bareng Aja.
             </h1>
             <p className="mt-4 text-lg md:text-xl">
-              BeliRumahBareng adalah platform kepemilikan properti kolektif pertama di Indonesia. Wujudkan kepemilikan properti dengan modal lebih terjangkau.
+              Lewati developer. Patungan beli tanah luas atau bangun properti bersama untuk wujudkan kepemilikan dengan harga jauh lebih terjangkau.
             </p>
             <Button asChild size="lg" className="mt-8">
               <Link href="/discover">
@@ -48,9 +48,9 @@ export default function HomePage() {
         <section id="how-it-works" className="py-12 md:py-24 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-xl mx-auto">
-              <h2 className="text-3xl font-bold">Bagaimana Caranya?</h2>
+              <h2 className="text-3xl font-bold">Solusi Cerdas Tanpa Developer</h2>
               <p className="mt-2 text-muted-foreground">
-                Miliki properti hanya dengan tiga langkah mudah.
+                Miliki properti dengan cara yang lebih efisien dan hemat biaya.
               </p>
             </div>
             <div className="mt-12 grid gap-8 md:grid-cols-3">
@@ -59,10 +59,10 @@ export default function HomePage() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Search className="h-6 w-6" />
                   </div>
-                  <CardTitle className="mt-4">1. Temukan Properti</CardTitle>
+                  <CardTitle className="mt-4">1. Patungan Beli Lahan Luas</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Jelajahi daftar properti yang telah dikurasi dan diverifikasi oleh tim ahli kami.</p>
+                  <p className="text-muted-foreground">Beli tanah dalam ukuran besar bersama grup membuat harga per meter jadi jauh lebih murah.</p>
                 </CardContent>
               </Card>
               <Card className="text-center">
@@ -70,10 +70,10 @@ export default function HomePage() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Users className="h-6 w-6" />
                   </div>
-                  <CardTitle className="mt-4">2. Gabung Grup</CardTitle>
+                  <CardTitle className="mt-4">2. Bangun Properti Bersama</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Bergabunglah dengan grup pembelian bersama atau temukan rekan investor dengan profil serupa.</p>
+                  <p className="text-muted-foreground">Ingin hunian vertikal? Patungan bangun flat atau apartemen untuk memangkas biaya konstruksi tanpa developer.</p>
                 </CardContent>
               </Card>
               <Card className="text-center">
@@ -81,10 +81,10 @@ export default function HomePage() {
                   <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <KeyRound className="h-6 w-6" />
                   </div>
-                  <CardTitle className="mt-4">3. Miliki Bersama</CardTitle>
+                  <CardTitle className="mt-4">3. Miliki Bagian Anda</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Selesaikan proses legal dan pendanaan untuk secara resmi memiliki bagian Anda dari properti.</p>
+                  <p className="text-muted-foreground">Selesaikan proses legal dan miliki kavling atau unit properti Anda dengan hak yang jelas dan berkekuatan hukum.</p>
                 </CardContent>
               </Card>
             </div>
@@ -95,7 +95,7 @@ export default function HomePage() {
         <section id="featured-properties" className="py-12 md:py-24 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-xl mx-auto">
-              <h2 className="text-3xl font-bold">Properti Unggulan</h2>
+              <h2 className="text-3xl font-bold">Peluang Patungan Populer</h2>
               <p className="mt-2 text-muted-foreground">
                 Lihat beberapa peluang kepemilikan properti kolektif yang sedang tren saat ini.
               </p>
@@ -107,7 +107,7 @@ export default function HomePage() {
             </div>
             <div className="mt-12 text-center">
               <Button asChild variant="outline">
-                <Link href="/discover">Lihat Semua Properti</Link>
+                <Link href="/discover">Lihat Semua Peluang</Link>
               </Button>
             </div>
           </div>
@@ -118,10 +118,10 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="relative isolate overflow-hidden bg-primary/90 px-6 py-20 text-center shadow-2xl sm:rounded-3xl sm:px-16">
                <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Siap Memulai Kepemilikan Properti Pertama Anda?
+                Siap Memiliki Properti Dengan Cara Cerdas?
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80">
-                Jangan tunda lagi impian Anda. Bergabunglah dengan ratusan investor lain dan wujudkan kepemilikan properti dengan cara yang lebih cerdas dan terjangkau.
+                Jangan biarkan harga mahal menghalangi impian Anda. Bergabunglah dengan komunitas BeliRumahBareng dan wujudkan kepemilikan properti yang lebih terjangkau.
               </p>
               <div className="mt-8 flex items-center justify-center gap-x-6">
                 <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
