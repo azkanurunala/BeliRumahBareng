@@ -50,8 +50,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             <p className="text-xs text-muted-foreground">Starting from</p>
             <p className="text-lg font-bold text-primary">{formattedPrice}</p>
         </div>
-        <Link href={`/property/${property.id}`}>
-          <Button>View Details</Button>
+        <Link href={`/property/${property.id}`} passHref>
+          <Button asChild>
+            <a>View Details</a>
+          </Button>
         </Link>
       </CardFooter>
     </Card>
