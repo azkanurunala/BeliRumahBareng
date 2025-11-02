@@ -3,11 +3,12 @@ export type Property = {
   name: string;
   description: string;
   price: number;
+  totalArea?: number;
   location: string;
   images: { url: string; hint: string }[];
   type: 'co-building' | 'co-owning';
-  totalUnits: number;
-  unitName: 'Lantai' | 'Kavling';
+  totalUnits?: number;
+  unitName: 'Lantai' | 'Kavling' | 'Kepemilikan';
   unitSize?: number; // e.g. 110
   unitMeasure?: string; // e.g. m²
   planningInfo?: {
@@ -66,3 +67,5 @@ export type Project = {
     timestamp: string;
   }[];
 };
+
+    

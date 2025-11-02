@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +5,7 @@ import type { Property } from '@/lib/types';
 import { mockUsers } from '@/lib/mock-data';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope, CheckCircle } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope, CheckCircle, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,29 +40,30 @@ export default function PropertyDetailClient({ property }: { property: Property 
   const { toast } = useToast();
 
   const isCoBuilding = property.type === 'co-building';
+  const isFlexible = !property.totalUnits && property.totalArea;
 
-  const unitPrices = Array.from({ length: property.totalUnits }, (_, i) => {
+  const unitPrices = isFlexible ? [] : Array.from({ length: property.totalUnits! }, (_, i) => {
     let weight;
-    const floorWeight = isCoBuilding ? (property.totalUnits - i -1) * 0.05 : (i * 0.02);
+    const floorWeight = isCoBuilding ? (property.totalUnits! - i -1) * 0.05 : (i * 0.02);
 
     weight = 1.0 + floorWeight;
     
     if (isCoBuilding && i === 0) {
-      weight = 1.0 + ((property.totalUnits - 1) * 0.05) + 0.10;
+      weight = 1.0 + ((property.totalUnits! - 1) * 0.05) + 0.10;
     } else if(isCoBuilding) {
-       weight = 1.0 + (property.totalUnits - 1 - i) * 0.05;
+       weight = 1.0 + (property.totalUnits! - 1 - i) * 0.05;
     } else {
        weight = 1.0 + (i * 0.02);
     }
     
     if(isCoBuilding) {
-        const basePricePerUnit = property.price / property.totalUnits;
-        const premium = (property.totalUnits - 1 - i) * 0.05;
+        const basePricePerUnit = property.price / property.totalUnits!;
+        const premium = (property.totalUnits! - 1 - i) * 0.05;
         return basePricePerUnit * (1 + premium);
 
     }
 
-    return (property.price / property.totalUnits) * weight;
+    return (property.price / property.totalUnits!) * weight;
   });
 
 
@@ -73,6 +72,12 @@ export default function PropertyDetailClient({ property }: { property: Property 
     currency: 'IDR',
     minimumFractionDigits: 0,
   }).format(property.price);
+  
+  const formattedPricePerMeter = isFlexible ? new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(property.price / property.totalArea!) : '';
 
   const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -83,37 +88,42 @@ export default function PropertyDetailClient({ property }: { property: Property 
   const interestedUsers = mockUsers.slice(1, 4);
 
   const getBadgeText = () => {
+    if (isFlexible) return 'Patungan Fleksibel';
     return isCoBuilding ? 'Patungan Bangunan' : 'Patungan Lahan';
   };
 
   const getTitle = () => {
+    if (isFlexible) return 'Gabung Grup Fleksibel';
     return isCoBuilding ? 'Gabung Grup Bangunan' : 'Gabung Grup Patungan Lahan';
   };
 
   const getDescription = () => {
+    if (isFlexible) return `Miliki sebagian tanah dengan pembagian luas berdasarkan jumlah investor final.`;
     return isCoBuilding 
       ? `Bangun dan miliki satu ${property.unitName.toLowerCase()} di properti ini.`
       : `Miliki satu ${property.unitName.toLowerCase()} tanah di lokasi ini.`;
   };
 
   const getButtonText = () => {
+    if (isFlexible) return 'Gabung Grup Fleksibel';
     return isCoBuilding ? 'Gabung Grup Bangunan' : 'Gabung Grup Patungan';
   };
   
   const getPropertyTypeDesc = () => {
+     if (isFlexible) return `Tanah dengan pembagian ${property.totalArea}${property.unitMeasure} secara merata`;
      if (isCoBuilding) return `Tanah & Proyek Bangunan ${property.totalUnits} Lantai`;
      return `Lahan Siap Bagi ${property.totalUnits} Kavling`;
   }
 
   const getUnitSize = (index: number) => {
-    if (isCoBuilding || !property.unitSize) return null;
+    if (isCoBuilding || !property.unitSize || isFlexible) return null;
     const baseSize = property.unitSize;
-    const variation = (index - Math.floor(property.totalUnits / 2)) * 2;
+    const variation = (index - Math.floor(property.totalUnits! / 2)) * 2;
     return baseSize + variation;
   }
   
   const handleJoinProject = () => {
-    if (!selectedUnit) {
+    if (!isFlexible && !selectedUnit) {
       toast({
         variant: "destructive",
         title: "Pilihan Dibutuhkan",
@@ -124,7 +134,9 @@ export default function PropertyDetailClient({ property }: { property: Property 
     
     toast({
       title: "Berhasil Bergabung (Simulasi)",
-      description: `Anda telah memilih ${property.unitName} ${selectedUnit}. Tim kami akan segera menghubungi Anda untuk langkah selanjutnya.`,
+      description: isFlexible
+        ? "Anda telah menyatakan minat untuk bergabung. Tim kami akan segera menghubungi Anda."
+        : `Anda telah memilih ${property.unitName} ${selectedUnit}. Tim kami akan segera menghubungi Anda untuk langkah selanjutnya.`,
     });
   };
 
@@ -181,7 +193,9 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       <AccordionContent className="grid grid-cols-2 gap-4 pt-2 text-sm">
                         <div className="flex items-center gap-2"><Home className="h-4 w-4 text-primary" /><p><strong>Tipe Proyek:</strong> {getPropertyTypeDesc()}</p></div>
                         <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary" /><p><strong>Sertifikat Induk:</strong> SHM</p></div>
-                        <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p><strong>Kapasitas Grup:</strong> {property.totalUnits} {property.unitName}</p></div>
+                        {property.totalUnits && (
+                          <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p><strong>Kapasitas Grup:</strong> {property.totalUnits} {property.unitName}</p></div>
+                        )}
                         {!isCoBuilding && property.unitSize && (
                            <div className="flex items-center gap-2"><Square className="h-4 w-4 text-primary" /><p><strong>Luas per Kavling:</strong> ~{property.unitSize}{property.unitMeasure}</p></div>
                         )}
@@ -229,49 +243,67 @@ export default function PropertyDetailClient({ property }: { property: Property 
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className='border-b pb-2 text-center'>
-                    <p className="text-sm text-muted-foreground">Total Nilai Proyek</p>
-                    <p className="text-2xl font-bold">{formattedTotalPrice}</p>
+                    <p className="text-sm text-muted-foreground">{isFlexible ? 'Total Luas Tanah' : 'Total Nilai Proyek'}</p>
+                    <p className="text-2xl font-bold">{isFlexible ? `${property.totalArea} ${property.unitMeasure}` : formattedTotalPrice}</p>
+                     {isFlexible && (
+                        <>
+                            <p className="text-sm text-muted-foreground mt-2">Harga Tanah per {property.unitMeasure}</p>
+                            <p className="text-xl font-bold text-primary">{formattedPricePerMeter}</p>
+                        </>
+                    )}
                   </div>
                   
-                  <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
-                    <AccordionItem value="item-1">
-                      <AccordionTrigger className="text-base font-semibold">
-                        Lihat Estimasi Biaya per {property.unitName}
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>{property.unitName}</TableHead>
-                              <TableHead className="text-right">Estimasi Harga</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {unitPrices.map((price, index) => (
-                              <TableRow key={index}>
-                                <TableCell className="font-medium">
-                                  {isCoBuilding ? `${property.unitName} ${index + 1}` : 
-                                  <div className='flex flex-col'>
-                                    <span>{`${property.unitName} ${index + 1}`}</span>
-                                    {property.unitSize && (
-                                      <span className='text-xs text-muted-foreground'>
-                                        ~{getUnitSize(index)}{property.unitMeasure}
-                                      </span>
-                                    )}
-                                  </div>
-                                  }
-                                </TableCell>
-                                <TableCell className="text-right font-semibold text-primary">{formatPrice(price)}</TableCell>
+                  {!isFlexible ? (
+                    <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                      <AccordionItem value="item-1">
+                        <AccordionTrigger className="text-base font-semibold">
+                          Lihat Estimasi Biaya per {property.unitName}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>{property.unitName}</TableHead>
+                                <TableHead className="text-right">Estimasi Harga</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                         <p className="text-xs text-muted-foreground mt-2 italic">
-                          *Harga dan luas bersifat estimasi dan dapat bervariasi tergantung posisi/ukuran final.
-                        </p>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                            </TableHeader>
+                            <TableBody>
+                              {unitPrices.map((price, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">
+                                    {isCoBuilding ? `${property.unitName} ${index + 1}` : 
+                                    <div className='flex flex-col'>
+                                      <span>{`${property.unitName} ${index + 1}`}</span>
+                                      {property.unitSize && (
+                                        <span className='text-xs text-muted-foreground'>
+                                          ~{getUnitSize(index)}{property.unitMeasure}
+                                        </span>
+                                      )}
+                                    </div>
+                                    }
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-primary">{formatPrice(price)}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                           <p className="text-xs text-muted-foreground mt-2 italic">
+                            *Harga dan luas bersifat estimasi dan dapat bervariasi tergantung posisi/ukuran final.
+                          </p>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  ) : (
+                    <div className='rounded-lg border bg-blue-50 p-4 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'>
+                        <div className='flex items-start gap-3'>
+                            <Info size={20} className='mt-0.5 shrink-0' />
+                            <div>
+                                <h4 className='font-semibold'>Model Pembagian Fleksibel</h4>
+                                <p className='text-xs mt-1'>Total biaya dan luas tanah yang Anda dapatkan akan dihitung secara proporsional berdasarkan jumlah total investor yang bergabung di akhir periode pendanaan.</p>
+                            </div>
+                        </div>
+                    </div>
+                  )}
 
                   <Dialog>
                     <DialogTrigger asChild>
@@ -283,34 +315,39 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       <DialogHeader>
                         <DialogTitle>Gabung Proyek: {property.name}</DialogTitle>
                         <DialogDescription>
-                          Pilih {property.unitName.toLowerCase()} yang Anda minati. Tim kami akan menghubungi Anda untuk proses verifikasi dan pendanaan.
+                          {isFlexible 
+                            ? 'Konfirmasi minat Anda untuk bergabung. Tim kami akan menghubungi Anda untuk proses selanjutnya.'
+                            : `Pilih ${property.unitName.toLowerCase()} yang Anda minati. Tim kami akan menghubungi Anda untuk proses verifikasi dan pendanaan.`
+                          }
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
-                        <RadioGroup onValueChange={setSelectedUnit} className="max-h-60 overflow-y-auto pr-4">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead className="w-10"></TableHead>
-                                <TableHead>{property.unitName}</TableHead>
-                                { !isCoBuilding && <TableHead>Luas</TableHead> }
-                                <TableHead className="text-right">Estimasi Harga</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {unitPrices.map((price, index) => (
-                                <TableRow key={index} className="cursor-pointer" onClick={() => setSelectedUnit((index + 1).toString())}>
-                                  <TableCell>
-                                    <RadioGroupItem value={(index + 1).toString()} id={`unit-${index + 1}`} />
-                                  </TableCell>
-                                  <TableCell className="font-medium">{`${property.unitName} ${index + 1}`}</TableCell>
-                                  { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)}{property.unitMeasure}</TableCell>}
-                                  <TableCell className="text-right">{formatPrice(price)}</TableCell>
+                        {!isFlexible && (
+                            <RadioGroup onValueChange={setSelectedUnit} className="max-h-60 overflow-y-auto pr-4">
+                            <Table>
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-10"></TableHead>
+                                    <TableHead>{property.unitName}</TableHead>
+                                    { !isCoBuilding && <TableHead>Luas</TableHead> }
+                                    <TableHead className="text-right">Estimasi Harga</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </RadioGroup>
+                                </TableHeader>
+                                <TableBody>
+                                {unitPrices.map((price, index) => (
+                                    <TableRow key={index} className="cursor-pointer" onClick={() => setSelectedUnit((index + 1).toString())}>
+                                    <TableCell>
+                                        <RadioGroupItem value={(index + 1).toString()} id={`unit-${index + 1}`} />
+                                    </TableCell>
+                                    <TableCell className="font-medium">{`${property.unitName} ${index + 1}`}</TableCell>
+                                    { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)}{property.unitMeasure}</TableCell>}
+                                    <TableCell className="text-right">{formatPrice(price)}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                            </RadioGroup>
+                        )}
                         <div className='mt-4 space-y-3 rounded-lg border bg-secondary/50 p-4'>
                           <h4 className='font-semibold text-sm'>Langkah Selanjutnya</h4>
                           <ul className='space-y-2 text-xs text-muted-foreground'>
@@ -363,3 +400,5 @@ export default function PropertyDetailClient({ property }: { property: Property 
     </div>
   );
 }
+
+    

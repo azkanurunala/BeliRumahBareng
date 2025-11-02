@@ -18,18 +18,20 @@ type PropertyCardProps = {
 };
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+    const isFlexible = !property.totalUnits && property.totalArea;
+
   const formattedPrice = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-  }).format(property.price / property.totalUnits);
+  }).format(isFlexible ? property.price / property.totalArea! : property.price / property.totalUnits!);
 
   const getBadgeText = () => {
     switch (property.type) {
       case 'co-building':
         return 'Patungan Bangunan';
       case 'co-owning':
-        return 'Patungan Lahan';
+        return isFlexible ? 'Patungan Fleksibel' : 'Patungan Lahan';
       default:
         return 'Siap Patungan';
     }
@@ -61,7 +63,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       </CardContent>
       <CardFooter className="flex items-center justify-between bg-secondary/30 p-4">
         <div>
-            <p className="text-xs text-muted-foreground">Estimasi per {property.unitName}</p>
+            <p className="text-xs text-muted-foreground">
+                {isFlexible ? `Harga per ${property.unitMeasure}`: `Estimasi per ${property.unitName}`}
+            </p>
             <p className="text-lg font-bold text-primary">{formattedPrice}</p>
         </div>
         <Link href={`/property/${property.id}`} passHref>
@@ -71,3 +75,5 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     </Card>
   );
 }
+
+    

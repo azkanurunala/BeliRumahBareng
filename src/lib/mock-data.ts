@@ -97,9 +97,10 @@ Dari sisi fasilitas pendukung, lokasi ini tidak perlu diragukan lagi. Berbagai f
   },
   {
     id: 'prop-004',
-    name: 'Tanah Kavling di Tangerang',
-    description: 'Kawasan tanah prospektif di Tangerang untuk dimiliki bersama. Amankan kavling Anda sekarang dan bangun nanti sesuai keinginan.',
+    name: 'Tanah Kavling Fleksibel di Tangerang',
+    description: 'Kawasan tanah prospektif di Tangerang untuk dimiliki bersama. Jumlah dan luas kavling akan ditentukan bersama berdasarkan jumlah investor final.',
     price: 2000000000,
+    totalArea: 1000,
     location: 'Tangerang, Banten',
     images: [
       { url: getImage('property-6').url, hint: getImage('property-6').hint },
@@ -107,9 +108,7 @@ Dari sisi fasilitas pendukung, lokasi ini tidak perlu diragukan lagi. Berbagai f
       { url: getImage('site-plan-2').url, hint: getImage('site-plan-2').hint },
     ],
     type: 'co-owning',
-    totalUnits: 10,
-    unitName: 'Kavling',
-    unitSize: 100,
+    unitName: 'Kepemilikan',
     unitMeasure: 'm²',
   },
 ];
@@ -200,7 +199,7 @@ const sidoarjoMembers = [mockUsers[0], mockUsers[1], mockUsers[2], mockUsers[3]]
 
 export const mockProject: Project = {
     id: 'proj-001',
-    propertyId: sidoarjoProject.id,
+    propertyId: sidoarjoProject.id!,
     propertyName: sidoarjoProject.name,
     propertyImageUrl: sidoarjoProject.images[0].url,
     propertyImageHint: sidoarjoProject.images[0].hint,
@@ -227,3 +226,5 @@ export const mockProject: Project = {
         { userId: 'user-003', message: 'Saya sudah meninjau perjanjiannya. Terlihat bagus bagi saya.', timestamp: '11:15' },
     ]
 };
+
+    
