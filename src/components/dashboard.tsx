@@ -19,13 +19,13 @@ export default function Dashboard() {
             <Search className="mr-2 h-4 w-4" />
             Jelajahi
           </TabsTrigger>
-          <TabsTrigger value="recommendations">
-            <Sparkles className="mr-2 h-4 w-4" />
-            Rekomendasi
-          </TabsTrigger>
           <TabsTrigger value="partners">
             <Users className="mr-2 h-4 w-4" />
             Cari Rekan
+          </TabsTrigger>
+          <TabsTrigger value="recommendations">
+            <Sparkles className="mr-2 h-4 w-4" />
+            Rekomendasi
           </TabsTrigger>
         </TabsList>
         <TabsContent value="projects" className="mt-6">
@@ -33,6 +33,9 @@ export default function Dashboard() {
         </TabsContent>
         <TabsContent value="discover" className="mt-6">
           <DiscoverTab />
+        </TabsContent>
+        <TabsContent value="partners" className="mt-6">
+          <FindPartnersTab />
         </TabsContent>
         <TabsContent value="recommendations" className="mt-6">
            <Card>
@@ -46,9 +49,6 @@ export default function Dashboard() {
                <Recommendations />
             </CardContent>
            </Card>
-        </TabsContent>
-        <TabsContent value="partners" className="mt-6">
-          <FindPartnersTab />
         </TabsContent>
       </Tabs>
     </div>
