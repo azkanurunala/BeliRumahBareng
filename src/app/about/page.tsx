@@ -4,7 +4,7 @@ import { Users, Target, ShieldCheck } from 'lucide-react';
 
 export default function AboutPage() {
   return (
-    <div className="bg-background">
+    <div className="bg-background py-6 sm:py-10">
       {/* Hero Section */}
       <section className="w-full py-20 md:py-32 bg-primary/10">
         <div className="container mx-auto text-center px-4">
