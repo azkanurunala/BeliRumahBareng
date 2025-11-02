@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Search, Users, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
 
 const navLinks = [
   { href: '/discover', label: 'Jelajahi', icon: Search },
@@ -15,17 +14,11 @@ const navLinks = [
 
 export default function MobileNav() {
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur-sm md:hidden">
       <div className="grid h-16 grid-cols-4 items-center">
-        {isClient && navLinks.map((link) => (
+        {navLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
