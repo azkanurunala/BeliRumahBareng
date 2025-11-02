@@ -50,11 +50,18 @@ const investmentGoalsOptions: ComboboxOption[] = [
     { value: "future-personal-use", label: "Penggunaan pribadi di masa depan" },
 ]
 
+const timeHorizonOptions: ComboboxOption[] = [
+    { value: "short", label: "Jangka pendek (< 5 tahun)" },
+    { value: "medium", label: "Jangka menengah (5-10 tahun)" },
+    { value: "long", label: "Jangka panjang (10+ tahun)" },
+]
+
 const FormSchema = z.object({
   location: z.string().min(1, { message: 'Lokasi harus dipilih.' }),
   priceRange: z.string().min(1, { message: 'Rentang harga harus dipilih.' }),
   investmentGoals: z.string().min(1, { message: 'Tujuan investasi harus dipilih.' }),
   financialCapacity: z.coerce.number().min(0, { message: 'Kapasitas finansial harus diisi.' }),
+  timeHorizon: z.string().min(1, { message: 'Horison waktu harus dipilih.' }),
 });
 
 const currentUser = mockUsers[0];
@@ -71,6 +78,7 @@ export default function Recommendations() {
       priceRange: '200-400',
       investmentGoals: "first-home",
       financialCapacity: 500000000,
+      timeHorizon: 'long',
     },
   });
 
@@ -195,6 +203,30 @@ export default function Recommendations() {
                     </FormItem>
                 )}
                 />
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                    control={form.control}
+                    name="timeHorizon"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Horison Waktu</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih horison waktu" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {timeHorizonOptions.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                 />
             </div>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
