@@ -1,7 +1,7 @@
 import { mockProperties, mockUsers } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Building, Users, AreaChart, BadgeCheck, Clock, Wallet, Info } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, User, Banknote } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,11 +20,19 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
   if (!property) {
     notFound();
   }
+  
+  const coBuyUnits = 4; // Example: plan for a 4-story flat
+  const pricePerUnit = property.price / coBuyUnits;
 
-  const formattedPrice = new Intl.NumberFormat('id-ID', {
+  const formattedTotalPrice = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
   }).format(property.price);
+
+  const formattedPricePerUnit = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+  }).format(pricePerUnit);
   
   const interestedUsers = mockUsers.slice(1, 4);
 
@@ -55,23 +63,15 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                 </CardHeader>
                 <CardContent>
                   <p className="text-base">{property.description}</p>
-                   <Accordion type="single" collapsible className="w-full mt-6">
+                   <Accordion type="single" collapsible className="w-full mt-6" defaultValue='item-1'>
                     <AccordionItem value="item-1">
                       <AccordionTrigger>
                         <h3 className="text-lg font-semibold flex items-center"><Building className="mr-2 h-5 w-5" /> Property Details</h3>
                       </AccordionTrigger>
                       <AccordionContent className="grid grid-cols-2 gap-4 pt-2 text-sm">
-                        <div className="flex items-center gap-2"><AreaChart className="h-4 w-4 text-primary" /><p><strong>Type:</strong> Land</p></div>
+                        <div className="flex items-center gap-2"><Home className="h-4 w-4 text-primary" /><p><strong>Type:</strong> Land for Flat</p></div>
                         <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary" /><p><strong>Certificate:</strong> SHM</p></div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2">
-                      <AccordionTrigger>
-                         <h3 className="text-lg font-semibold flex items-center"><Info className="mr-2 h-5 w-5" /> Investment Overview</h3>
-                      </AccordionTrigger>
-                      <AccordionContent className="grid grid-cols-2 gap-4 pt-2 text-sm">
-                         <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-primary" /><p><strong>Target Price:</strong> {formattedPrice}</p></div>
-                         <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /><p><strong>Time Horizon:</strong> 5-10 years</p></div>
+                        <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p><strong>Capacity:</strong> {coBuyUnits} Units/Floors</p></div>
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
@@ -82,26 +82,36 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Start a Co-Buy Group</CardTitle>
-                  <CardDescription>Invest in this property with others.</CardDescription>
+                  <CardTitle>Join Co-Building Group</CardTitle>
+                  <CardDescription>Build and own a floor of this property.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Total Price</p>
-                    <p className="text-2xl font-bold text-primary">{formattedPrice}</p>
+                  <div className='flex justify-between items-center border-b pb-2'>
+                     <div>
+                        <p className="text-sm font-medium">Cost per Floor</p>
+                        <p className="text-2xl font-bold text-primary">{formattedPricePerUnit}</p>
+                      </div>
+                      <div className='text-right'>
+                        <p className="text-sm text-muted-foreground">Total {coBuyUnits} People</p>
+                        <p className="text-sm text-muted-foreground">Est. Total: {formattedTotalPrice}</p>
+                      </div>
+                  </div>
+                  <div className='flex items-center gap-2 pt-2'>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <p className='text-sm text-muted-foreground'>{coBuyUnits - 1} people needed to start</p>
                   </div>
                   <Button size="lg" className="w-full">
-                    Initiate Co-Buy
+                    Join Building Group
                   </Button>
                    <p className="text-xs text-center text-muted-foreground">
-                    By initiating, you agree to our terms and conditions for co-ownership.
+                    By joining, you agree to our terms for co-building and ownership.
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
                    <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5" /> Interested Members</CardTitle>
-                   <CardDescription>Other users looking at this property.</CardDescription>
+                   <CardDescription>Other users interested in this build.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {interestedUsers.map(user => (
@@ -112,7 +122,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                        </Avatar>
                        <div>
                          <p className="font-semibold">{user.name}</p>
-                         <p className="text-xs text-muted-foreground">{user.profile.investmentGoals}</p>
+                         <p className="text-xs text-muted-foreground">Wants to live in {user.profile.locationPreference}</p>
                        </div>
                        <Button variant="outline" size="sm" className="ml-auto">Connect</Button>
                      </div>
