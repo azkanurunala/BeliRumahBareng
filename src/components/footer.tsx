@@ -12,7 +12,7 @@ export default function Footer() {
               <span className="text-xl font-bold">BeliRumahBareng</span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Platform investasi properti kolektif untuk masa depan finansial Anda.
+              Platform kepemilikan properti kolektif untuk masa depan finansial Anda.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-2">

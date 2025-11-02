@@ -6,7 +6,7 @@ import MobileNav from '@/components/mobile-nav';
 import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'BeliRumahBareng - Investasi Properti Kolektif',
+  title: 'BeliRumahBareng - Kepemilikan Properti Kolektif',
   description: 'Platform untuk pembelian properti kolektif, membuat kepemilikan properti lebih mudah diakses.',
 };
 

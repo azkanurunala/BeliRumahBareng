@@ -34,7 +34,7 @@ export default function HomePage() {
               Miliki Properti Impian, Bersama-sama.
             </h1>
             <p className="mt-4 text-lg md:text-xl">
-              BeliRumahBareng adalah platform investasi properti kolektif pertama di Indonesia. Wujudkan kepemilikan properti dengan modal lebih terjangkau.
+              BeliRumahBareng adalah platform kepemilikan properti kolektif pertama di Indonesia. Wujudkan kepemilikan properti dengan modal lebih terjangkau.
             </p>
             <Button asChild size="lg" className="mt-8">
               <Link href="/discover">
@@ -97,7 +97,7 @@ export default function HomePage() {
             <div className="text-center max-w-xl mx-auto">
               <h2 className="text-3xl font-bold">Properti Unggulan</h2>
               <p className="mt-2 text-muted-foreground">
-                Lihat beberapa peluang investasi properti kolektif yang sedang tren saat ini.
+                Lihat beberapa peluang kepemilikan properti kolektif yang sedang tren saat ini.
               </p>
             </div>
             <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -118,7 +118,7 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="relative isolate overflow-hidden bg-primary/90 px-6 py-20 text-center shadow-2xl sm:rounded-3xl sm:px-16">
                <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Siap Memulai Investasi Properti Pertama Anda?
+                Siap Memulai Kepemilikan Properti Pertama Anda?
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80">
                 Jangan tunda lagi impian Anda. Bergabunglah dengan ratusan investor lain dan wujudkan kepemilikan properti dengan cara yang lebih cerdas dan terjangkau.
