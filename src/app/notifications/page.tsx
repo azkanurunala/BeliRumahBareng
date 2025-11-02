@@ -18,8 +18,8 @@ const notifications = [
     },
     {
         title: 'Dokumen Baru Ditambahkan',
-        description: 'Surat Perjanjian Kerjasama (SPK) telah ditambahkan ke Proyek Bekasi.',
-        href: '#',
+        description: 'Perjanjian Kepemilikan Bersama telah ditambahkan ke Proyek Sidoarjo.',
+        href: '/projects/proj-001',
         time: '1 hari yang lalu'
     },
     {
