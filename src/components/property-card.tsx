@@ -66,7 +66,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
         <Link href={`/property/${property.id}`} passHref>
           <Button asChild>
-            <a>View Details</a>
+            <span>View Details</span>
           </Button>
         </Link>
       </CardFooter>
