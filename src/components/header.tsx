@@ -44,7 +44,7 @@ export default function Header() {
           className="flex items-center gap-2 text-lg font-semibold"
         >
           <CoBuyLogo className="h-6 w-6 text-primary" />
-          <span className="hidden font-bold sm:inline-block">BeliRumahBareng</span>
+          <span className="hidden font-bold sm:inline-block text-primary">BeliRumahBareng</span>
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
