@@ -41,10 +41,10 @@ export default function Header() {
       <div className="flex items-center gap-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold"
+          className="flex items-center gap-2 text-lg font-semibold text-primary"
         >
-          <CoBuyLogo className="h-6 w-6 text-primary" />
-          <span className="hidden font-bold sm:inline-block text-primary">BeliRumahBareng</span>
+          <CoBuyLogo className="h-6 w-6" />
+          <span className="hidden font-bold sm:inline-block">BeliRumahBareng</span>
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
