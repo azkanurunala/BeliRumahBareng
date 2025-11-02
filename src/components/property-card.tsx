@@ -11,6 +11,7 @@ import {
 import { Button } from './ui/button';
 import { MapPin } from 'lucide-react';
 import { Badge } from './ui/badge';
+import Link from 'next/link';
 
 type PropertyCardProps = {
   property: Property;
@@ -49,7 +50,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             <p className="text-xs text-muted-foreground">Starting from</p>
             <p className="text-lg font-bold text-primary">{formattedPrice}</p>
         </div>
-        <Button>View Details</Button>
+        <Link href={`/property/${property.id}`}>
+          <Button>View Details</Button>
+        </Link>
       </CardFooter>
     </Card>
   );
