@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Users, Sparkles } from 'lucide-react';
+import { Building, Search, Users, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
 const navLinks = [
   { href: '/discover', label: 'Jelajahi', icon: Search },
-  { href: '/projects', label: 'Proyek', icon: Home },
+  { href: '/projects', label: 'Proyek', icon: Building },
   { href: '/partners', label: 'Rekan', icon: Users },
   { href: '/recommendations', label: 'Rekomendasi', icon: Sparkles },
 ];
