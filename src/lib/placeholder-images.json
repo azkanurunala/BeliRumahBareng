@@ -19,6 +19,66 @@
       "imageHint": "land plot"
     },
     {
+      "id": "land-1",
+      "description": "A plot of land seen from above.",
+      "imageUrl": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsYW5kJTIwYWVyaWFsfGVufDB8fHx8MTc2MjA3MDcxN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "land aerial"
+    },
+    {
+      "id": "land-2",
+      "description": "A plot of land with markers.",
+      "imageUrl": "https://images.unsplash.com/photo-1533509299949-8c433575b546?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsYW5kJTIwc3VydmV5fGVufDB8fHx8MTc2MjA3MDcxN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "land survey"
+    },
+    {
+      "id": "land-3",
+      "description": "A plot of land in a residential area.",
+      "imageUrl": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyZXNpZGVudGlhbCUyMGFyZWF8ZW58MHx8fHwxNzYyMDcwNzE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "residential area"
+    },
+    {
+      "id": "site-plan-1",
+      "description": "A site plan for a housing development.",
+      "imageUrl": "https://images.unsplash.com/photo-1542361345-89e58247f2d5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzaXRlJTIwcGxhbnxlbnwwfHx8fDE3NjIwNzA3E3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "site plan"
+    },
+    {
+      "id": "site-plan-2",
+      "description": "An architectural drawing of a site plan.",
+      "imageUrl": "https://images.unsplash.com/photo-1519494110103-12c8b0a75c1a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhcmNoaXRlY3R1cmFsJTIwZHJhd2luZ3xlbnwwfHx8fDE3NjIwNzEwNzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "architectural drawing"
+    },
+    {
+      "id": "floor-plan-1",
+      "description": "A floor plan for an apartment.",
+      "imageUrl": "https://images.unsplash.com/photo-1610212570415-dce9f8355609?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmbG9vciUyMHBsYW58ZW58MHx8fHwxNzYyMDcwNzE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "floor plan"
+    },
+    {
+      "id": "floor-plan-2",
+      "description": "A modern floor plan design.",
+      "imageUrl": "https://images.unsplash.com/photo-1593998041135-6058925567b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcmNoaXRlY3QlMjBibHVlcHJpbnR8ZW58MHx8fHwxNzYyMDcxMDc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "architect blueprint"
+    },
+    {
+      "id": "building-concept-1",
+      "description": "A 3D render of a modern building.",
+      "imageUrl": "https://images.unsplash.com/photo-1554464621-c2738a493a55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxidWlsZGluZyUyMHJlbmRlcnxlbnwwfHx8fDE3NjIwNzA3E3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "building render"
+    },
+    {
+      "id": "building-concept-2",
+      "description": "A conceptual architectural model.",
+      "imageUrl": "https://images.unsplash.com/photo-1618390589330-fe08d4554316?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcmNoaXRlY3R1cmUlMjBtb2RlbHxlbnwwfHx8fDE3NjIwNzEwNzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "architecture model"
+    },
+    {
+      "id": "location-map-1",
+      "description": "A map of a city.",
+      "imageUrl": "https://images.unsplash.com/photo-1594398902888-2d88a123a076?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsb2NhdGlvbiUyMG1hcHxlbnwwfHx8fDE3NjIwNzA3E3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "location map"
+    },
+    {
       "id": "property-4",
       "description": "A cozy cluster house in a gated community.",
       "imageUrl": "https://images.unsplash.com/photo-1745564827840-21e7899c5988?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjbHVzdGVyJTIwaG91c2V8ZW58MHx8fHwxNzYyMDczNDc4fDA&ixlib=rb-4.1.0&q=80&w=1080",

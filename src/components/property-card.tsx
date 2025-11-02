@@ -40,11 +40,11 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       <CardHeader className="p-0">
         <div className="relative aspect-video">
           <Image
-            src={property.imageUrl}
+            src={property.images[0].url}
             alt={property.name}
             fill
             className="object-cover"
-            data-ai-hint={property.imageHint}
+            data-ai-hint={property.images[0].hint}
           />
         </div>
       </CardHeader>

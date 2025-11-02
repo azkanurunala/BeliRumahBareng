@@ -2,7 +2,7 @@ import { mockProperties, mockUsers } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const property = mockProperties.find((p) => p.id === params.id);
@@ -116,15 +118,25 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card className="overflow-hidden">
-                <div className="relative h-96 w-full">
-                  <Image
-                    src={property.imageUrl}
-                    alt={property.name}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={property.imageHint}
-                  />
-                </div>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {property.images.map((image, index) => (
+                      <CarouselItem key={index}>
+                        <div className="relative h-96 w-full">
+                          <Image
+                            src={image.url}
+                            alt={`${property.name} - gambar ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            data-ai-hint={image.hint}
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-4" />
+                  <CarouselNext className="right-4" />
+                </Carousel>
                 <CardHeader>
                   <Badge variant="secondary" className="mb-2 w-fit">
                     {getBadgeText()}
@@ -154,6 +166,33 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   </Accordion>
                 </CardContent>
               </Card>
+              {property.planningInfo && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Perencanaan & Detail Proyek</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="plan">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="plan"><DraftingCompass className="mr-2 h-4 w-4" />Denah Lokasi</TabsTrigger>
+                        <TabsTrigger value="dev"><AreaChart className="mr-2 h-4 w-4" />Rencana Pengembangan</TabsTrigger>
+                        <TabsTrigger value="env"><Microscope className="mr-2 h-4 w-4" />Analisis Lingkungan</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="plan" className="mt-4">
+                        <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
+                          <Image src={property.planningInfo.sitePlanUrl} alt="Denah Lokasi" fill className="object-contain" data-ai-hint={property.planningInfo.sitePlanHint} />
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="dev" className="mt-4 text-sm text-muted-foreground">
+                        <p>{property.planningInfo.developmentPlan}</p>
+                      </TabsContent>
+                      <TabsContent value="env" className="mt-4 text-sm text-muted-foreground">
+                        <p>{property.planningInfo.environmentalAnalysis}</p>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -190,7 +229,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                                   {isCoBuilding ? `${property.unitName} ${index + 1}` : 
                                   <div className='flex flex-col'>
                                     <span>{`${property.unitName} ${index + 1}`}</span>
-                                    {!isCoBuilding && property.unitSize && (
+                                    {property.unitSize && (
                                       <span className='text-xs text-muted-foreground'>
                                         ~{getUnitSize(index)}{property.unitMeasure}
                                       </span>

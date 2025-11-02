@@ -4,13 +4,18 @@ export type Property = {
   description: string;
   price: number;
   location: string;
-  imageUrl: string;
-  imageHint: string;
+  images: { url: string; hint: string }[];
   type: 'co-building' | 'co-owning';
   totalUnits: number;
   unitName: 'Lantai' | 'Kavling';
   unitSize?: number; // e.g. 110
   unitMeasure?: string; // e.g. m²
+  planningInfo?: {
+    sitePlanUrl: string;
+    sitePlanHint: string;
+    developmentPlan: string;
+    environmentalAnalysis: string;
+  };
 };
 
 export type UserProfile = {
