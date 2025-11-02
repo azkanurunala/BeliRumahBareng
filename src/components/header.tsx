@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
-import { Bell, CircleUser, Home, Search, Users } from 'lucide-react';
+import { Bell, CircleUser, Home, Search, Users, Sparkles } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 import { CoBuyLogo } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -13,22 +16,48 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from './ui/badge';
 import { mockUsers } from '@/lib/mock-data';
+import { cn } from '@/lib/utils';
 
 const currentUser = mockUsers[0];
 
+const navLinks = [
+  { href: '/discover', label: 'Jelajahi', icon: Search },
+  { href: '/projects', label: 'Proyek Saya', icon: Home },
+  { href: '/partners', label: 'Cari Rekan', icon: Users },
+  { href: '/recommendations', label: 'Rekomendasi', icon: Sparkles },
+];
+
 export default function Header() {
+  const pathname = usePathname();
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+      <div className="flex items-center gap-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold md:text-base"
+          className="flex items-center gap-2 text-lg font-semibold"
         >
           <CoBuyLogo className="h-6 w-6 text-primary" />
-          <span className="font-bold">BeliRumahBareng</span>
+          <span className="hidden font-bold sm:inline-block">BeliRumahBareng</span>
         </Link>
-      </nav>
-      {/* Mobile nav could be added here with a Sheet component */}
+
+        <nav className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <link.icon className="h-4 w-4" />
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
       <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
