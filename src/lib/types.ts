@@ -6,6 +6,8 @@ export type Property = {
   location: string;
   imageUrl: string;
   imageHint: string;
+  type: 'co-building' | 'co-living';
+  units: number;
 };
 
 export type UserProfile = {

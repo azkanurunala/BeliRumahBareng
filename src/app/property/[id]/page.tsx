@@ -22,10 +22,10 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
     notFound();
   }
   
-  const coBuyUnits = 4;
-  const floorWeights = [1.3, 1.1, 0.9, 0.7]; // Example weights: ground floor is 30% more expensive
+  const coBuyUnits = property.units;
+  const floorWeights = Array.from({ length: coBuyUnits }, (_, i) => 1.3 - (i * 0.2)).reverse();
   const totalWeight = floorWeights.reduce((sum, weight) => sum + weight, 0);
-  const floorPrices = floorWeights.map(weight => (property.price / totalWeight) * weight);
+  const floorPrices = floorWeights.map(weight => (property.price / totalWeight) * weight).reverse();
 
   const formattedTotalPrice = new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -40,6 +40,8 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
   }).format(price);
   
   const interestedUsers = mockUsers.slice(1, 4);
+
+  const isCoBuilding = property.type === 'co-building';
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -59,7 +61,9 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   />
                 </div>
                 <CardHeader>
-                  <Badge variant="secondary" className="mb-2 w-fit">Ready for Co-Building</Badge>
+                  <Badge variant="secondary" className="mb-2 w-fit">
+                    {isCoBuilding ? 'Ready for Co-Building' : 'Ready for Co-Living'}
+                  </Badge>
                   <CardTitle className="text-3xl font-bold">{property.name}</CardTitle>
                   <CardDescription className="flex items-center text-lg text-muted-foreground">
                     <MapPin className="mr-2 h-5 w-5" />
@@ -74,7 +78,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                         <h3 className="text-lg font-semibold flex items-center"><Building className="mr-2 h-5 w-5" /> Property Details</h3>
                       </AccordionTrigger>
                       <AccordionContent className="grid grid-cols-2 gap-4 pt-2 text-sm">
-                        <div className="flex items-center gap-2"><Home className="h-4 w-4 text-primary" /><p><strong>Type:</strong> Land for Flat</p></div>
+                        <div className="flex items-center gap-2"><Home className="h-4 w-4 text-primary" /><p><strong>Type:</strong> {isCoBuilding ? 'Land for Flat' : 'Apartment'}</p></div>
                         <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary" /><p><strong>Certificate:</strong> SHM</p></div>
                         <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p><strong>Capacity:</strong> {coBuyUnits} Units/Floors</p></div>
                       </AccordionContent>
@@ -87,8 +91,10 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Join Co-Building Group</CardTitle>
-                  <CardDescription>Build and own a floor of this property.</CardDescription>
+                  <CardTitle>{isCoBuilding ? 'Join Co-Building Group' : 'Join Co-Living Group'}</CardTitle>
+                  <CardDescription>
+                    {isCoBuilding ? 'Build and own a floor of this property.' : 'Own a floor in this apartment.'}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className='border-b pb-2 text-center'>
@@ -125,17 +131,17 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   </Accordion>
 
                   <Button size="lg" className="w-full">
-                    Join Building Group
+                    {isCoBuilding ? 'Join Building Group' : 'Join Buying Group'}
                   </Button>
                    <p className="text-xs text-center text-muted-foreground">
-                    By joining, you agree to our terms for co-building and ownership.
+                    By joining, you agree to our terms for co-ownership.
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
                    <CardTitle className="flex items-center"><Users className="mr-2 h-5 w-5" /> Interested Members</CardTitle>
-                   <CardDescription>Other users interested in this build.</CardDescription>
+                   <CardDescription>Other users interested in this property.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {interestedUsers.map(user => (

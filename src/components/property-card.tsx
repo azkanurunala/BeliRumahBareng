@@ -22,7 +22,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-  }).format(property.price);
+  }).format(property.price / property.units);
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
@@ -38,7 +38,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
       </CardHeader>
       <CardContent className="flex-grow p-4">
-        <Badge variant="secondary" className="mb-2">Ready for Co-Buy</Badge>
+        <Badge variant="secondary" className="mb-2">
+          {property.type === 'co-building' ? 'Ready for Co-Building' : 'Ready for Co-Living'}
+        </Badge>
         <CardTitle className="mb-1 text-lg font-semibold">{property.name}</CardTitle>
         <CardDescription className="flex items-center text-sm text-muted-foreground">
           <MapPin className="mr-1 h-4 w-4" />
