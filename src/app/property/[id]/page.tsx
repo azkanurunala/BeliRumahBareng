@@ -26,15 +26,33 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
 
   const unitPrices = Array.from({ length: property.totalUnits }, (_, i) => {
     let weight;
-    if (isCoBuilding) {
-      // Co-Building: Higher floors can be more expensive
-      weight = 1.0 + (i * 0.05);
-    } else {
-      // Co-Owning Land: Price is mainly by size, maybe slight premium for "better" plots
-      // For now, we'll use a simple differentiation
-      weight = 1.0 + (i * 0.02);
+    // Co-Building: Higher floors are more expensive, so we make lower floors more expensive here.
+    // The most expensive is the ground floor (i=0).
+    const floorWeight = isCoBuilding ? (property.totalUnits - i -1) * 0.05 : (i * 0.02);
+
+    weight = 1.0 + floorWeight;
+    
+    if (isCoBuilding && i === 0) { // Make ground floor significantly more expensive
+      weight = 1.0 + ((property.totalUnits - 1) * 0.05) + 0.10;
+    } else if(isCoBuilding) { // Other floors
+       weight = 1.0 + (property.totalUnits - 1 - i) * 0.05;
+    } else { // Co-Owning Land
+       weight = 1.0 + (i * 0.02);
     }
+    
+    // Reverse logic for co-building: floor 1 (index 0) is most expensive.
+    if(isCoBuilding) {
+        const basePricePerUnit = property.price / property.totalUnits;
+        // Example: 10% premium for ground floor, then 5% less for each floor up.
+        // This is a simple model. A real app might have more complex pricing.
+        const premium = (property.totalUnits - 1 - i) * 0.05;
+        return basePricePerUnit * (1 + premium);
+
+    }
+
+    // Simple differentiation for land plots
     return (property.price / property.totalUnits) * weight;
+
   });
 
 
@@ -87,7 +105,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   <Image
                     src={property.imageUrl}
                     alt={property.name}
-                    layout="fill"
+                    fill
                     objectFit="cover"
                     data-ai-hint={property.imageHint}
                   />
@@ -154,7 +172,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                             {unitPrices.map((price, index) => (
                               <TableRow key={index}>
                                 <TableCell className="font-medium">
-                                  {property.unitName} {index + 1}
+                                  {isCoBuilding ? `${property.unitName} ${index + 1}` : `${property.unitName} ${index + 1}`}
                                 </TableCell>
                                 <TableCell className="text-right font-semibold text-primary">{formatPrice(price)}</TableCell>
                               </TableRow>
@@ -192,7 +210,6 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                          <p className="font-semibold">{user.name}</p>
                          <p className="text-xs text-muted-foreground">Ingin tinggal di {user.profile.locationPreference}</p>
                        </div>
-                       <Button variant="outline" size="sm" className="ml-auto">Hubungkan</Button>
                      </div>
                   ))}
                 </CardContent>
