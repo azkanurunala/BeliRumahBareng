@@ -41,10 +41,10 @@ export default function Header() {
       <div className="flex items-center gap-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold text-primary"
+          className="flex items-center gap-2 text-lg font-semibold"
         >
-          <CoBuyLogo className="h-6 w-6" />
-          <span className="hidden font-bold sm:inline-block">BeliRumahBareng</span>
+          <CoBuyLogo className="h-6 w-6 text-primary" />
+          <span className="hidden font-bold sm:inline-block text-primary">BeliRumahBareng</span>
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
@@ -75,14 +75,14 @@ export default function Header() {
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/property/prop-001" className="flex-col items-start gap-1 cursor-pointer">
+            <DropdownMenuItem asChild className="items-start">
+              <Link href="/property/prop-001" className="flex flex-col gap-1 cursor-pointer">
                 <p className='font-semibold'>Kecocokan Proyek Baru</p>
                 <p className='text-xs text-muted-foreground'>Sebuah lahan di Sidoarjo cocok dengan profil Anda.</p>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/projects/proj-001" className="flex-col items-start gap-1 cursor-pointer">
+            <DropdownMenuItem asChild className="items-start">
+              <Link href="/projects/proj-001" className="flex flex-col gap-1 cursor-pointer">
                 <p className='font-semibold'>Pembaruan Dana Grup</p>
                 <p className='text-xs text-muted-foreground'>Proyek Sidoarjo Anda sekarang 50% didanai.</p>
               </Link>
