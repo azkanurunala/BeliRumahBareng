@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MapPin, Sparkles } from 'lucide-react';
@@ -21,16 +21,43 @@ import { getRecommendationsAction } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import type { PersonalizedPropertyRecommendationsOutput } from '@/ai/flows/personalized-property-recommendations';
 import { useToast } from '@/hooks/use-toast';
+import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
+import { mockUsers } from '@/lib/mock-data';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+
+const cities: ComboboxOption[] = [
+    { value: "jakarta", label: "Jakarta" },
+    { value: "surabaya", label: "Surabaya" },
+    { value: "bandung", label: "Bandung" },
+    { value: "bekasi", label: "Bekasi" },
+    { value: "tangerang", label: "Tangerang" },
+    { value: "yogyakarta", label: "Yogyakarta" },
+];
+
+const priceRanges: ComboboxOption[] = [
+    { value: "200-400", label: "Rp 200jt - 400jt" },
+    { value: "400-600", label: "Rp 400jt - 600jt" },
+    { value: "600-800", label: "Rp 600jt - 800jt" },
+    { value: "800-1M", label: "Rp 800jt - 1M" },
+    { value: "1M+", label: "Diatas Rp 1M" },
+]
+
+const investmentGoalsOptions: ComboboxOption[] = [
+    { value: "first-home", label: "Kepemilikan rumah pertama" },
+    { value: "rental-income", label: "Pendapatan sewa" },
+    { value: "capital-appreciation", label: "Apresiasi modal" },
+    { value: "business-use", label: "Penggunaan bisnis (ruko)" },
+    { value: "future-personal-use", label: "Penggunaan pribadi di masa depan" },
+]
 
 const FormSchema = z.object({
-  location: z.string().min(2, { message: 'Lokasi harus memiliki minimal 2 karakter.' }),
-  minPrice: z.coerce.number().min(0, { message: 'Harga minimum harus positif.' }),
-  maxPrice: z.coerce.number().min(0, { message: 'Harga maksimum harus positif.' }),
-  investmentGoals: z.string().min(10, { message: 'Tujuan harus memiliki minimal 10 karakter.' }),
-}).refine(data => data.maxPrice > data.minPrice, {
-    message: "Harga maksimum harus lebih besar dari harga minimum.",
-    path: ["maxPrice"],
+  location: z.string().min(1, { message: 'Lokasi harus dipilih.' }),
+  priceRange: z.string().min(1, { message: 'Rentang harga harus dipilih.' }),
+  investmentGoals: z.string().min(1, { message: 'Tujuan investasi harus dipilih.' }),
+  financialCapacity: z.coerce.number().min(0, { message: 'Kapasitas finansial harus diisi.' }),
 });
+
+const currentUser = mockUsers[0];
 
 export default function Recommendations() {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,20 +67,29 @@ export default function Recommendations() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      location: 'Surabaya',
-      minPrice: 300000000,
-      maxPrice: 800000000,
-      investmentGoals: 'Rumah pertama untuk keluarga muda saya dengan apresiasi modal jangka panjang.',
+      location: currentUser.profile.locationPreference.toLowerCase(),
+      priceRange: '200-400',
+      investmentGoals: "first-home",
+      financialCapacity: 500000000,
     },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
     setRecommendations([]);
+
+    const priceRangeParts = data.priceRange.split('-');
+    const minPrice = parseInt(priceRangeParts[0].replace('jt', '000000').replace('M','000000000'), 10);
+    const maxPrice = priceRangeParts[1] ? parseInt(priceRangeParts[1].replace('jt', '000000').replace('M','000000000'), 10) : 9999999999;
+    
+    const investmentGoalLabel = investmentGoalsOptions.find(opt => opt.value === data.investmentGoals)?.label ?? data.investmentGoals;
+
+
     const result = await getRecommendationsAction({
         location: data.location,
-        priceRange: { min: data.minPrice, max: data.maxPrice },
-        investmentGoals: data.investmentGoals
+        priceRange: { min: minPrice, max: maxPrice },
+        investmentGoals: investmentGoalLabel,
+        financialCapacity: `Rp ${new Intl.NumberFormat('id-ID').format(data.financialCapacity)}`
     });
 
     if (result.success && result.data) {
@@ -87,60 +123,79 @@ export default function Recommendations() {
               control={form.control}
               name="location"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className='flex flex-col'>
                   <FormLabel>Lokasi Pilihan</FormLabel>
-                  <FormControl>
-                    <Input placeholder="cth., Jakarta, Bandung" {...field} />
-                  </FormControl>
+                   <Combobox
+                        options={cities}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Pilih kota..."
+                        emptyText="Kota tidak ditemukan."
+                    />
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-                <FormField
+            <FormField
                 control={form.control}
-                name="minPrice"
+                name="priceRange"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Harga Min (IDR)</FormLabel>
-                    <FormControl>
-                        <Input type="number" placeholder="cth., 300000000" {...field} />
-                    </FormControl>
-                    <FormMessage />
+                        <FormLabel>Rentang Harga</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih rentang harga" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {priceRanges.map(range => (
+                                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+             />
+          </div>
+           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <FormField
+                control={form.control}
+                name="investmentGoals"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Tujuan Investasi</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih tujuan investasi" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            {investmentGoalsOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
                     </FormItem>
                 )}
                 />
-                <FormField
+            <FormField
                 control={form.control}
-                name="maxPrice"
+                name="financialCapacity"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Harga Max (IDR)</FormLabel>
+                    <FormLabel>Kapasitas Finansial (IDR)</FormLabel>
                     <FormControl>
-                        <Input type="number" placeholder="cth., 1000000000" {...field} />
+                        <Input type="number" placeholder="cth., 500000000" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
                 )}
                 />
             </div>
-          </div>
-          <FormField
-            control={form.control}
-            name="investmentGoals"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tujuan Investasi</FormLabel>
-                <FormControl>
-                  <Input placeholder="cth., Sewa jangka panjang, rumah pertama" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Jelaskan apa yang Anda cari dalam sebuah properti.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <Button type="submit" disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Hasilkan Rekomendasi

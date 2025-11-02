@@ -26,6 +26,7 @@ const PersonalizedPropertyRecommendationsInputSchema = z.object({
     .describe(
       'The user\u2019s investment goals, such as long-term rental income, capital appreciation, or personal use.'
     ),
+  financialCapacity: z.string().describe('Financial capacity of the user.')
 });
 export type PersonalizedPropertyRecommendationsInput = z.infer<
   typeof PersonalizedPropertyRecommendationsInputSchema
@@ -69,6 +70,7 @@ const personalizedPropertyRecommendationsPrompt = ai.definePrompt({
   - Location: {{{location}}}
   - Price Range: {{{priceRange.min}}} - {{{priceRange.max}}}
   - Investment Goals: {{{investmentGoals}}}
+  - Financial Capacity: {{{financialCapacity}}}
 
   Provide a list of property recommendations, including the property ID, name, description, price, location, and a suitability score (0-100) indicating how well the property matches the user's profile.
   `,
