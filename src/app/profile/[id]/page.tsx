@@ -34,7 +34,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                 </Avatar>
                 <div className="grid gap-1">
                   <CardTitle className="text-2xl">{user.name}</CardTitle>
-                  <CardDescription>Anggota CoBuy sejak 2024</CardDescription>
+                  <CardDescription>Anggota BeliRumahBareng sejak 2024</CardDescription>
                 </div>
             </CardHeader>
             <CardContent className="p-6">

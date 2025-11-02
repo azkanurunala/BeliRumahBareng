@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'CoBuy - Investasi Properti Kolektif',
+  title: 'BeliRumahBareng - Investasi Properti Kolektif',
   description: 'Platform untuk pembelian properti kolektif, membuat kepemilikan properti lebih mudah diakses.',
 };
 

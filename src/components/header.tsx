@@ -25,7 +25,7 @@ export default function Header() {
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
         >
           <CoBuyLogo className="h-6 w-6 text-primary" />
-          <span className="font-bold">CoBuy</span>
+          <span className="font-bold">BeliRumahBareng</span>
         </Link>
       </nav>
       {/* Mobile nav could be added here with a Sheet component */}

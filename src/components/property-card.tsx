@@ -31,7 +31,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       case 'co-owning':
         return 'Patungan Lahan';
       default:
-        return 'Siap Co-Buy';
+        return 'Siap Patungan';
     }
   };
 
