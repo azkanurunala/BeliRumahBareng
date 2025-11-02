@@ -21,10 +21,10 @@ import { cn } from '@/lib/utils';
 const currentUser = mockUsers[0];
 
 const navLinks = [
-  { href: '/discover', label: 'Jelajahi', icon: Search },
-  { href: '/projects', label: 'Proyek Saya', icon: Home },
-  { href: '/partners', label: 'Cari Rekan', icon: Users },
-  { href: '/recommendations', label: 'Rekomendasi', icon: Sparkles },
+  { href: '/discover', label: 'Jelajahi' },
+  { href: '/projects', label: 'Proyek Saya' },
+  { href: '/partners', label: 'Cari Rekan' },
+  { href: '/recommendations', label: 'Rekomendasi' },
 ];
 
 export default function Header() {
@@ -47,11 +47,10 @@ export default function Header() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                "text-sm font-medium transition-colors hover:text-primary",
                 pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
               )}
             >
-              <link.icon className="h-4 w-4" />
               {link.label}
             </Link>
           ))}
