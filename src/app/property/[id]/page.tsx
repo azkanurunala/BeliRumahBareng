@@ -1,7 +1,7 @@
 import { mockProperties, mockUsers } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Building, Users, BadgeCheck, Home, User, Banknote } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, User, Banknote, Landmark } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const property = mockProperties.find((p) => p.id === params.id);
@@ -21,18 +22,22 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
     notFound();
   }
   
-  const coBuyUnits = 4; // Example: plan for a 4-story flat
-  const pricePerUnit = property.price / coBuyUnits;
+  const coBuyUnits = 4;
+  const floorWeights = [1.3, 1.1, 0.9, 0.7]; // Example weights: ground floor is 30% more expensive
+  const totalWeight = floorWeights.reduce((sum, weight) => sum + weight, 0);
+  const floorPrices = floorWeights.map(weight => (property.price / totalWeight) * weight);
 
   const formattedTotalPrice = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
+    minimumFractionDigits: 0,
   }).format(property.price);
 
-  const formattedPricePerUnit = new Intl.NumberFormat('id-ID', {
+  const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
-  }).format(pricePerUnit);
+    minimumFractionDigits: 0,
+  }).format(price);
   
   const interestedUsers = mockUsers.slice(1, 4);
 
@@ -54,7 +59,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   />
                 </div>
                 <CardHeader>
-                  <Badge variant="secondary" className="mb-2 w-fit">Ready for Co-Buy</Badge>
+                  <Badge variant="secondary" className="mb-2 w-fit">Ready for Co-Building</Badge>
                   <CardTitle className="text-3xl font-bold">{property.name}</CardTitle>
                   <CardDescription className="flex items-center text-lg text-muted-foreground">
                     <MapPin className="mr-2 h-5 w-5" />
@@ -86,20 +91,39 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
                   <CardDescription>Build and own a floor of this property.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className='flex justify-between items-center border-b pb-2'>
-                     <div>
-                        <p className="text-sm font-medium">Cost per Floor</p>
-                        <p className="text-2xl font-bold text-primary">{formattedPricePerUnit}</p>
-                      </div>
-                      <div className='text-right'>
-                        <p className="text-sm text-muted-foreground">Total {coBuyUnits} People</p>
-                        <p className="text-sm text-muted-foreground">Est. Total: {formattedTotalPrice}</p>
-                      </div>
+                  <div className='border-b pb-2 text-center'>
+                    <p className="text-sm text-muted-foreground">Est. Total Project Cost</p>
+                    <p className="text-2xl font-bold">{formattedTotalPrice}</p>
                   </div>
-                  <div className='flex items-center gap-2 pt-2'>
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <p className='text-sm text-muted-foreground'>{coBuyUnits - 1} people needed to start</p>
-                  </div>
+                  
+                  <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                    <AccordionItem value="item-1">
+                      <AccordionTrigger className="text-base font-semibold">
+                        View Cost per Floor
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Floor</TableHead>
+                              <TableHead className="text-right">Est. Price</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {floorPrices.map((price, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-medium">
+                                  {index === 0 ? 'Ground Floor' : `Floor ${index + 1}`}
+                                </TableCell>
+                                <TableCell className="text-right font-semibold text-primary">{formatPrice(price)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+
                   <Button size="lg" className="w-full">
                     Join Building Group
                   </Button>
