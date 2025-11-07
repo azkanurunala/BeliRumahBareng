@@ -38,20 +38,24 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   };
 
   return (
-    <Card className="flex flex-col overflow-hidden transition-all hover:shadow-lg">
-      <CardHeader className="p-0">
+    <Card className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] group border-2 hover:border-primary/20">
+      <CardHeader className="p-0 relative overflow-hidden">
         <div className="relative aspect-video">
+          {/* Gradient overlay saat hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
           <Image
             src={property.images[0].url}
             alt={property.name}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
             data-ai-hint={property.images[0].hint}
           />
+          {/* Shine effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent z-10" />
         </div>
       </CardHeader>
       <CardContent className="flex-grow p-4">
-        <Badge variant="secondary" className="mb-2">
+        <Badge className="mb-2 bg-gradient-to-r from-primary/90 to-primary/70 text-white border-0 shadow-sm">
           {getBadgeText()}
         </Badge>
         <CardTitle className="mb-1 text-lg font-semibold">{property.name}</CardTitle>
@@ -69,7 +73,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             <p className="text-lg font-bold text-primary">{formattedPrice}</p>
         </div>
         <Link href={`/property/${property.id}`} passHref>
-          <Button>Lihat Detail</Button>
+          <Button className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-primary/50 transition-all duration-300 hover:scale-105">
+            Lihat Detail
+          </Button>
         </Link>
       </CardFooter>
     </Card>

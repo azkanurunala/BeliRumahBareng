@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -25,6 +28,8 @@ import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
 import { mockProperties } from '@/lib/mock-data';
+import ProgressDetailDialog from './progress-detail-dialog';
+import DocumentDetailDialog from './document-detail-dialog';
 
 type ProjectDashboardProps = {
   project: Project;
@@ -32,12 +37,24 @@ type ProjectDashboardProps = {
 
 export default function ProjectDashboard({ project }: ProjectDashboardProps) {
   const property = mockProperties.find(p => p.id === project.propertyId);
+  
+  // State for dialogs
+  const [selectedProgress, setSelectedProgress] = useState<'kyc' | 'funding' | 'legal' | 'closing' | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
 
   const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
   }).format(price);
+
+  const handleProgressClick = (progressType: 'kyc' | 'funding' | 'legal' | 'closing') => {
+    setSelectedProgress(progressType);
+  };
+
+  const handleDocumentClick = (documentId: string) => {
+    setSelectedDocument(documentId);
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -73,30 +90,42 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
             <CardDescription>Status keseluruhan dari proyek co-buy Anda.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+              onClick={() => handleProgressClick('kyc')}
+            >
               <div className='flex justify-between text-sm'>
-                <p>Verifikasi KYC</p>
+                <p className="group-hover:text-primary transition-colors font-medium">Verifikasi KYC</p>
                 <p className='font-medium'>{project.progress.kyc}%</p>
               </div>
               <Progress value={project.progress.kyc} aria-label={`${project.progress.kyc}% KYC terverifikasi`} />
             </div>
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+              onClick={() => handleProgressClick('funding')}
+            >
               <div className='flex justify-between text-sm'>
-                <p>Pendanaan Grup</p>
+                <p className="group-hover:text-primary transition-colors font-medium">Pendanaan Grup</p>
                 <p className='font-medium'>{project.progress.funding}%</p>
               </div>
               <Progress value={project.progress.funding} aria-label={`${project.progress.funding}% didanai`} />
             </div>
-            <div className="space-y-2">
+            <div 
+              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+              onClick={() => handleProgressClick('legal')}
+            >
               <div className='flex justify-between text-sm'>
-                <p>Legal & Dokumentasi</p>
+                <p className="group-hover:text-primary transition-colors font-medium">Legal & Dokumentasi</p>
                 <p className='font-medium'>{project.progress.legal}%</p>
               </div>
               <Progress value={project.progress.legal} aria-label={`${project.progress.legal}% legal selesai`} />
             </div>
-             <div className="space-y-2">
+             <div 
+              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+              onClick={() => handleProgressClick('closing')}
+            >
               <div className='flex justify-between text-sm'>
-                <p>Penutupan</p>
+                <p className="group-hover:text-primary transition-colors font-medium">Penutupan</p>
                 <p className='font-medium'>{project.progress.closing}%</p>
               </div>
               <Progress value={project.progress.closing} aria-label={`${project.progress.closing}% selesai`} />
@@ -123,7 +152,11 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
               </TableHeader>
               <TableBody>
                 {project.documents.map((doc) => (
-                  <TableRow key={doc.id}>
+                  <TableRow 
+                    key={doc.id}
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => handleDocumentClick(doc.id)}
+                  >
                     <TableCell className="font-medium flex items-center gap-2"><FileText size={16} /> {doc.name}</TableCell>
                     <TableCell>
                       <Badge variant={doc.status === 'Terverifikasi' ? 'default' : doc.status === 'Tertanda' ? 'secondary' : 'outline'}>
@@ -131,8 +164,8 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {doc.status === 'Menunggu' && <Button size="sm">Tanda Tangan</Button>}
-                      {doc.status !== 'Menunggu' && <Button size="sm" variant="outline">Lihat</Button>}
+                      {doc.status === 'Menunggu' && <Button size="sm" onClick={(e) => { e.stopPropagation(); handleDocumentClick(doc.id); }}>Tanda Tangan</Button>}
+                      {doc.status !== 'Menunggu' && <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleDocumentClick(doc.id); }}>Lihat</Button>}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -191,6 +224,26 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Progress Detail Dialogs */}
+      {selectedProgress && project.progressDetails[selectedProgress] && (
+        <ProgressDetailDialog
+          open={selectedProgress !== null}
+          onOpenChange={(open) => !open && setSelectedProgress(null)}
+          progressDetail={project.progressDetails[selectedProgress]}
+          members={project.members}
+        />
+      )}
+
+      {/* Document Detail Dialogs */}
+      {selectedDocument && (
+        <DocumentDetailDialog
+          open={selectedDocument !== null}
+          onOpenChange={(open) => !open && setSelectedDocument(null)}
+          document={project.documents.find(d => d.id === selectedDocument)!}
+          members={project.members}
+        />
+      )}
     </div>
   );
 }

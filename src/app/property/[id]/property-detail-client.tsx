@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Property } from '@/lib/types';
 import { mockUsers } from '@/lib/mock-data';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope, CheckCircle, Info } from 'lucide-react';
+import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope, CheckCircle, Info, Maximize2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -32,11 +32,70 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-
+import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
 
 export default function PropertyDetailClient({ property }: { property: Property }) {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Fullscreen states for each carousel
+  const [mainCarouselFullscreen, setMainCarouselFullscreen] = useState({ isOpen: false, index: 0 });
+  const [floorPlanFullscreen, setFloorPlanFullscreen] = useState({ isOpen: false, index: 0 });
+  const [developmentPlanFullscreen, setDevelopmentPlanFullscreen] = useState({ isOpen: false, index: 0 });
+  
+  // Carousel API states to track current index
+  const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>();
+  const [floorPlanCarouselApi, setFloorPlanCarouselApi] = useState<CarouselApi>();
+  const [developmentPlanCarouselApi, setDevelopmentPlanCarouselApi] = useState<CarouselApi>();
+  
+  const [mainCarouselCurrent, setMainCarouselCurrent] = useState(0);
+  const [floorPlanCarouselCurrent, setFloorPlanCarouselCurrent] = useState(0);
+  const [developmentPlanCarouselCurrent, setDevelopmentPlanCarouselCurrent] = useState(0);
+
+  // Track current index for main carousel
+  useEffect(() => {
+    if (!mainCarouselApi) return;
+
+    setMainCarouselCurrent(mainCarouselApi.selectedScrollSnap());
+
+    mainCarouselApi.on('select', () => {
+      setMainCarouselCurrent(mainCarouselApi.selectedScrollSnap());
+    });
+
+    return () => {
+      mainCarouselApi.off('select');
+    };
+  }, [mainCarouselApi]);
+
+  // Track current index for floor plan carousel
+  useEffect(() => {
+    if (!floorPlanCarouselApi) return;
+
+    setFloorPlanCarouselCurrent(floorPlanCarouselApi.selectedScrollSnap());
+
+    floorPlanCarouselApi.on('select', () => {
+      setFloorPlanCarouselCurrent(floorPlanCarouselApi.selectedScrollSnap());
+    });
+
+    return () => {
+      floorPlanCarouselApi.off('select');
+    };
+  }, [floorPlanCarouselApi]);
+
+  // Track current index for development plan carousel
+  useEffect(() => {
+    if (!developmentPlanCarouselApi) return;
+
+    setDevelopmentPlanCarouselCurrent(developmentPlanCarouselApi.selectedScrollSnap());
+
+    developmentPlanCarouselApi.on('select', () => {
+      setDevelopmentPlanCarouselCurrent(developmentPlanCarouselApi.selectedScrollSnap());
+    });
+
+    return () => {
+      developmentPlanCarouselApi.off('select');
+    };
+  }, [developmentPlanCarouselApi]);
 
   // Generate array of all 16 floor plan images
   const floorPlanImages = Array.from({ length: 16 }, (_, i) => ({
@@ -163,34 +222,49 @@ export default function PropertyDetailClient({ property }: { property: Property 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Card className="overflow-hidden">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {property.images.map((image, index) => (
-                    <CarouselItem key={index}>
-                      <div className="relative h-96 w-full">
-                        <Image
-                          src={image.url}
-                          alt={`${property.name} - gambar ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          data-ai-hint={image.hint}
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-4" />
-                <CarouselNext className="right-4" />
-              </Carousel>
+              <div className="relative">
+                <Carousel className="w-full" setApi={setMainCarouselApi}>
+                  <CarouselContent>
+                    {property.images.map((image, index) => (
+                      <CarouselItem key={index}>
+                        <div className="relative h-96 w-full group">
+                          <Image
+                            src={image.url}
+                            alt={`${property.name} - gambar ${index + 1}`}
+                            fill
+                            className="object-cover"
+                            data-ai-hint={image.hint}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                            onClick={() => setMainCarouselFullscreen({ isOpen: true, index: mainCarouselCurrent })}
+                            aria-label="Open fullscreen"
+                          >
+                            <Maximize2 className="h-5 w-5" />
+                          </Button>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-4" />
+                  <CarouselNext className="right-4" />
+                </Carousel>
+              </div>
               <CardHeader>
-                <Badge variant="secondary" className="mb-2 w-fit">
+                <Badge className="mb-2 w-fit bg-gradient-to-r from-primary/90 to-primary/70 text-white border-0 shadow-sm">
                   {getBadgeText()}
                 </Badge>
-                <CardTitle className="text-3xl font-bold">{property.name}</CardTitle>
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                  {property.name}
+                </CardTitle>
                 <CardDescription className="flex items-center text-lg text-muted-foreground">
                   <MapPin className="mr-2 h-5 w-5" />
                   {property.location}
                 </CardDescription>
+                {/* Gradient divider */}
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
               </CardHeader>
               <CardContent>
                 <p className="text-base">{property.description}</p>
@@ -216,7 +290,11 @@ export default function PropertyDetailClient({ property }: { property: Property 
             {property.planningInfo && (
               <Card className="mt-8">
                 <CardHeader>
-                  <CardTitle>Perencanaan & Detail Proyek</CardTitle>
+                  <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                    Perencanaan & Detail Proyek
+                  </CardTitle>
+                  {/* Gradient divider */}
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="plan">
@@ -226,46 +304,68 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       <TabsTrigger value="env"><Microscope className="mr-2 h-4 w-4" />Analisis Lingkungan</TabsTrigger>
                     </TabsList>
                     <TabsContent value="plan" className="mt-4">
-                      <Carousel className="w-full">
-                        <CarouselContent>
-                          {floorPlanImages.map((image, index) => (
-                            <CarouselItem key={index}>
-                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
-                                <Image
-                                  src={image.url}
-                                  alt={`Denah Lokasi ${index + 1}`}
-                                  fill
-                                  className="object-contain"
-                                  data-ai-hint={image.hint}
-                                />
-                              </div>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="left-4" />
-                        <CarouselNext className="right-4" />
-                      </Carousel>
+                      <div className="relative">
+                        <Carousel className="w-full" setApi={setFloorPlanCarouselApi}>
+                          <CarouselContent>
+                            {floorPlanImages.map((image, index) => (
+                              <CarouselItem key={index}>
+                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                  <Image
+                                    src={image.url}
+                                    alt={`Denah Lokasi ${index + 1}`}
+                                    fill
+                                    className="object-contain"
+                                    data-ai-hint={image.hint}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                    onClick={() => setFloorPlanFullscreen({ isOpen: true, index: floorPlanCarouselCurrent })}
+                                    aria-label="Open fullscreen"
+                                  >
+                                    <Maximize2 className="h-5 w-5" />
+                                  </Button>
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-4" />
+                          <CarouselNext className="right-4" />
+                        </Carousel>
+                      </div>
                     </TabsContent>
                     <TabsContent value="dev" className="mt-4">
-                      <Carousel className="w-full">
-                        <CarouselContent>
-                          {developmentPlanImages.map((image, index) => (
-                            <CarouselItem key={index}>
-                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
-                                <Image
-                                  src={image.url}
-                                  alt={`Rencana Pengembangan ${index + 4}`}
-                                  fill
-                                  className="object-contain"
-                                  data-ai-hint={image.hint}
-                                />
-                              </div>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="left-4" />
-                        <CarouselNext className="right-4" />
-                      </Carousel>
+                      <div className="relative">
+                        <Carousel className="w-full" setApi={setDevelopmentPlanCarouselApi}>
+                          <CarouselContent>
+                            {developmentPlanImages.map((image, index) => (
+                              <CarouselItem key={index}>
+                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                  <Image
+                                    src={image.url}
+                                    alt={`Rencana Pengembangan ${index + 4}`}
+                                    fill
+                                    className="object-contain"
+                                    data-ai-hint={image.hint}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                    onClick={() => setDevelopmentPlanFullscreen({ isOpen: true, index: developmentPlanCarouselCurrent })}
+                                    aria-label="Open fullscreen"
+                                  >
+                                    <Maximize2 className="h-5 w-5" />
+                                  </Button>
+                                </div>
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious className="left-4" />
+                          <CarouselNext className="right-4" />
+                        </Carousel>
+                      </div>
                       {property.planningInfo.developmentPlan && (
                         <div className="mt-4 text-sm text-muted-foreground">
                           <p>{property.planningInfo.developmentPlan}</p>
@@ -284,13 +384,17 @@ export default function PropertyDetailClient({ property }: { property: Property 
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>{getTitle()}</CardTitle>
+                <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                  {getTitle()}
+                </CardTitle>
                 <CardDescription>
                   {getDescription()}
                 </CardDescription>
+                {/* Gradient divider */}
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className='border-b pb-2 text-center'>
+                <div className='border-b border-primary/20 pb-2 text-center'>
                   <p className="text-sm text-muted-foreground">{isFlexible ? 'Total Luas Tanah' : 'Total Nilai Proyek'}</p>
                   <p className="text-2xl font-bold">{isFlexible ? `${property.totalArea} ${property.unitMeasure}` : formattedTotalPrice}</p>
                    {isFlexible && (
@@ -444,6 +548,28 @@ export default function PropertyDetailClient({ property }: { property: Property 
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Image Viewers */}
+      <FullscreenImageViewer
+        images={property.images.map(img => ({ url: img.url, alt: `${property.name} - gambar`, hint: img.hint }))}
+        initialIndex={mainCarouselFullscreen.index}
+        isOpen={mainCarouselFullscreen.isOpen}
+        onClose={() => setMainCarouselFullscreen({ isOpen: false, index: 0 })}
+      />
+
+      <FullscreenImageViewer
+        images={floorPlanImages.map(img => ({ url: img.url, alt: `Denah Lokasi`, hint: img.hint }))}
+        initialIndex={floorPlanFullscreen.index}
+        isOpen={floorPlanFullscreen.isOpen}
+        onClose={() => setFloorPlanFullscreen({ isOpen: false, index: 0 })}
+      />
+
+      <FullscreenImageViewer
+        images={developmentPlanImages.map(img => ({ url: img.url, alt: `Rencana Pengembangan`, hint: img.hint }))}
+        initialIndex={developmentPlanFullscreen.index}
+        isOpen={developmentPlanFullscreen.isOpen}
+        onClose={() => setDevelopmentPlanFullscreen({ isOpen: false, index: 0 })}
+      />
     </main>
   );
 }

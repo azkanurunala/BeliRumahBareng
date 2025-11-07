@@ -42,6 +42,41 @@ export type UnitAssignment = {
   size?: number;
 };
 
+export type ProgressChecklistItem = {
+  id: string;
+  label: string;
+  completed: boolean;
+  completedBy?: string; // userId
+  completedAt?: string; // ISO date string
+};
+
+export type ProgressDetail = {
+  title: string;
+  percentage: number;
+  description?: string;
+  checklist: ProgressChecklistItem[];
+  completedMembers: string[]; // userIds
+  milestones?: {
+    label: string;
+    date?: string; // ISO date string
+    status: 'completed' | 'pending' | 'upcoming';
+  }[];
+  notes?: string;
+};
+
+export type ProjectDocument = {
+  id: string;
+  name: string;
+  status: 'Menunggu' | 'Tertanda' | 'Terverifikasi';
+  url?: string;
+  uploadDate?: string; // ISO date string
+  size?: number; // in bytes
+  description?: string;
+  uploadedBy?: string; // userId
+  signedBy?: string[]; // userIds
+  verifiedAt?: string; // ISO date string
+};
+
 export type Project = {
   id: string;
   propertyId: string;
@@ -56,11 +91,13 @@ export type Project = {
     legal: number;
     closing: number;
   };
-  documents: {
-    id: string;
-    name: string;
-    status: 'Menunggu' | 'Tertanda' | 'Terverifikasi';
-  }[];
+  progressDetails: {
+    kyc: ProgressDetail;
+    funding: ProgressDetail;
+    legal: ProgressDetail;
+    closing: ProgressDetail;
+  };
+  documents: ProjectDocument[];
   messages: {
     userId: string;
     message: string;

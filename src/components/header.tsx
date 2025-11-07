@@ -53,11 +53,16 @@ export default function Header() {
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
-                isClient && pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+                "text-sm font-medium transition-colors relative whitespace-nowrap",
+                isClient && pathname.startsWith(link.href) 
+                  ? "text-primary" 
+                  : "text-muted-foreground hover:text-primary"
               )}
             >
               {link.label}
+              {isClient && pathname.startsWith(link.href) && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
+              )}
             </Link>
           ))}
         </nav>
