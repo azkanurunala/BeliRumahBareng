@@ -7,11 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Search, Users, KeyRound, ArrowRight } from 'lucide-react';
 import PropertyCard from '@/components/property-card';
 import { mockProperties } from '@/lib/mock-data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function HomePage() {
   const featuredProperties = mockProperties.slice(0, 3);
-  const heroImage = PlaceHolderImages.find(p => p.id === 'property-1');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -19,16 +17,14 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center text-center text-white">
           <div className="absolute inset-0 bg-black/50 z-10" />
-          {heroImage && (
-             <Image
-                src={heroImage.imageUrl}
-                alt="Modern house background"
-                fill
-                className="object-cover"
-                data-ai-hint={heroImage.imageHint}
-                priority
-              />
-          )}
+          <Image
+            src="/images/floor-plans/01.png"
+            alt="Modern house background"
+            fill
+            className="object-cover"
+            data-ai-hint="property cover"
+            priority
+          />
           <div className="relative z-20 max-w-2xl mx-auto px-4">
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
               Kepemilikan Properti Jadi Lebih Mudah, Bersama-sama.

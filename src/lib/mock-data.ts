@@ -9,6 +9,12 @@ const getImage = (id: string) => {
   };
 };
 
+// Helper function untuk mendapatkan path gambar lokal
+const getLocalImage = (filename: string, hint: string = 'property image') => ({
+  url: `/images/floor-plans/${filename}`,
+  hint
+});
+
 export const mockProperties: Property[] = [
   {
     id: 'prop-001',
@@ -17,10 +23,11 @@ export const mockProperties: Property[] = [
     price: 1800000000,
     location: 'Sidoarjo, Surabaya',
     images: [
-      { url: getImage('property-3').url, hint: getImage('property-3').hint },
-      { url: getImage('land-2').url, hint: getImage('land-2').hint },
-      { url: getImage('land-3').url, hint: getImage('land-3').hint },
-      { url: getImage('site-plan-1').url, hint: getImage('site-plan-1').hint },
+      getLocalImage('01.png', 'property cover'),
+      getLocalImage('04.png', 'floor plan'),
+      getLocalImage('05.png', 'floor plan'),
+      getLocalImage('06.png', 'floor plan'),
+      getLocalImage('07.png', 'property image'),
     ],
     type: 'co-owning',
     totalUnits: 9,
@@ -28,8 +35,8 @@ export const mockProperties: Property[] = [
     unitSize: 110,
     unitMeasure: 'm²',
     planningInfo: {
-      sitePlanUrl: getImage('site-plan-1').url,
-      sitePlanHint: getImage('site-plan-1').hint,
+      sitePlanUrl: '/images/floor-plans/04.png',
+      sitePlanHint: 'floor plan',
       developmentPlan: `Proyek pengembangan lahan di Sidoarjo ini dirancang dengan pendekatan bertahap untuk memastikan kualitas dan efisiensi. Fase pertama akan berfokus pada persiapan infrastruktur dasar yang krusial. Ini mencakup pematangan lahan secara menyeluruh, pembersihan, dan perataan kontur tanah untuk memastikan setiap kavling berada pada elevasi yang optimal dan aman. Proses ini juga melibatkan pembuatan jalan utama dengan lebar 8 meter yang akan menjadi akses sentral di dalam area perumahan.
 
 Fase kedua adalah tahap realisasi kavling dan penyerahan kepada para pemilik. Setelah infrastruktur jalan utama dan saluran drainase primer selesai, tim akan melakukan pembagian kavling secara akurat sesuai dengan denah yang telah disetujui bersama. Setiap kavling akan memiliki patok batas yang jelas. Setelah proses administrasi dan serah terima selesai, para pemilik kavling diberikan kebebasan untuk memulai proses desain dan pembangunan rumah impian mereka masing-masing, sesuai dengan pedoman desain umum yang telah ditetapkan untuk menjaga keserasian lingkungan.
@@ -53,17 +60,18 @@ Kualitas hidup di sekitar lokasi didukung oleh ketersediaan fasilitas umum yang 
     price: 2500000000,
     location: 'Bekasi, Jawa Barat',
     images: [
-      { url: getImage('property-2').url, hint: getImage('property-2').hint },
-      { url: getImage('building-concept-1').url, hint: getImage('building-concept-1').hint },
-      { url: getImage('floor-plan-1').url, hint: getImage('floor-plan-1').hint },
-      { url: getImage('location-map-1').url, hint: getImage('location-map-1').hint },
+      getLocalImage('02.png', 'property cover'),
+      getLocalImage('04.png', 'floor plan'),
+      getLocalImage('05.png', 'floor plan'),
+      getLocalImage('06.png', 'floor plan'),
+      getLocalImage('08.png', 'property image'),
     ],
     type: 'co-building',
     totalUnits: 5,
     unitName: 'Lantai',
     planningInfo: {
-      sitePlanUrl: getImage('floor-plan-1').url,
-      sitePlanHint: getImage('floor-plan-1').hint,
+      sitePlanUrl: '/images/floor-plans/05.png',
+      sitePlanHint: 'floor plan',
       developmentPlan: `Rencana pengembangan proyek apartemen ini akan dieksekusi setelah target pendanaan awal sebesar 70% dari total nilai proyek berhasil tercapai. Dana awal ini akan digunakan untuk akuisisi lahan secara penuh dan biaya perizinan awal, memberikan keamanan hukum bagi seluruh anggota grup. Proses penggalangan dana akan dilakukan secara transparan melalui rekening bersama (escrow account) yang diawasi oleh notaris independen.
 
 Setelah pendanaan dan legalitas lahan aman, tahap konstruksi akan segera dimulai. Perkiraan durasi pembangunan adalah sekitar 18 hingga 24 bulan, tergantung pada kondisi cuaca dan logistik. Kami telah menunjuk kontraktor bereputasi dengan rekam jejak terbukti dalam membangun hunian vertikal berkualitas. Proses pembangunan akan diawasi oleh tim pengawas independen untuk memastikan semua spesifikasi teknis dan standar keselamatan terpenuhi. Laporan kemajuan konstruksi akan dibagikan kepada anggota secara berkala.
@@ -87,13 +95,21 @@ Dari sisi fasilitas pendukung, lokasi ini tidak perlu diragukan lagi. Berbagai f
     price: 3200000000,
     location: 'Jakarta Pusat, DKI Jakarta',
     images: [
-      { url: getImage('property-5').url, hint: getImage('property-5').hint },
-      { url: getImage('building-concept-2').url, hint: getImage('building-concept-2').hint },
-      { url: getImage('floor-plan-2').url, hint: getImage('floor-plan-2').hint },
+      getLocalImage('03.png', 'property cover'),
+      getLocalImage('04.png', 'floor plan'),
+      getLocalImage('05.png', 'floor plan'),
+      getLocalImage('06.png', 'floor plan'),
+      getLocalImage('09.png', 'property image'),
     ],
     type: 'co-building',
     totalUnits: 8,
     unitName: 'Lantai',
+    planningInfo: {
+      sitePlanUrl: '/images/floor-plans/06.png',
+      sitePlanHint: 'floor plan',
+      developmentPlan: `Proyek flat co-build di Jakarta Pusat ini dirancang untuk memberikan solusi hunian vertikal yang terjangkau di lokasi strategis. Setelah target pendanaan tercapai, konstruksi akan dimulai dengan durasi estimasi 20-24 bulan.`,
+      environmentalAnalysis: `Lokasi di jantung Jakarta Pusat memberikan aksesibilitas tinggi ke berbagai fasilitas publik, transportasi massal, dan pusat bisnis. Area ini memiliki potensi apresiasi nilai yang sangat baik.`,
+    },
   },
   {
     id: 'prop-004',
@@ -103,13 +119,21 @@ Dari sisi fasilitas pendukung, lokasi ini tidak perlu diragukan lagi. Berbagai f
     totalArea: 1000,
     location: 'Tangerang, Banten',
     images: [
-      { url: getImage('property-6').url, hint: getImage('property-6').hint },
-      { url: getImage('land-1').url, hint: getImage('land-1').hint },
-      { url: getImage('site-plan-2').url, hint: getImage('site-plan-2').hint },
+      getLocalImage('01.png', 'property cover'),
+      getLocalImage('04.png', 'floor plan'),
+      getLocalImage('05.png', 'floor plan'),
+      getLocalImage('06.png', 'floor plan'),
+      getLocalImage('10.png', 'property image'),
     ],
     type: 'co-owning',
     unitName: 'Kepemilikan',
     unitMeasure: 'm²',
+    planningInfo: {
+      sitePlanUrl: '/images/floor-plans/04.png',
+      sitePlanHint: 'floor plan',
+      developmentPlan: `Proyek tanah kavling fleksibel ini memberikan kebebasan kepada investor untuk menentukan pembagian lahan berdasarkan jumlah peserta final. Setelah periode penggalangan dana selesai, lahan akan dibagi secara proporsional.`,
+      environmentalAnalysis: `Lokasi di Tangerang menawarkan potensi pertumbuhan yang tinggi dengan akses mudah ke Jakarta dan Bandara Soekarno-Hatta. Area ini sedang berkembang pesat dengan berbagai proyek infrastruktur baru.`,
+    },
   },
 ];
 
