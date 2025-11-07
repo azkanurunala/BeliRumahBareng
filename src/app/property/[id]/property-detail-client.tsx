@@ -38,6 +38,18 @@ export default function PropertyDetailClient({ property }: { property: Property 
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Generate array of all 16 floor plan images
+  const floorPlanImages = Array.from({ length: 16 }, (_, i) => ({
+    url: `/images/floor-plans/${String(i + 1).padStart(2, '0')}.png`,
+    hint: `floor plan ${i + 1}`
+  }));
+
+  // Generate array of development plan images (04.png to 16.png)
+  const developmentPlanImages = Array.from({ length: 13 }, (_, i) => ({
+    url: `/images/floor-plans/${String(i + 4).padStart(2, '0')}.png`,
+    hint: `development plan ${i + 4}`
+  }));
+
   const isCoBuilding = property.type === 'co-building';
   const isFlexible = !property.totalUnits && property.totalArea;
 
@@ -214,12 +226,51 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       <TabsTrigger value="env"><Microscope className="mr-2 h-4 w-4" />Analisis Lingkungan</TabsTrigger>
                     </TabsList>
                     <TabsContent value="plan" className="mt-4">
-                      <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
-                        <Image src={property.planningInfo.sitePlanUrl} alt="Denah Lokasi" fill className="object-contain" data-ai-hint={property.planningInfo.sitePlanHint} />
-                      </div>
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {floorPlanImages.map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
+                                <Image
+                                  src={image.url}
+                                  alt={`Denah Lokasi ${index + 1}`}
+                                  fill
+                                  className="object-contain"
+                                  data-ai-hint={image.hint}
+                                />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-4" />
+                        <CarouselNext className="right-4" />
+                      </Carousel>
                     </TabsContent>
-                    <TabsContent value="dev" className="mt-4 text-sm text-muted-foreground">
-                      <p>{property.planningInfo.developmentPlan}</p>
+                    <TabsContent value="dev" className="mt-4">
+                      <Carousel className="w-full">
+                        <CarouselContent>
+                          {developmentPlanImages.map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border">
+                                <Image
+                                  src={image.url}
+                                  alt={`Rencana Pengembangan ${index + 4}`}
+                                  fill
+                                  className="object-contain"
+                                  data-ai-hint={image.hint}
+                                />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-4" />
+                        <CarouselNext className="right-4" />
+                      </Carousel>
+                      {property.planningInfo.developmentPlan && (
+                        <div className="mt-4 text-sm text-muted-foreground">
+                          <p>{property.planningInfo.developmentPlan}</p>
+                        </div>
+                      )}
                     </TabsContent>
                     <TabsContent value="env" className="mt-4 text-sm text-muted-foreground">
                       <p>{property.planningInfo.environmentalAnalysis}</p>
