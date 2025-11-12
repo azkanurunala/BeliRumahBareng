@@ -234,95 +234,96 @@ export const mockProject: Project = {
       { userId: 'user-004', unitId: 5, price: 216000000, size: 110 },
     ],
     progress: {
-        kyc: 75,
-        funding: 50,
-        legal: 25,
-        closing: 0,
+        kyc: 100,
+        funding: 100,
+        legal: 100,
+        closing: 100,
     },
     progressDetails: {
         kyc: {
             title: 'Verifikasi KYC',
-            percentage: 75,
+            percentage: 100,
             description: 'Proses verifikasi identitas dan dokumen KYC untuk semua anggota grup.',
             checklist: [
                 { id: 'kyc-1', label: 'Formulir KYC diisi oleh semua anggota', completed: true, completedBy: 'user-001', completedAt: '2024-01-15T10:00:00Z' },
                 { id: 'kyc-2', label: 'Upload KTP/SIM semua anggota', completed: true, completedBy: 'user-002', completedAt: '2024-01-15T11:30:00Z' },
                 { id: 'kyc-3', label: 'Upload NPWP semua anggota', completed: true, completedBy: 'user-001', completedAt: '2024-01-16T09:15:00Z' },
-                { id: 'kyc-4', label: 'Verifikasi dokumen oleh tim legal', completed: false },
+                { id: 'kyc-4', label: 'Verifikasi dokumen oleh tim legal', completed: true, completedBy: 'user-001', completedAt: '2024-01-20T17:00:00Z' },
             ],
-            completedMembers: ['user-001', 'user-002', 'user-004'],
+            completedMembers: ['user-001', 'user-002', 'user-003', 'user-004'],
             milestones: [
                 { label: 'Mulai Verifikasi', date: '2024-01-15T08:00:00Z', status: 'completed' },
                 { label: 'Dokumen Lengkap', date: '2024-01-16T12:00:00Z', status: 'completed' },
-                { label: 'Verifikasi Selesai', date: '2024-01-20T17:00:00Z', status: 'pending' },
+                { label: 'Verifikasi Selesai', date: '2024-01-20T17:00:00Z', status: 'completed' },
             ],
-            notes: 'Menunggu verifikasi dokumen user-003 yang belum mengupload NPWP.',
+            notes: 'Semua dokumen KYC telah diverifikasi dan disetujui.',
         },
         funding: {
             title: 'Pendanaan Grup',
-            percentage: 50,
+            percentage: 100,
             description: 'Pengumpulan dana dari semua anggota untuk pembelian properti.',
             checklist: [
                 { id: 'fund-1', label: 'Pembayaran DP dari user-001 (Rp 60.000.000)', completed: true, completedBy: 'user-001', completedAt: '2024-01-18T14:00:00Z' },
                 { id: 'fund-2', label: 'Pembayaran DP dari user-002 (Rp 62.400.000)', completed: true, completedBy: 'user-002', completedAt: '2024-01-18T15:30:00Z' },
-                { id: 'fund-3', label: 'Pembayaran DP dari user-003 (Rp 60.000.000)', completed: false },
+                { id: 'fund-3', label: 'Pembayaran DP dari user-003 (Rp 60.000.000)', completed: true, completedBy: 'user-003', completedAt: '2024-01-20T10:00:00Z' },
                 { id: 'fund-4', label: 'Pembayaran DP dari user-004 (Rp 64.800.000)', completed: true, completedBy: 'user-004', completedAt: '2024-01-19T10:00:00Z' },
+                { id: 'fund-5', label: 'Pembayaran pelunasan dari semua anggota', completed: true, completedBy: 'user-001', completedAt: '2024-02-05T14:00:00Z' },
             ],
-            completedMembers: ['user-001', 'user-002', 'user-004'],
+            completedMembers: ['user-001', 'user-002', 'user-003', 'user-004'],
             milestones: [
-                { label: 'Target DP 30%', date: '2024-01-20T23:59:59Z', status: 'pending' },
-                { label: 'Target DP 60%', date: '2024-01-25T23:59:59Z', status: 'upcoming' },
-                { label: 'Pembayaran Lunas', date: '2024-02-05T23:59:59Z', status: 'upcoming' },
+                { label: 'Target DP 30%', date: '2024-01-20T23:59:59Z', status: 'completed' },
+                { label: 'Target DP 60%', date: '2024-01-25T23:59:59Z', status: 'completed' },
+                { label: 'Pembayaran Lunas', date: '2024-02-05T23:59:59Z', status: 'completed' },
             ],
-            notes: 'Total terkumpul: Rp 187.200.000 dari target Rp 374.400.000 (50%). Menunggu pembayaran dari user-003.',
+            notes: 'Semua pembayaran telah lunas. Total terkumpul: Rp 624.000.000.',
         },
         legal: {
             title: 'Legal & Dokumentasi',
-            percentage: 25,
+            percentage: 100,
             description: 'Proses legal dan penyelesaian dokumen kepemilikan.',
             checklist: [
-                { id: 'legal-1', label: 'Perjanjian Kepemilikan Bersama ditandatangani', completed: false },
+                { id: 'legal-1', label: 'Perjanjian Kepemilikan Bersama ditandatangani', completed: true, completedBy: 'user-001', completedAt: '2024-01-22T14:00:00Z' },
                 { id: 'legal-2', label: 'Sertifikat Hak Milik diverifikasi', completed: true, completedBy: 'user-001', completedAt: '2024-01-10T09:00:00Z' },
-                { id: 'legal-3', label: 'Akta Jual Beli disiapkan', completed: false },
-                { id: 'legal-4', label: 'Pembagian unit ditetapkan secara legal', completed: false },
+                { id: 'legal-3', label: 'Akta Jual Beli disiapkan', completed: true, completedBy: 'user-001', completedAt: '2024-01-30T17:00:00Z' },
+                { id: 'legal-4', label: 'Pembagian unit ditetapkan secara legal', completed: true, completedBy: 'user-001', completedAt: '2024-02-01T10:00:00Z' },
             ],
-            completedMembers: ['user-001'],
+            completedMembers: ['user-001', 'user-002', 'user-003', 'user-004'],
             milestones: [
                 { label: 'Verifikasi Sertifikat', date: '2024-01-10T09:00:00Z', status: 'completed' },
-                { label: 'Penandatanganan Perjanjian', date: '2024-01-22T14:00:00Z', status: 'pending' },
-                { label: 'Akta Jual Beli Selesai', date: '2024-01-30T17:00:00Z', status: 'upcoming' },
+                { label: 'Penandatanganan Perjanjian', date: '2024-01-22T14:00:00Z', status: 'completed' },
+                { label: 'Akta Jual Beli Selesai', date: '2024-01-30T17:00:00Z', status: 'completed' },
             ],
-            notes: 'Sertifikat sudah diverifikasi. Menunggu semua anggota menandatangani perjanjian kepemilikan bersama.',
+            notes: 'Semua dokumen legal telah lengkap dan ditandatangani oleh semua anggota.',
         },
         closing: {
             title: 'Penutupan',
-            percentage: 0,
+            percentage: 100,
             description: 'Proses akhir penutupan transaksi dan serah terima properti.',
             checklist: [
-                { id: 'close-1', label: 'Semua pembayaran lunas', completed: false },
-                { id: 'close-2', label: 'Dokumen legal lengkap', completed: false },
-                { id: 'close-3', label: 'Sertifikat dibagi sesuai unit', completed: false },
-                { id: 'close-4', label: 'Serah terima properti', completed: false },
+                { id: 'close-1', label: 'Semua pembayaran lunas', completed: true, completedBy: 'user-001', completedAt: '2024-02-05T14:00:00Z' },
+                { id: 'close-2', label: 'Dokumen legal lengkap', completed: true, completedBy: 'user-001', completedAt: '2024-02-01T10:00:00Z' },
+                { id: 'close-3', label: 'Sertifikat dibagi sesuai unit', completed: true, completedBy: 'user-001', completedAt: '2024-02-10T14:00:00Z' },
+                { id: 'close-4', label: 'Serah terima properti', completed: true, completedBy: 'user-001', completedAt: '2024-02-15T10:00:00Z' },
             ],
-            completedMembers: [],
+            completedMembers: ['user-001', 'user-002', 'user-003', 'user-004'],
             milestones: [
-                { label: 'Pembayaran Lunas', date: '2024-02-05T23:59:59Z', status: 'upcoming' },
-                { label: 'Penutupan Transaksi', date: '2024-02-10T14:00:00Z', status: 'upcoming' },
-                { label: 'Serah Terima', date: '2024-02-15T10:00:00Z', status: 'upcoming' },
+                { label: 'Pembayaran Lunas', date: '2024-02-05T23:59:59Z', status: 'completed' },
+                { label: 'Penutupan Transaksi', date: '2024-02-10T14:00:00Z', status: 'completed' },
+                { label: 'Serah Terima', date: '2024-02-15T10:00:00Z', status: 'completed' },
             ],
-            notes: 'Proses penutupan akan dimulai setelah semua tahap sebelumnya selesai.',
+            notes: 'Proyek telah selesai dan serah terima properti telah dilakukan. Cicilan bulanan sedang berjalan.',
         },
     },
     documents: [
         {
             id: 'doc-01',
             name: 'Perjanjian Kepemilikan Bersama',
-            status: 'Menunggu',
+            status: 'Tertanda',
             description: 'Dokumen perjanjian yang mengatur hak dan kewajiban semua anggota dalam kepemilikan bersama properti ini.',
             uploadDate: '2024-01-12T10:00:00Z',
             size: 245760, // 240 KB
             uploadedBy: 'user-001',
-            signedBy: [],
+            signedBy: ['user-001', 'user-002', 'user-003', 'user-004'],
         },
         {
             id: 'doc-02',
@@ -337,19 +338,742 @@ export const mockProject: Project = {
         {
             id: 'doc-03',
             name: 'Formulir KYC (Semua anggota)',
-            status: 'Menunggu',
+            status: 'Terverifikasi',
             description: 'Formulir Know Your Customer yang harus diisi oleh semua anggota grup. Berisi informasi identitas dan dokumen pendukung.',
             uploadDate: '2024-01-15T08:00:00Z',
             size: 153600, // 150 KB
             uploadedBy: 'user-001',
-            signedBy: ['user-001', 'user-002', 'user-004'],
+            signedBy: ['user-001', 'user-002', 'user-003', 'user-004'],
+            verifiedAt: '2024-01-20T17:00:00Z',
         },
     ],
     messages: [
         { userId: 'user-002', message: 'Hai semuanya! Senang menjadi bagian dari proyek ini.', timestamp: '10:30' },
         { userId: 'user-001', message: 'Saya juga! Lokasinya kelihatan bagus.', timestamp: '10:31' },
         { userId: 'user-003', message: 'Saya sudah meninjau perjanjiannya. Terlihat bagus bagi saya.', timestamp: '11:15' },
-    ]
+    ],
+    status: 'closed',
+    installmentPlans: [
+        {
+            id: 'install-001',
+            projectId: 'proj-001',
+            userId: 'user-001',
+            unitId: 1,
+            totalAmount: 200000000,
+            downPayment: 60000000, // 30% DP
+            installmentAmount: 5000000, // 5 juta per bulan
+            totalInstallments: 28, // 28 bulan
+            startDate: '2024-03-01T00:00:00Z',
+            endDate: '2026-06-01T00:00:00Z',
+            status: 'active',
+            payments: [
+                {
+                    id: 'pay-001',
+                    projectId: 'proj-001',
+                    userId: 'user-001',
+                    unitId: 1,
+                    amount: 5000000,
+                    paymentDate: '2024-03-05T10:00:00Z',
+                    dueDate: '2024-03-01T00:00:00Z',
+                    period: '2024-03',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-001.pdf',
+                    verifiedAt: '2024-03-05T11:00:00Z',
+                    createdAt: '2024-03-05T10:00:00Z',
+                },
+                {
+                    id: 'pay-002',
+                    projectId: 'proj-001',
+                    userId: 'user-001',
+                    unitId: 1,
+                    amount: 5000000,
+                    paymentDate: '2024-04-03T14:30:00Z',
+                    dueDate: '2024-04-01T00:00:00Z',
+                    period: '2024-04',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-002.pdf',
+                    verifiedAt: '2024-04-03T15:00:00Z',
+                    createdAt: '2024-04-03T14:30:00Z',
+                },
+                {
+                    id: 'pay-003',
+                    projectId: 'proj-001',
+                    userId: 'user-001',
+                    unitId: 1,
+                    amount: 5000000,
+                    paymentDate: '2024-05-02T09:15:00Z',
+                    dueDate: '2024-05-01T00:00:00Z',
+                    period: '2024-05',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-003.pdf',
+                    verifiedAt: '2024-05-02T10:00:00Z',
+                    createdAt: '2024-05-02T09:15:00Z',
+                },
+                {
+                    id: 'pay-004',
+                    projectId: 'proj-001',
+                    userId: 'user-001',
+                    unitId: 1,
+                    amount: 5000000,
+                    dueDate: '2024-06-01T00:00:00Z',
+                    period: '2024-06',
+                    status: 'pending',
+                    createdAt: '2024-05-15T00:00:00Z',
+                },
+            ],
+        },
+        {
+            id: 'install-002',
+            projectId: 'proj-001',
+            userId: 'user-002',
+            unitId: 3,
+            totalAmount: 208000000,
+            downPayment: 62400000, // 30% DP
+            installmentAmount: 5200000, // 5.2 juta per bulan
+            totalInstallments: 28,
+            startDate: '2024-03-01T00:00:00Z',
+            endDate: '2026-06-01T00:00:00Z',
+            status: 'active',
+            payments: [
+                {
+                    id: 'pay-005',
+                    projectId: 'proj-001',
+                    userId: 'user-002',
+                    unitId: 3,
+                    amount: 5200000,
+                    paymentDate: '2024-03-04T11:20:00Z',
+                    dueDate: '2024-03-01T00:00:00Z',
+                    period: '2024-03',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-005.pdf',
+                    verifiedAt: '2024-03-04T12:00:00Z',
+                    createdAt: '2024-03-04T11:20:00Z',
+                },
+                {
+                    id: 'pay-006',
+                    projectId: 'proj-001',
+                    userId: 'user-002',
+                    unitId: 3,
+                    amount: 5200000,
+                    paymentDate: '2024-04-02T16:45:00Z',
+                    dueDate: '2024-04-01T00:00:00Z',
+                    period: '2024-04',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-006.pdf',
+                    verifiedAt: '2024-04-02T17:00:00Z',
+                    createdAt: '2024-04-02T16:45:00Z',
+                },
+                {
+                    id: 'pay-007',
+                    projectId: 'proj-001',
+                    userId: 'user-002',
+                    unitId: 3,
+                    amount: 5200000,
+                    dueDate: '2024-05-01T00:00:00Z',
+                    period: '2024-05',
+                    status: 'overdue',
+                    createdAt: '2024-04-20T00:00:00Z',
+                },
+                {
+                    id: 'pay-008',
+                    projectId: 'proj-001',
+                    userId: 'user-002',
+                    unitId: 3,
+                    amount: 5200000,
+                    dueDate: '2024-06-01T00:00:00Z',
+                    period: '2024-06',
+                    status: 'pending',
+                    createdAt: '2024-05-15T00:00:00Z',
+                },
+            ],
+        },
+        {
+            id: 'install-003',
+            projectId: 'proj-001',
+            userId: 'user-004',
+            unitId: 5,
+            totalAmount: 216000000,
+            downPayment: 64800000, // 30% DP
+            installmentAmount: 5400000, // 5.4 juta per bulan
+            totalInstallments: 28,
+            startDate: '2024-03-01T00:00:00Z',
+            endDate: '2026-06-01T00:00:00Z',
+            status: 'active',
+            payments: [
+                {
+                    id: 'pay-009',
+                    projectId: 'proj-001',
+                    userId: 'user-004',
+                    unitId: 5,
+                    amount: 5400000,
+                    paymentDate: '2024-03-06T13:10:00Z',
+                    dueDate: '2024-03-01T00:00:00Z',
+                    period: '2024-03',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-009.pdf',
+                    verifiedAt: '2024-03-06T14:00:00Z',
+                    createdAt: '2024-03-06T13:10:00Z',
+                },
+                {
+                    id: 'pay-010',
+                    projectId: 'proj-001',
+                    userId: 'user-004',
+                    unitId: 5,
+                    amount: 5400000,
+                    paymentDate: '2024-04-01T10:00:00Z',
+                    dueDate: '2024-04-01T00:00:00Z',
+                    period: '2024-04',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-010.pdf',
+                    verifiedAt: '2024-04-01T11:00:00Z',
+                    createdAt: '2024-04-01T10:00:00Z',
+                },
+                {
+                    id: 'pay-011',
+                    projectId: 'proj-001',
+                    userId: 'user-004',
+                    unitId: 5,
+                    amount: 5400000,
+                    paymentDate: '2024-05-01T09:00:00Z',
+                    dueDate: '2024-05-01T00:00:00Z',
+                    period: '2024-05',
+                    status: 'paid',
+                    paymentMethod: 'transfer',
+                    receiptUrl: '/receipts/pay-011.pdf',
+                    verifiedAt: '2024-05-01T10:00:00Z',
+                    createdAt: '2024-05-01T09:00:00Z',
+                },
+                {
+                    id: 'pay-012',
+                    projectId: 'proj-001',
+                    userId: 'user-004',
+                    unitId: 5,
+                    amount: 5400000,
+                    dueDate: '2024-06-01T00:00:00Z',
+                    period: '2024-06',
+                    status: 'pending',
+                    createdAt: '2024-05-15T00:00:00Z',
+                },
+            ],
+        },
+    ],
 };
+
+// proj-002: Active dengan progress
+const bekasiProject = mockProperties[1];
+// Members: user-002 (Budi), user-005 (Eka), user-006 (Fajar)
+const bekasiMembers = [mockUsers[1], mockUsers[4], mockUsers[5]];
+
+const proj002: Project = {
+    id: 'proj-002',
+    propertyId: bekasiProject.id!,
+    propertyName: bekasiProject.name,
+    propertyImageUrl: bekasiProject.images[0].url,
+    propertyImageHint: bekasiProject.images[0].hint,
+    members: bekasiMembers,
+    unitAssignments: [
+        { userId: 'user-002', unitId: 1, price: 500000000, size: undefined },
+        { userId: 'user-005', unitId: 2, price: 500000000, size: undefined },
+        { userId: 'user-006', unitId: 3, price: 500000000, size: undefined },
+    ],
+    progress: {
+        kyc: 100,
+        funding: 75,
+        legal: 50,
+        closing: 0,
+    },
+    progressDetails: {
+        kyc: {
+            title: 'Verifikasi KYC',
+            percentage: 100,
+            description: 'Proses verifikasi identitas dan dokumen KYC untuk semua anggota grup.',
+            checklist: [
+                { id: 'kyc-1', label: 'Formulir KYC diisi oleh semua anggota', completed: true, completedBy: 'user-002', completedAt: '2024-03-10T10:00:00Z' },
+                { id: 'kyc-2', label: 'Upload KTP/SIM semua anggota', completed: true, completedBy: 'user-002', completedAt: '2024-03-10T11:30:00Z' },
+                { id: 'kyc-3', label: 'Upload NPWP semua anggota', completed: true, completedBy: 'user-005', completedAt: '2024-03-11T09:15:00Z' },
+                { id: 'kyc-4', label: 'Verifikasi dokumen oleh tim legal', completed: true, completedBy: 'user-002', completedAt: '2024-03-12T14:00:00Z' },
+            ],
+            completedMembers: ['user-002', 'user-005', 'user-006'],
+            milestones: [
+                { label: 'Mulai Verifikasi', date: '2024-03-10T08:00:00Z', status: 'completed' },
+                { label: 'Dokumen Lengkap', date: '2024-03-11T12:00:00Z', status: 'completed' },
+                { label: 'Verifikasi Selesai', date: '2024-03-12T14:00:00Z', status: 'completed' },
+            ],
+            notes: 'Semua dokumen KYC telah diverifikasi dan disetujui.',
+        },
+        funding: {
+            title: 'Pendanaan Grup',
+            percentage: 75,
+            description: 'Pengumpulan dana dari semua anggota untuk pembelian properti.',
+            checklist: [
+                { id: 'fund-1', label: 'Pembayaran DP dari user-002 (Rp 150.000.000)', completed: true, completedBy: 'user-002', completedAt: '2024-03-15T14:00:00Z' },
+                { id: 'fund-2', label: 'Pembayaran DP dari user-005 (Rp 150.000.000)', completed: true, completedBy: 'user-005', completedAt: '2024-03-16T10:00:00Z' },
+                { id: 'fund-3', label: 'Pembayaran DP dari user-006 (Rp 150.000.000)', completed: true, completedBy: 'user-006', completedAt: '2024-03-17T11:00:00Z' },
+                { id: 'fund-4', label: 'Pembayaran tahap 2 dari user-002 (Rp 100.000.000)', completed: false },
+            ],
+            completedMembers: ['user-002', 'user-005', 'user-006'],
+            milestones: [
+                { label: 'Target DP 30%', date: '2024-03-20T23:59:59Z', status: 'completed' },
+                { label: 'Target DP 60%', date: '2024-03-25T23:59:59Z', status: 'pending' },
+                { label: 'Pembayaran Lunas', date: '2024-04-10T23:59:59Z', status: 'upcoming' },
+            ],
+            notes: 'Total terkumpul: Rp 450.000.000 dari target Rp 600.000.000 (75%). Menunggu pembayaran tahap 2.',
+        },
+        legal: {
+            title: 'Legal & Dokumentasi',
+            percentage: 50,
+            description: 'Proses legal dan penyelesaian dokumen kepemilikan.',
+            checklist: [
+                { id: 'legal-1', label: 'Perjanjian Kepemilikan Bersama ditandatangani', completed: false },
+                { id: 'legal-2', label: 'Sertifikat Hak Milik diverifikasi', completed: true, completedBy: 'user-002', completedAt: '2024-03-18T09:00:00Z' },
+                { id: 'legal-3', label: 'Akta Jual Beli disiapkan', completed: true, completedBy: 'user-002', completedAt: '2024-03-20T14:00:00Z' },
+                { id: 'legal-4', label: 'Pembagian unit ditetapkan secara legal', completed: false },
+            ],
+            completedMembers: ['user-002'],
+            milestones: [
+                { label: 'Verifikasi Sertifikat', date: '2024-03-18T09:00:00Z', status: 'completed' },
+                { label: 'Penandatanganan Perjanjian', date: '2024-03-25T14:00:00Z', status: 'pending' },
+                { label: 'Akta Jual Beli Selesai', date: '2024-04-05T17:00:00Z', status: 'upcoming' },
+            ],
+            notes: 'Sertifikat sudah diverifikasi dan akta jual beli sedang disiapkan. Menunggu semua anggota menandatangani perjanjian.',
+        },
+        closing: {
+            title: 'Penutupan',
+            percentage: 0,
+            description: 'Proses akhir penutupan transaksi dan serah terima properti.',
+            checklist: [
+                { id: 'close-1', label: 'Semua pembayaran lunas', completed: false },
+                { id: 'close-2', label: 'Dokumen legal lengkap', completed: false },
+                { id: 'close-3', label: 'Sertifikat dibagi sesuai unit', completed: false },
+                { id: 'close-4', label: 'Serah terima properti', completed: false },
+            ],
+            completedMembers: [],
+            milestones: [
+                { label: 'Pembayaran Lunas', date: '2024-04-10T23:59:59Z', status: 'upcoming' },
+                { label: 'Penutupan Transaksi', date: '2024-04-15T14:00:00Z', status: 'upcoming' },
+                { label: 'Serah Terima', date: '2024-04-20T10:00:00Z', status: 'upcoming' },
+            ],
+            notes: 'Proses penutupan akan dimulai setelah semua tahap sebelumnya selesai.',
+        },
+    },
+    documents: [
+        {
+            id: 'doc-04',
+            name: 'Perjanjian Kepemilikan Bersama',
+            status: 'Menunggu',
+            description: 'Dokumen perjanjian yang mengatur hak dan kewajiban semua anggota dalam kepemilikan bersama properti ini.',
+            uploadDate: '2024-03-22T10:00:00Z',
+            size: 245760,
+            uploadedBy: 'user-002',
+            signedBy: [],
+        },
+        {
+            id: 'doc-05',
+            name: 'Sertifikat Hak Milik Properti',
+            status: 'Terverifikasi',
+            description: 'Sertifikat SHM asli dari properti yang akan dibeli. Sudah diverifikasi oleh tim legal.',
+            uploadDate: '2024-03-15T09:00:00Z',
+            size: 512000,
+            uploadedBy: 'user-002',
+            verifiedAt: '2024-03-18T09:00:00Z',
+        },
+        {
+            id: 'doc-06',
+            name: 'Formulir KYC (Semua anggota)',
+            status: 'Terverifikasi',
+            description: 'Formulir Know Your Customer yang harus diisi oleh semua anggota grup.',
+            uploadDate: '2024-03-10T08:00:00Z',
+            size: 153600,
+            uploadedBy: 'user-002',
+            signedBy: ['user-002', 'user-005', 'user-006'],
+            verifiedAt: '2024-03-12T14:00:00Z',
+        },
+    ],
+    messages: [
+        { userId: 'user-005', message: 'Proyek ini menarik sekali!', timestamp: '14:20' },
+        { userId: 'user-002', message: 'Setuju, lokasinya strategis.', timestamp: '14:25' },
+    ],
+    status: 'active',
+    // Tidak ada installmentPlans karena belum closing
+};
+
+// proj-003: Active baru mulai
+const jakartaProject = mockProperties[2];
+const jakartaMembers = [mockUsers[0], mockUsers[3], mockUsers[4]];
+
+const proj003: Project = {
+    id: 'proj-003',
+    propertyId: jakartaProject.id!,
+    propertyName: jakartaProject.name,
+    propertyImageUrl: jakartaProject.images[0].url,
+    propertyImageHint: jakartaProject.images[0].hint,
+    members: jakartaMembers,
+    unitAssignments: [
+        { userId: 'user-001', unitId: 1, price: 400000000 },
+        { userId: 'user-004', unitId: 2, price: 400000000 },
+    ],
+    progress: {
+        kyc: 25,
+        funding: 0,
+        legal: 0,
+        closing: 0,
+    },
+    progressDetails: {
+        kyc: {
+            title: 'Verifikasi KYC',
+            percentage: 25,
+            description: 'Proses verifikasi identitas dan dokumen KYC untuk semua anggota grup.',
+            checklist: [
+                { id: 'kyc-1', label: 'Formulir KYC diisi oleh semua anggota', completed: true, completedBy: 'user-001', completedAt: '2024-04-01T10:00:00Z' },
+                { id: 'kyc-2', label: 'Upload KTP/SIM semua anggota', completed: false },
+                { id: 'kyc-3', label: 'Upload NPWP semua anggota', completed: false },
+                { id: 'kyc-4', label: 'Verifikasi dokumen oleh tim legal', completed: false },
+            ],
+            completedMembers: ['user-001'],
+            milestones: [
+                { label: 'Mulai Verifikasi', date: '2024-04-01T08:00:00Z', status: 'completed' },
+                { label: 'Dokumen Lengkap', date: '2024-04-05T12:00:00Z', status: 'pending' },
+                { label: 'Verifikasi Selesai', date: '2024-04-10T17:00:00Z', status: 'upcoming' },
+            ],
+            notes: 'Formulir KYC sudah diisi oleh user-001. Menunggu anggota lain mengisi dan upload dokumen.',
+        },
+        funding: {
+            title: 'Pendanaan Grup',
+            percentage: 0,
+            description: 'Pengumpulan dana dari semua anggota untuk pembelian properti.',
+            checklist: [
+                { id: 'fund-1', label: 'Pembayaran DP dari user-001', completed: false },
+                { id: 'fund-2', label: 'Pembayaran DP dari user-004', completed: false },
+            ],
+            completedMembers: [],
+            milestones: [
+                { label: 'Target DP 30%', date: '2024-04-15T23:59:59Z', status: 'upcoming' },
+                { label: 'Target DP 60%', date: '2024-04-25T23:59:59Z', status: 'upcoming' },
+                { label: 'Pembayaran Lunas', date: '2024-05-10T23:59:59Z', status: 'upcoming' },
+            ],
+            notes: 'Pendanaan akan dimulai setelah verifikasi KYC selesai.',
+        },
+        legal: {
+            title: 'Legal & Dokumentasi',
+            percentage: 0,
+            description: 'Proses legal dan penyelesaian dokumen kepemilikan.',
+            checklist: [
+                { id: 'legal-1', label: 'Perjanjian Kepemilikan Bersama ditandatangani', completed: false },
+                { id: 'legal-2', label: 'Sertifikat Hak Milik diverifikasi', completed: false },
+                { id: 'legal-3', label: 'Akta Jual Beli disiapkan', completed: false },
+                { id: 'legal-4', label: 'Pembagian unit ditetapkan secara legal', completed: false },
+            ],
+            completedMembers: [],
+            milestones: [
+                { label: 'Verifikasi Sertifikat', date: '2024-04-20T09:00:00Z', status: 'upcoming' },
+                { label: 'Penandatanganan Perjanjian', date: '2024-04-25T14:00:00Z', status: 'upcoming' },
+                { label: 'Akta Jual Beli Selesai', date: '2024-05-05T17:00:00Z', status: 'upcoming' },
+            ],
+            notes: 'Proses legal akan dimulai setelah pendanaan mencapai target minimum.',
+        },
+        closing: {
+            title: 'Penutupan',
+            percentage: 0,
+            description: 'Proses akhir penutupan transaksi dan serah terima properti.',
+            checklist: [
+                { id: 'close-1', label: 'Semua pembayaran lunas', completed: false },
+                { id: 'close-2', label: 'Dokumen legal lengkap', completed: false },
+                { id: 'close-3', label: 'Sertifikat dibagi sesuai unit', completed: false },
+                { id: 'close-4', label: 'Serah terima properti', completed: false },
+            ],
+            completedMembers: [],
+            milestones: [
+                { label: 'Pembayaran Lunas', date: '2024-05-10T23:59:59Z', status: 'upcoming' },
+                { label: 'Penutupan Transaksi', date: '2024-05-15T14:00:00Z', status: 'upcoming' },
+                { label: 'Serah Terima', date: '2024-05-20T10:00:00Z', status: 'upcoming' },
+            ],
+            notes: 'Proses penutupan akan dimulai setelah semua tahap sebelumnya selesai.',
+        },
+    },
+    documents: [
+        {
+            id: 'doc-07',
+            name: 'Formulir KYC (Semua anggota)',
+            status: 'Menunggu',
+            description: 'Formulir Know Your Customer yang harus diisi oleh semua anggota grup.',
+            uploadDate: '2024-04-01T08:00:00Z',
+            size: 153600,
+            uploadedBy: 'user-001',
+            signedBy: ['user-001'],
+        },
+    ],
+    messages: [
+        { userId: 'user-001', message: 'Selamat datang di proyek baru!', timestamp: '09:00' },
+        { userId: 'user-004', message: 'Terima kasih! Mari kita mulai.', timestamp: '09:15' },
+    ],
+    status: 'active',
+    // Tidak ada installmentPlans karena belum closing
+};
+
+// proj-004: Completed - benar-benar selesai (semua cicilan sudah lunas)
+const tangerangProject = mockProperties[3];
+const tangerangMembers = [mockUsers[1], mockUsers[2], mockUsers[3]];
+
+const proj004: Project = {
+    id: 'proj-004',
+    propertyId: tangerangProject.id!,
+    propertyName: tangerangProject.name,
+    propertyImageUrl: tangerangProject.images[0].url,
+    propertyImageHint: tangerangProject.images[0].hint,
+    members: tangerangMembers,
+    unitAssignments: [
+        { userId: 'user-002', unitId: 1, price: 700000000, size: 350 },
+        { userId: 'user-003', unitId: 2, price: 650000000, size: 325 },
+        { userId: 'user-004', unitId: 3, price: 650000000, size: 325 },
+    ],
+    progress: {
+        kyc: 100,
+        funding: 100,
+        legal: 100,
+        closing: 100,
+    },
+    progressDetails: {
+        kyc: {
+            title: 'Verifikasi KYC',
+            percentage: 100,
+            description: 'Proses verifikasi identitas dan dokumen KYC untuk semua anggota grup.',
+            checklist: [
+                { id: 'kyc-1', label: 'Formulir KYC diisi oleh semua anggota', completed: true, completedBy: 'user-002', completedAt: '2023-06-15T10:00:00Z' },
+                { id: 'kyc-2', label: 'Upload KTP/SIM semua anggota', completed: true, completedBy: 'user-003', completedAt: '2023-06-15T11:30:00Z' },
+                { id: 'kyc-3', label: 'Upload NPWP semua anggota', completed: true, completedBy: 'user-004', completedAt: '2023-06-16T09:15:00Z' },
+                { id: 'kyc-4', label: 'Verifikasi dokumen oleh tim legal', completed: true, completedBy: 'user-002', completedAt: '2023-06-20T17:00:00Z' },
+            ],
+            completedMembers: ['user-002', 'user-003', 'user-004'],
+            milestones: [
+                { label: 'Mulai Verifikasi', date: '2023-06-15T08:00:00Z', status: 'completed' },
+                { label: 'Dokumen Lengkap', date: '2023-06-16T12:00:00Z', status: 'completed' },
+                { label: 'Verifikasi Selesai', date: '2023-06-20T17:00:00Z', status: 'completed' },
+            ],
+            notes: 'Semua dokumen KYC telah diverifikasi dan disetujui.',
+        },
+        funding: {
+            title: 'Pendanaan Grup',
+            percentage: 100,
+            description: 'Pengumpulan dana dari semua anggota untuk pembelian properti.',
+            checklist: [
+                { id: 'fund-1', label: 'Pembayaran DP dari user-002 (Rp 210.000.000)', completed: true, completedBy: 'user-002', completedAt: '2023-06-18T14:00:00Z' },
+                { id: 'fund-2', label: 'Pembayaran DP dari user-003 (Rp 195.000.000)', completed: true, completedBy: 'user-003', completedAt: '2023-06-18T15:30:00Z' },
+                { id: 'fund-3', label: 'Pembayaran DP dari user-004 (Rp 195.000.000)', completed: true, completedBy: 'user-004', completedAt: '2023-06-20T10:00:00Z' },
+                { id: 'fund-4', label: 'Pembayaran pelunasan dari semua anggota', completed: true, completedBy: 'user-002', completedAt: '2023-07-05T16:00:00Z' },
+            ],
+            completedMembers: ['user-002', 'user-003', 'user-004'],
+            milestones: [
+                { label: 'Target DP 30%', date: '2023-06-20T23:59:59Z', status: 'completed' },
+                { label: 'Target DP 60%', date: '2023-06-25T23:59:59Z', status: 'completed' },
+                { label: 'Pembayaran Lunas', date: '2023-07-05T23:59:59Z', status: 'completed' },
+            ],
+            notes: 'Semua pembayaran telah lunas tepat waktu.',
+        },
+        legal: {
+            title: 'Legal & Dokumentasi',
+            percentage: 100,
+            description: 'Proses legal dan penyelesaian dokumen kepemilikan.',
+            checklist: [
+                { id: 'legal-1', label: 'Perjanjian Kepemilikan Bersama ditandatangani', completed: true, completedBy: 'user-002', completedAt: '2023-07-10T10:00:00Z' },
+                { id: 'legal-2', label: 'Sertifikat Hak Milik diverifikasi', completed: true, completedBy: 'user-003', completedAt: '2023-07-10T11:00:00Z' },
+                { id: 'legal-3', label: 'Akta Jual Beli disiapkan', completed: true, completedBy: 'user-004', completedAt: '2023-07-12T14:00:00Z' },
+                { id: 'legal-4', label: 'Pembagian unit ditetapkan secara legal', completed: true, completedBy: 'user-002', completedAt: '2023-07-15T17:00:00Z' },
+            ],
+            completedMembers: ['user-002', 'user-003', 'user-004'],
+            milestones: [
+                { label: 'Verifikasi Sertifikat', date: '2023-07-10T09:00:00Z', status: 'completed' },
+                { label: 'Penandatanganan Perjanjian', date: '2023-07-10T14:00:00Z', status: 'completed' },
+                { label: 'Akta Jual Beli Selesai', date: '2023-07-15T17:00:00Z', status: 'completed' },
+            ],
+            notes: 'Semua dokumen legal telah selesai dan terverifikasi.',
+        },
+        closing: {
+            title: 'Penutupan',
+            percentage: 100,
+            description: 'Proses akhir penutupan transaksi dan serah terima properti.',
+            checklist: [
+                { id: 'close-1', label: 'Semua pembayaran lunas', completed: true, completedBy: 'user-002', completedAt: '2023-07-05T16:00:00Z' },
+                { id: 'close-2', label: 'Dokumen legal lengkap', completed: true, completedBy: 'user-003', completedAt: '2023-07-15T17:00:00Z' },
+                { id: 'close-3', label: 'Sertifikat dibagi sesuai unit', completed: true, completedBy: 'user-004', completedAt: '2023-07-20T10:00:00Z' },
+                { id: 'close-4', label: 'Serah terima properti', completed: true, completedBy: 'user-002', completedAt: '2023-07-25T14:00:00Z' },
+            ],
+            completedMembers: ['user-002', 'user-003', 'user-004'],
+            milestones: [
+                { label: 'Pembayaran Lunas', date: '2023-07-05T23:59:59Z', status: 'completed' },
+                { label: 'Penutupan Transaksi', date: '2023-07-20T14:00:00Z', status: 'completed' },
+                { label: 'Serah Terima', date: '2023-07-25T10:00:00Z', status: 'completed' },
+            ],
+            notes: 'Proyek telah selesai sepenuhnya. Semua unit telah diserahterimakan.',
+        },
+    },
+    documents: [
+        {
+            id: 'doc-08',
+            name: 'Perjanjian Kepemilikan Bersama',
+            status: 'Terverifikasi',
+            description: 'Perjanjian kepemilikan bersama untuk proyek tanah kavling di Tangerang.',
+            uploadDate: '2023-07-10T10:00:00Z',
+            size: 245760,
+            uploadedBy: 'user-002',
+            signedBy: ['user-002', 'user-003', 'user-004'],
+            verifiedAt: '2023-07-12T10:00:00Z',
+        },
+        {
+            id: 'doc-09',
+            name: 'Sertifikat Hak Milik Properti',
+            status: 'Terverifikasi',
+            description: 'Sertifikat hak milik properti yang telah dibagi sesuai unit.',
+            uploadDate: '2023-07-20T10:00:00Z',
+            size: 512000,
+            uploadedBy: 'user-003',
+            signedBy: ['user-002', 'user-003', 'user-004'],
+            verifiedAt: '2023-07-22T14:00:00Z',
+        },
+        {
+            id: 'doc-10',
+            name: 'Akta Jual Beli',
+            status: 'Terverifikasi',
+            description: 'Akta jual beli yang telah ditandatangani oleh semua pihak.',
+            uploadDate: '2023-07-15T14:00:00Z',
+            size: 307200,
+            uploadedBy: 'user-004',
+            signedBy: ['user-002', 'user-003', 'user-004'],
+            verifiedAt: '2023-07-16T09:00:00Z',
+        },
+    ],
+    messages: [
+        { userId: 'user-002', message: 'Proyek sudah selesai! Terima kasih semua.', timestamp: '14:00' },
+        { userId: 'user-003', message: 'Sangat senang bisa menyelesaikan proyek ini bersama.', timestamp: '14:15' },
+        { userId: 'user-004', message: 'Semua berjalan lancar. Terima kasih!', timestamp: '14:30' },
+    ],
+    status: 'completed',
+    // InstallmentPlans dengan status completed (semua pembayaran sudah lunas)
+    installmentPlans: [
+        {
+            id: 'install-004',
+            projectId: 'proj-004',
+            userId: 'user-002',
+            unitId: 1,
+            totalAmount: 700000000,
+            downPayment: 210000000, // 30% DP
+            installmentAmount: 7000000, // 7 juta per bulan
+            totalInstallments: 70, // 70 bulan
+            startDate: '2023-08-01T00:00:00Z',
+            endDate: '2029-05-01T00:00:00Z',
+            status: 'completed', // Semua sudah lunas
+            payments: [
+                // Generate all 70 payments as paid
+                ...Array.from({ length: 70 }, (_, i) => {
+                    const paymentDate = new Date('2023-08-01T00:00:00Z');
+                    paymentDate.setMonth(paymentDate.getMonth() + i);
+                    const dueDate = new Date(paymentDate);
+                    const period = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+                    return {
+                        id: `pay-004-${i + 1}`,
+                        projectId: 'proj-004',
+                        userId: 'user-002',
+                        unitId: 1,
+                        amount: 7000000,
+                        paymentDate: paymentDate.toISOString(),
+                        dueDate: dueDate.toISOString(),
+                        period,
+                        status: 'paid' as const,
+                        paymentMethod: 'transfer',
+                        receiptUrl: `/receipts/pay-004-${i + 1}.pdf`,
+                        verifiedAt: new Date(paymentDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                        createdAt: paymentDate.toISOString(),
+                    };
+                }),
+            ],
+        },
+        {
+            id: 'install-005',
+            projectId: 'proj-004',
+            userId: 'user-003',
+            unitId: 2,
+            totalAmount: 650000000,
+            downPayment: 195000000, // 30% DP
+            installmentAmount: 6500000, // 6.5 juta per bulan
+            totalInstallments: 70, // 70 bulan
+            startDate: '2023-08-01T00:00:00Z',
+            endDate: '2029-05-01T00:00:00Z',
+            status: 'completed', // Semua sudah lunas
+            payments: [
+                ...Array.from({ length: 70 }, (_, i) => {
+                    const paymentDate = new Date('2023-08-01T00:00:00Z');
+                    paymentDate.setMonth(paymentDate.getMonth() + i);
+                    const dueDate = new Date(paymentDate);
+                    const period = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+                    return {
+                        id: `pay-005-${i + 1}`,
+                        projectId: 'proj-004',
+                        userId: 'user-003',
+                        unitId: 2,
+                        amount: 6500000,
+                        paymentDate: paymentDate.toISOString(),
+                        dueDate: dueDate.toISOString(),
+                        period,
+                        status: 'paid' as const,
+                        paymentMethod: 'transfer',
+                        receiptUrl: `/receipts/pay-005-${i + 1}.pdf`,
+                        verifiedAt: new Date(paymentDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                        createdAt: paymentDate.toISOString(),
+                    };
+                }),
+            ],
+        },
+        {
+            id: 'install-006',
+            projectId: 'proj-004',
+            userId: 'user-004',
+            unitId: 3,
+            totalAmount: 650000000,
+            downPayment: 195000000, // 30% DP
+            installmentAmount: 6500000, // 6.5 juta per bulan
+            totalInstallments: 70, // 70 bulan
+            startDate: '2023-08-01T00:00:00Z',
+            endDate: '2029-05-01T00:00:00Z',
+            status: 'completed', // Semua sudah lunas
+            payments: [
+                ...Array.from({ length: 70 }, (_, i) => {
+                    const paymentDate = new Date('2023-08-01T00:00:00Z');
+                    paymentDate.setMonth(paymentDate.getMonth() + i);
+                    const dueDate = new Date(paymentDate);
+                    const period = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+                    return {
+                        id: `pay-006-${i + 1}`,
+                        projectId: 'proj-004',
+                        userId: 'user-004',
+                        unitId: 3,
+                        amount: 6500000,
+                        paymentDate: paymentDate.toISOString(),
+                        dueDate: dueDate.toISOString(),
+                        period,
+                        status: 'paid' as const,
+                        paymentMethod: 'transfer',
+                        receiptUrl: `/receipts/pay-006-${i + 1}.pdf`,
+                        verifiedAt: new Date(paymentDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                        createdAt: paymentDate.toISOString(),
+                    };
+                }),
+            ],
+        },
+    ],
+};
+
+// Export array of projects
+export const mockProjects: Project[] = [
+    mockProject, // proj-001 (closed - proses pembayaran)
+    proj002,     // proj-002 (active progress)
+    proj003,     // proj-003 (active baru mulai)
+    proj004,     // proj-004 (completed - benar-benar selesai)
+];
 
     

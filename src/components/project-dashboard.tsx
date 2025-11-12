@@ -30,6 +30,12 @@ import Link from 'next/link';
 import { mockProperties } from '@/lib/mock-data';
 import ProgressDetailDialog from './progress-detail-dialog';
 import DocumentDetailDialog from './document-detail-dialog';
+import InstallmentOverview from './installment-overview';
+import MonthlyPaymentCard from './monthly-payment-card';
+import PaymentHistoryTable from './payment-history-table';
+import AddPaymentDialog from './add-payment-dialog';
+import { calculateTotalPaymentProgress, formatCurrency } from '@/lib/payment-utils';
+import { CreditCard } from 'lucide-react';
 
 type ProjectDashboardProps = {
   project: Project;
@@ -41,6 +47,14 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
   // State for dialogs
   const [selectedProgress, setSelectedProgress] = useState<'kyc' | 'funding' | 'legal' | 'closing' | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null);
+  
+  const isProjectClosed = project.status === 'closed' || project.status === 'completed';
+  const hasActiveInstallments = project.installmentPlans?.some(p => p.status === 'active') || false;
+  const isFullyCompleted = isProjectClosed && !hasActiveInstallments;
+  const paymentProgress = hasActiveInstallments 
+    ? calculateTotalPaymentProgress(project)
+    : null;
 
   const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -72,66 +86,151 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
                     />
                 </div>
                 <div className='p-6 md:col-span-3'>
-                    <Badge>Sedang Berjalan</Badge>
+                    <Badge variant={isFullyCompleted ? 'default' : hasActiveInstallments ? 'default' : isProjectClosed ? 'default' : 'secondary'}>
+                        {isFullyCompleted ? 'Selesai' : hasActiveInstallments ? 'Proses Pembayaran' : isProjectClosed ? 'Selesai' : 'Sedang Berjalan'}
+                    </Badge>
                     <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
                         {project.propertyName}
                     </h1>
                     <p className="mt-2 text-muted-foreground">
-                        Selamat datang di dasbor proyek kolaboratif Anda. Lacak kemajuan, kelola dokumen, dan berkomunikasi dengan grup Anda di sini.
+                        {isFullyCompleted 
+                          ? 'Proyek sudah selesai sepenuhnya. Semua pembayaran telah lunas.'
+                          : hasActiveInstallments 
+                          ? 'Proyek sudah selesai. Kelola pembayaran cicilan bulanan di sini.'
+                          : isProjectClosed 
+                          ? 'Proyek sudah selesai. Kelola pembayaran cicilan bulanan di sini.'
+                          : 'Selamat datang di dasbor proyek kolaboratif Anda. Lacak kemajuan, kelola dokumen, dan berkomunikasi dengan grup Anda di sini.'}
                     </p>
                 </div>
             </div>
         </Card>
 
-        {/* Project Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Kemajuan Proyek</CardTitle>
-            <CardDescription>Status keseluruhan dari proyek co-buy Anda.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div 
-              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-              onClick={() => handleProgressClick('kyc')}
-            >
-              <div className='flex justify-between text-sm'>
-                <p className="group-hover:text-primary transition-colors font-medium">Verifikasi KYC</p>
-                <p className='font-medium'>{project.progress.kyc}%</p>
+        {/* Project Progress - Only show if project is active */}
+        {!isProjectClosed && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Kemajuan Proyek</CardTitle>
+              <CardDescription>Status keseluruhan dari proyek co-buy Anda.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div 
+                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                onClick={() => handleProgressClick('kyc')}
+              >
+                <div className='flex justify-between text-sm'>
+                  <p className="group-hover:text-primary transition-colors font-medium">Verifikasi KYC</p>
+                  <p className='font-medium'>{project.progress.kyc}%</p>
+                </div>
+                <Progress value={project.progress.kyc} aria-label={`${project.progress.kyc}% KYC terverifikasi`} />
               </div>
-              <Progress value={project.progress.kyc} aria-label={`${project.progress.kyc}% KYC terverifikasi`} />
-            </div>
-            <div 
-              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-              onClick={() => handleProgressClick('funding')}
-            >
-              <div className='flex justify-between text-sm'>
-                <p className="group-hover:text-primary transition-colors font-medium">Pendanaan Grup</p>
-                <p className='font-medium'>{project.progress.funding}%</p>
+              <div 
+                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                onClick={() => handleProgressClick('funding')}
+              >
+                <div className='flex justify-between text-sm'>
+                  <p className="group-hover:text-primary transition-colors font-medium">Pendanaan Grup</p>
+                  <p className='font-medium'>{project.progress.funding}%</p>
+                </div>
+                <Progress value={project.progress.funding} aria-label={`${project.progress.funding}% didanai`} />
               </div>
-              <Progress value={project.progress.funding} aria-label={`${project.progress.funding}% didanai`} />
-            </div>
-            <div 
-              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-              onClick={() => handleProgressClick('legal')}
-            >
-              <div className='flex justify-between text-sm'>
-                <p className="group-hover:text-primary transition-colors font-medium">Legal & Dokumentasi</p>
-                <p className='font-medium'>{project.progress.legal}%</p>
+              <div 
+                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                onClick={() => handleProgressClick('legal')}
+              >
+                <div className='flex justify-between text-sm'>
+                  <p className="group-hover:text-primary transition-colors font-medium">Legal & Dokumentasi</p>
+                  <p className='font-medium'>{project.progress.legal}%</p>
+                </div>
+                <Progress value={project.progress.legal} aria-label={`${project.progress.legal}% legal selesai`} />
               </div>
-              <Progress value={project.progress.legal} aria-label={`${project.progress.legal}% legal selesai`} />
-            </div>
-             <div 
-              className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-              onClick={() => handleProgressClick('closing')}
-            >
-              <div className='flex justify-between text-sm'>
-                <p className="group-hover:text-primary transition-colors font-medium">Penutupan</p>
-                <p className='font-medium'>{project.progress.closing}%</p>
+               <div 
+                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                onClick={() => handleProgressClick('closing')}
+              >
+                <div className='flex justify-between text-sm'>
+                  <p className="group-hover:text-primary transition-colors font-medium">Penutupan</p>
+                  <p className='font-medium'>{project.progress.closing}%</p>
+                </div>
+                <Progress value={project.progress.closing} aria-label={`${project.progress.closing}% selesai`} />
               </div>
-              <Progress value={project.progress.closing} aria-label={`${project.progress.closing}% selesai`} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Progress - Only show if there are active installments */}
+        {hasActiveInstallments && paymentProgress && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-primary" />
+                <CardTitle>Progress Pembayaran</CardTitle>
+              </div>
+              <CardDescription>
+                Ringkasan pembayaran cicilan untuk semua unit
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total Pembayaran</span>
+                  <span className="font-bold text-lg text-primary">{paymentProgress.percentage}%</span>
+                </div>
+                <Progress value={paymentProgress.percentage} className="h-3" />
+                <div className="flex items-center justify-between text-sm pt-2">
+                  <span className="text-muted-foreground">
+                    {formatCurrency(paymentProgress.paid)} dari {formatCurrency(paymentProgress.total)}
+                  </span>
+                  <span className="font-medium text-muted-foreground">
+                    Sisa: {formatCurrency(paymentProgress.total - paymentProgress.paid)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Installment Overview - Only show if project is closed */}
+        {isProjectClosed && project.installmentPlans && project.installmentPlans.length > 0 && (
+          <InstallmentOverview plans={project.installmentPlans} />
+        )}
+
+        {/* Monthly Payment Cards - Only show if project is closed */}
+        {isProjectClosed && project.installmentPlans && project.installmentPlans.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              Cicilan per Unit
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              {project.installmentPlans.map((plan) => {
+                const user = project.members.find(m => m.id === plan.userId);
+                if (!user) return null;
+                return (
+                  <MonthlyPaymentCard
+                    key={plan.id}
+                    plan={plan}
+                    user={user}
+                    property={property}
+                    onAddPayment={() => setSelectedPlanForPayment(plan.id)}
+                  />
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
+
+        {/* Payment History Table - Only show if project is closed */}
+        {isProjectClosed && project.installmentPlans && project.installmentPlans.length > 0 && (
+          <PaymentHistoryTable
+            payments={project.installmentPlans.flatMap(plan => plan.payments)}
+            members={project.members}
+            property={property}
+            onViewReceipt={(payment) => {
+              if (payment.receiptUrl) {
+                window.open(payment.receiptUrl, '_blank');
+              }
+            }}
+          />
+        )}
 
         {/* Document Management */}
         <Card>
@@ -242,6 +341,20 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
           onOpenChange={(open) => !open && setSelectedDocument(null)}
           document={project.documents.find(d => d.id === selectedDocument)!}
           members={project.members}
+        />
+      )}
+
+      {/* Add Payment Dialog */}
+      {selectedPlanForPayment && project.installmentPlans && (
+        <AddPaymentDialog
+          open={selectedPlanForPayment !== null}
+          onOpenChange={(open) => !open && setSelectedPlanForPayment(null)}
+          plan={project.installmentPlans.find(p => p.id === selectedPlanForPayment)!}
+          onSubmit={(paymentData) => {
+            // Handle payment submission
+            console.log('Payment submitted:', paymentData);
+            // In real app, this would call an API to save the payment
+          }}
         />
       )}
     </div>

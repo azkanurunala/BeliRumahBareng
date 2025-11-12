@@ -77,6 +77,39 @@ export type ProjectDocument = {
   verifiedAt?: string; // ISO date string
 };
 
+export type MonthlyPayment = {
+  id: string;
+  projectId: string;
+  userId: string; // penghuni yang membayar
+  unitId: number; // unit yang dibayar
+  amount: number; // jumlah pembayaran
+  paymentDate: string; // ISO date string - tanggal pembayaran
+  dueDate: string; // ISO date string - tanggal jatuh tempo
+  period: string; // format: "YYYY-MM" (e.g., "2024-02")
+  status: 'paid' | 'pending' | 'overdue' | 'partial';
+  paymentMethod?: string; // 'transfer', 'cash', 'other'
+  receiptUrl?: string; // URL bukti pembayaran
+  notes?: string;
+  verifiedBy?: string; // userId admin yang verifikasi
+  verifiedAt?: string; // ISO date string
+  createdAt: string; // ISO date string
+};
+
+export type InstallmentPlan = {
+  id: string;
+  projectId: string;
+  userId: string;
+  unitId: number;
+  totalAmount: number; // total harga unit
+  downPayment: number; // DP yang sudah dibayar
+  installmentAmount: number; // jumlah cicilan per bulan
+  totalInstallments: number; // total bulan cicilan
+  startDate: string; // ISO date string - mulai cicilan
+  endDate: string; // ISO date string - akhir cicilan
+  status: 'active' | 'completed' | 'cancelled';
+  payments: MonthlyPayment[]; // history pembayaran
+};
+
 export type Project = {
   id: string;
   propertyId: string;
@@ -103,6 +136,8 @@ export type Project = {
     message: string;
     timestamp: string;
   }[];
+  status?: 'active' | 'closed' | 'completed'; // status project
+  installmentPlans?: InstallmentPlan[]; // rencana cicilan per unit
 };
 
     
