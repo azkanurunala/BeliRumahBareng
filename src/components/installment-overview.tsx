@@ -146,10 +146,19 @@ export default function InstallmentOverview({ plans }: InstallmentOverviewProps)
                 style={{ width: `${overallProgress}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>DP: {formatCurrency(totalDownPayment)}</span>
-              <span>Cicilan: {formatCurrency(totalPaid)}</span>
-              <span>Sisa: {formatCurrency(totalRemaining)}</span>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="flex justify-between">
+                <span>DP:</span>
+                <span className="font-medium">{formatCurrency(totalDownPayment)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Cicilan:</span>
+                <span className="font-medium">{formatCurrency(totalPaid)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Sisa:</span>
+                <span className="font-medium">{formatCurrency(totalRemaining)}</span>
+              </div>
             </div>
           </div>
         </div>
