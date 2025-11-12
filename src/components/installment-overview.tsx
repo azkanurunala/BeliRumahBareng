@@ -63,27 +63,27 @@ export default function InstallmentOverview({ plans }: InstallmentOverviewProps)
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Total Amount */}
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <div className="p-3 rounded-lg border bg-card">
+              <div className="flex items-center gap-2 mb-1.5">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Total Nilai
                 </p>
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
+              <p className="text-base font-bold break-words leading-snug">{formatCurrency(totalAmount)}</p>
             </div>
 
             {/* Total Paid */}
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-green-600" />
+            <div className="p-3 rounded-lg border bg-card">
+              <div className="flex items-center gap-2 mb-1.5">
+                <TrendingUp className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Total Dibayar
                 </p>
               </div>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-base font-bold text-green-600 break-words leading-snug">
                 {formatCurrency(totalDownPayment + totalPaid)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -92,26 +92,26 @@ export default function InstallmentOverview({ plans }: InstallmentOverviewProps)
             </div>
 
             {/* Remaining */}
-            <div className="p-4 rounded-lg border bg-card">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="h-4 w-4 text-primary" />
+            <div className="p-3 rounded-lg border bg-card">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Calendar className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Sisa Cicilan
                 </p>
               </div>
-              <p className="text-2xl font-bold text-primary">{formatCurrency(totalRemaining)}</p>
+              <p className="text-base font-bold text-primary break-words leading-snug">{formatCurrency(totalRemaining)}</p>
             </div>
 
             {/* Overdue */}
             {totalOverdue > 0 ? (
-              <div className="p-4 rounded-lg border bg-destructive/10 border-destructive/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
+              <div className="p-3 rounded-lg border bg-destructive/10 border-destructive/20">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Terlambat
                   </p>
                 </div>
-                <p className="text-2xl font-bold text-destructive">
+                <p className="text-base font-bold text-destructive break-words leading-snug">
                   {formatCurrency(totalOverdue)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -119,14 +119,14 @@ export default function InstallmentOverview({ plans }: InstallmentOverviewProps)
                 </p>
               </div>
             ) : (
-              <div className="p-4 rounded-lg border bg-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
+              <div className="p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Progress
                   </p>
                 </div>
-                <p className="text-2xl font-bold">
+                <p className="text-base font-bold">
                   {totalPaidInstallments} / {totalInstallments}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">bulan terbayar</p>

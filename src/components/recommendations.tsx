@@ -173,11 +173,11 @@ export default function Recommendations() {
                 name="investmentGoals"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Tujuan Investasi</FormLabel>
+                        <FormLabel>Tujuan Kepemilikan</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                             <SelectTrigger>
-                                <SelectValue placeholder="Pilih tujuan investasi" />
+                                <SelectValue placeholder="Pilih tujuan kepemilikan" />
                             </SelectTrigger>
                             </FormControl>
                             <SelectContent>

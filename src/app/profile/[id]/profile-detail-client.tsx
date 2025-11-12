@@ -31,11 +31,11 @@ export default function ProfileDetailClient({ user }: { user: User }) {
               </Avatar>
               <div className="grid gap-1">
                 <CardTitle className="text-2xl">{user.name}</CardTitle>
-                <CardDescription>Anggota BeliRumahBareng sejak 2024</CardDescription>
+                <CardDescription>Anggota BeliRumahBareng sejak 2025</CardDescription>
               </div>
           </CardHeader>
           <CardContent className="p-6">
-              <h3 className="mb-4 text-lg font-semibold">Preferensi Investasi</h3>
+              <h3 className="mb-4 text-lg font-semibold">Preferensi Properti</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex items-start gap-3 rounded-lg border p-4">
                       <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -60,7 +60,7 @@ export default function ProfileDetailClient({ user }: { user: User }) {
                           <Target size={18} />
                       </div>
                       <div>
-                          <p className="text-sm text-muted-foreground">Tujuan Investasi</p>
+                          <p className="text-sm text-muted-foreground">Tujuan Kepemilikan</p>
                           <p className="font-semibold">{user.profile.investmentGoals}</p>
                       </div>
                   </div>

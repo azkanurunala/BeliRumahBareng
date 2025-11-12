@@ -213,7 +213,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span className="text-xs">Total Investasi</span>
+                    <span className="text-xs">Total Biaya</span>
                   </div>
                   <p className="text-sm font-bold truncate" title={formatCurrency(totalPrice)}>
                     {formatCurrency(totalPrice).replace('Rp', 'Rp ').split(',')[0]}

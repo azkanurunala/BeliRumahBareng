@@ -57,7 +57,7 @@ export function getOverduePayments(plan: InstallmentPlan): MonthlyPayment[] {
 }
 
 /**
- * Format period (YYYY-MM) to readable format (Maret 2024)
+ * Format period (YYYY-MM) to readable format (Maret 2025)
  */
 export function formatPeriod(period: string): string {
   try {

@@ -85,7 +85,7 @@ export type MonthlyPayment = {
   amount: number; // jumlah pembayaran
   paymentDate: string; // ISO date string - tanggal pembayaran
   dueDate: string; // ISO date string - tanggal jatuh tempo
-  period: string; // format: "YYYY-MM" (e.g., "2024-02")
+  period: string; // format: "YYYY-MM" (e.g., "2025-02")
   status: 'paid' | 'pending' | 'overdue' | 'partial';
   paymentMethod?: string; // 'transfer', 'cash', 'other'
   receiptUrl?: string; // URL bukti pembayaran

@@ -23,7 +23,7 @@ const notifications = [
     },
     {
         title: 'Selamat Datang!',
-        description: 'Selamat datang di BeliRumahBareng! Mari mulai investasi properti pertama Anda.',
+        description: 'Selamat datang di BeliRumahBareng! Mari mulai miliki properti pertama Anda.',
         href: '/',
         time: '2 hari yang lalu'
     }

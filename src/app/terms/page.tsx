@@ -6,7 +6,7 @@ export default function TermsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl">Syarat & Ketentuan</CardTitle>
-          <CardDescription>Terakhir diperbarui: 24 Juli 2024</CardDescription>
+          <CardDescription>Terakhir diperbarui: 24 Juli 2025</CardDescription>
         </CardHeader>
         <CardContent className="prose max-w-none dark:prose-invert">
           <p>

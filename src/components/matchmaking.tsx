@@ -62,7 +62,7 @@ export default function Matchmaking() {
         <div className="md:col-span-1">
           <h4 className="font-semibold">Profil Anda</h4>
           <p className="text-sm text-muted-foreground">
-            AI akan menemukan rekan berdasarkan preferensi investasi Anda.
+            AI akan menemukan rekan berdasarkan preferensi propertiAnda.
           </p>
           <Card className="mt-4">
             <CardHeader className="flex flex-row items-center gap-4">
