@@ -1,16 +1,34 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DataTable, Column } from '@/components/admin/data-table';
+import { DataTable, Column, CustomAction } from '@/components/admin/data-table';
 import { useAdminData } from '@/contexts/admin-data-context';
 import type { ProjectDocument } from '@/lib/types';
-import { FileText } from 'lucide-react';
+import { FileText, Plus, Eye, Download, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { DocumentForm } from '@/components/admin/document-form';
+import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+
+type DocumentWithProject = ProjectDocument & {
+  projectId: string;
+  projectName: string;
+};
 
 export default function AllDocumentsPage() {
-  const { projects } = useAdminData();
+  const { projects, updateProject } = useAdminData();
+  const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingDocument, setEditingDocument] = useState<DocumentWithProject | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<DocumentWithProject | null>(null);
+  const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   
   const allDocuments = useMemo(() => {
     return projects.flatMap(project => 
@@ -22,11 +40,29 @@ export default function AllDocumentsPage() {
     );
   }, [projects]);
 
-  const columns: Column<typeof allDocuments[0]>[] = [
+  // Filter data
+  const filteredDocuments = useMemo(() => {
+    let result = allDocuments;
+    
+    // Filter by project
+    if (projectFilter !== 'all') {
+      result = result.filter(doc => doc.projectId === projectFilter);
+    }
+    
+    // Filter by status
+    if (statusFilter !== 'all') {
+      result = result.filter(doc => doc.status === statusFilter);
+    }
+    
+    return result;
+  }, [allDocuments, projectFilter, statusFilter]);
+
+  const columns: Column<DocumentWithProject>[] = [
     {
       key: 'name',
       header: 'Nama Dokumen',
       sortable: true,
+      searchable: true,
       cell: (row) => (
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -37,16 +73,18 @@ export default function AllDocumentsPage() {
     {
       key: 'projectName',
       header: 'Project',
+      sortable: true,
+      searchable: true,
       cell: (row) => (
         <Link href={`/admin/projects/${row.projectId}`} className="text-primary hover:underline">
           {row.projectName}
         </Link>
       ),
-      sortable: true,
     },
     {
       key: 'status',
       header: 'Status',
+      sortable: true,
       cell: (row) => {
         const variant = row.status === 'Terverifikasi' ? 'default' : row.status === 'Tertanda' ? 'secondary' : 'outline';
         return <Badge variant={variant}>{row.status}</Badge>;
@@ -54,13 +92,203 @@ export default function AllDocumentsPage() {
     },
   ];
 
+  const handleSubmit = (data: any) => {
+    if (editingDocument) {
+      // Update existing document
+      const project = projects.find(p => p.id === editingDocument.projectId);
+      if (!project) return;
+
+      const updatedDocuments = project.documents.map(doc => 
+        doc.id === editingDocument.id 
+          ? { ...doc, ...data, id: doc.id }
+          : doc
+      );
+      
+      updateProject(editingDocument.projectId, { documents: updatedDocuments });
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Dokumen berhasil diperbarui',
+      });
+    } else {
+      // Create new document
+      if (!data.projectId) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Project harus dipilih',
+        });
+        return;
+      }
+
+      const project = projects.find(p => p.id === data.projectId);
+      if (!project) return;
+
+      const newDoc: ProjectDocument = {
+        id: `doc-${Date.now()}`,
+        name: data.name,
+        status: data.status,
+        url: data.url || undefined,
+        description: data.description || undefined,
+        uploadedBy: data.uploadedBy || undefined,
+        signedBy: data.signedBy || undefined,
+        verifiedAt: data.verifiedAt || undefined,
+        uploadDate: new Date().toISOString(),
+      };
+
+      updateProject(data.projectId, { documents: [...project.documents, newDoc] });
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Dokumen berhasil ditambahkan',
+      });
+    }
+    
+    setIsDialogOpen(false);
+    setEditingDocument(null);
+  };
+
+  const handleEdit = (doc: DocumentWithProject) => {
+    setEditingDocument(doc);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteClick = (doc: DocumentWithProject) => {
+    setDocumentToDelete(doc);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!documentToDelete) return;
+
+    const project = projects.find(p => p.id === documentToDelete.projectId);
+    if (!project) return;
+
+    const updatedDocuments = project.documents.filter(d => d.id !== documentToDelete.id);
+    updateProject(documentToDelete.projectId, { documents: updatedDocuments });
+
+    toast({
+      title: 'Berhasil',
+      description: 'Dokumen berhasil dihapus',
+    });
+
+    setDeleteDialogOpen(false);
+    setDocumentToDelete(null);
+  };
+
+  const handleView = (doc: DocumentWithProject) => {
+    if (doc.url) {
+      window.open(doc.url, '_blank');
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'URL dokumen tidak tersedia',
+      });
+    }
+  };
+
+  const handleDownload = (doc: DocumentWithProject) => {
+    if (doc.url) {
+      // Simulate download
+      const link = document.createElement('a');
+      link.href = doc.url;
+      link.download = doc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Download dokumen dimulai',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'URL dokumen tidak tersedia',
+      });
+    }
+  };
+
+  const customActions: CustomAction<DocumentWithProject>[] = [
+    {
+      label: 'Lihat',
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (row) => handleView(row),
+      variant: 'ghost',
+      size: 'icon',
+    },
+    {
+      label: 'Download',
+      icon: <Download className="h-4 w-4" />,
+      onClick: (row) => handleDownload(row),
+      variant: 'ghost',
+      size: 'icon',
+    },
+    {
+      label: 'Edit',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (row) => handleEdit(row),
+      variant: 'ghost',
+      size: 'icon',
+    },
+    {
+      label: 'Hapus',
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: (row) => handleDeleteClick(row),
+      variant: 'ghost',
+      size: 'icon',
+    },
+  ];
+
+  // Get project members for editing
+  const getProjectMembers = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    return project?.members || [];
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
-        <p className="text-muted-foreground">
-          Semua dokumen dari semua project
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
+          <p className="text-muted-foreground">
+            Semua dokumen dari semua project
+          </p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) setEditingDocument(null);
+        }}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Dokumen
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingDocument ? 'Edit Dokumen' : 'Tambah Dokumen Baru'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingDocument ? 'Edit informasi dokumen' : 'Tambahkan dokumen baru ke project'}
+              </DialogDescription>
+            </DialogHeader>
+            <DocumentForm
+              document={editingDocument || undefined}
+              projects={editingDocument ? undefined : projects}
+              selectedProjectId={editingDocument ? undefined : undefined}
+              projectMembers={editingDocument ? getProjectMembers(editingDocument.projectId) : []}
+              onSubmit={handleSubmit}
+              onCancel={() => {
+                setIsDialogOpen(false);
+                setEditingDocument(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>
@@ -71,16 +299,61 @@ export default function AllDocumentsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable
-            data={allDocuments}
-            columns={columns}
-            searchKey="name"
-            searchPlaceholder="Cari dokumen..."
-            actions={false}
-          />
+          <div className="space-y-4">
+            {/* Filters */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Filter Project:</span>
+                <Select value={projectFilter} onValueChange={setProjectFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Semua Project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Project</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.propertyName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Filter Status:</span>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Semua Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="Menunggu">Menunggu</SelectItem>
+                    <SelectItem value="Tertanda">Tertanda</SelectItem>
+                    <SelectItem value="Terverifikasi">Terverifikasi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DataTable
+              data={filteredDocuments}
+              columns={columns}
+              searchKeys={['name', 'projectName']}
+              searchPlaceholder="Cari dokumen atau project..."
+              actionButtons={customActions}
+              actions={true}
+            />
+          </div>
         </CardContent>
       </Card>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Hapus Dokumen"
+        description="Apakah Anda yakin ingin menghapus dokumen ini?"
+        itemName={documentToDelete?.name}
+      />
     </div>
   );
 }
-

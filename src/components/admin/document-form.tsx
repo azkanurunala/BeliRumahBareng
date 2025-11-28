@@ -23,10 +23,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { ProjectDocument, User } from '@/lib/types';
+import type { ProjectDocument, User, Project } from '@/lib/types';
 import { mockUsers } from '@/lib/mock-data';
 
-const documentSchema = z.object({
+const createDocumentSchema = z.object({
   name: z.string().min(1, 'Nama dokumen wajib diisi'),
   status: z.enum(['Menunggu', 'Tertanda', 'Terverifikasi'], {
     required_error: 'Status wajib dipilih',
@@ -36,20 +36,41 @@ const documentSchema = z.object({
   uploadedBy: z.string().optional(),
   signedBy: z.array(z.string()).optional(),
   verifiedAt: z.string().optional(),
+  projectId: z.string().min(1, 'Project wajib dipilih'), // Required when creating
 });
 
-type DocumentFormValues = z.infer<typeof documentSchema>;
+const editDocumentSchema = z.object({
+  name: z.string().min(1, 'Nama dokumen wajib diisi'),
+  status: z.enum(['Menunggu', 'Tertanda', 'Terverifikasi'], {
+    required_error: 'Status wajib dipilih',
+  }),
+  url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  description: z.string().optional(),
+  uploadedBy: z.string().optional(),
+  signedBy: z.array(z.string()).optional(),
+  verifiedAt: z.string().optional(),
+  projectId: z.string().optional(), // Not needed when editing
+});
+
+type CreateDocumentFormValues = z.infer<typeof createDocumentSchema>;
+type EditDocumentFormValues = z.infer<typeof editDocumentSchema>;
+type DocumentFormValues = CreateDocumentFormValues | EditDocumentFormValues;
 
 interface DocumentFormProps {
   document?: ProjectDocument;
   projectMembers: User[];
+  projects?: Project[]; // Optional: for project selection
+  selectedProjectId?: string; // Optional: pre-selected project
   onSubmit: (data: DocumentFormValues) => void;
   onCancel?: () => void;
 }
 
-export function DocumentForm({ document, projectMembers, onSubmit, onCancel }: DocumentFormProps) {
+export function DocumentForm({ document, projectMembers, projects, selectedProjectId, onSubmit, onCancel }: DocumentFormProps) {
+  const isEditing = !!document;
+  const schema = isEditing ? editDocumentSchema : createDocumentSchema;
+  
   const form = useForm<DocumentFormValues>({
-    resolver: zodResolver(documentSchema),
+    resolver: zodResolver(schema),
     defaultValues: document
       ? {
           name: document.name,
@@ -59,6 +80,7 @@ export function DocumentForm({ document, projectMembers, onSubmit, onCancel }: D
           uploadedBy: document.uploadedBy || '',
           signedBy: document.signedBy || [],
           verifiedAt: document.verifiedAt || '',
+          projectId: undefined, // Not needed when editing existing doc
         }
       : {
           name: '',
@@ -68,15 +90,49 @@ export function DocumentForm({ document, projectMembers, onSubmit, onCancel }: D
           uploadedBy: '',
           signedBy: [],
           verifiedAt: '',
+          projectId: selectedProjectId || '',
         },
   });
 
   const watchStatus = form.watch('status');
   const watchSignedBy = form.watch('signedBy') || [];
+  const watchProjectId = form.watch('projectId');
+  
+  // Get members from selected project if projects are provided
+  const availableMembers = projects && watchProjectId
+    ? projects.find(p => p.id === watchProjectId)?.members || projectMembers
+    : projectMembers;
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {projects && !isEditing && (
+          <FormField
+            control={form.control}
+            name="projectId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Project</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih project" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.propertyName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         <FormField
           control={form.control}
           name="name"
@@ -156,7 +212,7 @@ export function DocumentForm({ document, projectMembers, onSubmit, onCancel }: D
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="">Tidak ada</SelectItem>
-                  {projectMembers.map((user) => (
+                  {availableMembers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}
                     </SelectItem>
@@ -171,7 +227,7 @@ export function DocumentForm({ document, projectMembers, onSubmit, onCancel }: D
         <div className="space-y-2">
           <FormLabel>Ditandatangani Oleh (Opsional)</FormLabel>
           <div className="space-y-2">
-            {projectMembers.map((user) => (
+            {availableMembers.map((user) => (
               <FormField
                 key={user.id}
                 control={form.control}

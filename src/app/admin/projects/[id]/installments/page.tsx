@@ -18,6 +18,7 @@ import { formatCurrency } from '@/lib/payment-utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { calculatePaidPercentage, getTotalPaid } from '@/lib/payment-utils';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function ProjectInstallmentsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -153,56 +154,65 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/admin/projects/${id}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/admin/projects/${id}`}>
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">Installment Plans</h1>
+            <p className="text-muted-foreground">
+              Kelola rencana cicilan untuk project: {project.propertyName}
+            </p>
+            <div className="mt-2">
+              <Breadcrumb items={[
+                { label: 'Projects', href: '/admin/projects' },
+                { label: project.propertyName, href: `/admin/projects/${id}/detail` },
+                { label: 'Installment Plans' }
+              ]} />
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Kelola rencana cicilan untuk project: {project.propertyName}
-          </p>
         </div>
-        {project.status === 'closed' || project.status === 'completed' ? (
-          <Dialog open={isDialogOpen} onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) setEditingPlan(null);
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah Installment Plan
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingPlan ? 'Edit Installment Plan' : 'Tambah Installment Plan Baru'}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingPlan ? 'Edit informasi installment plan' : 'Tambahkan installment plan baru ke project'}
-                </DialogDescription>
-              </DialogHeader>
-              <InstallmentPlanForm
-                installmentPlan={editingPlan || undefined}
-                projectMembers={project.members}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setIsDialogOpen(false);
-                  setEditingPlan(null);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        ) : (
-          <div className="text-sm text-muted-foreground">
-            Installment plans hanya dapat dibuat untuk project dengan status 'closed' atau 'completed'
-          </div>
-        )}
+        <div>
+          {project.status === 'closed' || project.status === 'completed' ? (
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) setEditingPlan(null);
+            }}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Installment Plan
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingPlan ? 'Edit Installment Plan' : 'Tambah Installment Plan Baru'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {editingPlan ? 'Edit informasi installment plan' : 'Tambahkan installment plan baru ke project'}
+                  </DialogDescription>
+                </DialogHeader>
+                <InstallmentPlanForm
+                  installmentPlan={editingPlan || undefined}
+                  projectMembers={project.members}
+                  onSubmit={handleSubmit}
+                  onCancel={() => {
+                    setIsDialogOpen(false);
+                    setEditingPlan(null);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Installment plans hanya dapat dibuat untuk project dengan status 'closed' atau 'completed'
+            </div>
+          )}
+        </div>
       </div>
 
       <Card>

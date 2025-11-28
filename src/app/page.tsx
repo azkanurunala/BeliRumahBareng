@@ -145,9 +145,12 @@ export default function HomePage() {
               <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80 relative z-10">
                 Jangan biarkan harga mahal menghalangi impian Anda. Bergabunglah dengan komunitas BeliRumahBareng dan wujudkan kepemilikan properti yang lebih terjangkau.
               </p>
-              <div className="mt-8 flex items-center justify-center gap-x-6 relative z-10">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-x-6 gap-y-4 relative z-10">
                 <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                    <Link href="/discover">Mulai Sekarang</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                   <Link href="/sell-property">Jual Properti Anda</Link>
                 </Button>
               </div>
             </div>

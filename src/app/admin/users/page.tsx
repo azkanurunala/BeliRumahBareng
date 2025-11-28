@@ -47,7 +47,7 @@ export default function UsersPage() {
     },
     {
       key: 'profile',
-      header: 'Tujuan Investasi',
+      header: 'Tujuan Kepemilikan',
       cell: (row) => row.profile.investmentGoals,
     },
   ];

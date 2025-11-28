@@ -108,6 +108,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passwordHash: data.password, // In real app, hash this
       };
       
+      // Save to registeredUsers in localStorage for admin context
+      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+      const registeredUsers: User[] = storedRegisteredUsers ? JSON.parse(storedRegisteredUsers) : [];
+      registeredUsers.push(newUser);
+      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+      
+      // Trigger custom event to notify admin context
+      window.dispatchEvent(new CustomEvent('userRegistered', { detail: newUser }));
+      
       setUser(newUser);
       localStorage.setItem('currentUserId', newUser.id);
       setIsLoading(false);

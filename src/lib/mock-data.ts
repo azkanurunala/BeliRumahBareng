@@ -1,4 +1,4 @@
-import type { Property, User, Project } from './types';
+import type { Property, User, Project, PropertyInterest, PropertySubmission } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const getImage = (id: string) => {
@@ -141,6 +141,8 @@ export const mockUsers: User[] = [
   {
     id: 'user-001',
     name: 'Adi',
+    email: 'adi@example.com',
+    phoneNumber: '+62 812-3456-7890',
     avatarUrl: getImage('user-1').url,
     avatarHint: getImage('user-1').hint,
     profile: {
@@ -154,6 +156,8 @@ export const mockUsers: User[] = [
   {
     id: 'user-002',
     name: 'Budi',
+    email: 'budi@example.com',
+    phoneNumber: '+62 812-3456-7891',
     avatarUrl: getImage('user-2').url,
     avatarHint: getImage('user-2').hint,
     profile: {
@@ -167,6 +171,8 @@ export const mockUsers: User[] = [
   {
     id: 'user-003',
     name: 'Citra',
+    email: 'citra@example.com',
+    phoneNumber: '+62 812-3456-7892',
     avatarUrl: getImage('user-3').url,
     avatarHint: getImage('user-3').hint,
     profile: {
@@ -180,6 +186,8 @@ export const mockUsers: User[] = [
   {
     id: 'user-004',
     name: 'Dewi',
+    email: 'dewi@example.com',
+    phoneNumber: '+62 812-3456-7893',
     avatarUrl: getImage('user-4').url,
     avatarHint: getImage('user-4').hint,
     profile: {
@@ -193,6 +201,8 @@ export const mockUsers: User[] = [
   {
     id: 'user-005',
     name: 'Eka',
+    email: 'eka@example.com',
+    phoneNumber: '+62 812-3456-7894',
     avatarUrl: getImage('user-5').url,
     avatarHint: getImage('user-5').hint,
     profile: {
@@ -206,6 +216,8 @@ export const mockUsers: User[] = [
   {
     id: 'user-006',
     name: 'Fajar',
+    email: 'fajar@example.com',
+    phoneNumber: '+62 812-3456-7895',
     avatarUrl: getImage('user-6').url,
     avatarHint: getImage('user-6').hint,
     profile: {
@@ -1075,5 +1087,423 @@ export const mockProjects: Project[] = [
     proj003,     // proj-003 (active baru mulai)
     proj004,     // proj-004 (completed - benar-benar selesai)
 ];
+
+// Helper function untuk mendapatkan email dan phoneNumber dari user
+const getUserContact = (userId: string) => {
+  const user = mockUsers.find(u => u.id === userId);
+  return {
+    email: user?.email || `${user?.name.toLowerCase()}@example.com`,
+    phoneNumber: user?.phoneNumber || `+62 812-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+  };
+};
+
+// Mock Interests - Pernyataan minat pengguna terhadap properti
+export const mockInterests: PropertyInterest[] = [
+  // Interests untuk prop-001 (Sidoarjo - co-owning dengan 9 kavling)
+  {
+    id: 'interest-001',
+    propertyId: 'prop-001',
+    userId: 'user-001',
+    unitId: 2,
+    isFirstHome: true,
+    willOccupy: true,
+    email: getUserContact('user-001').email,
+    phoneNumber: getUserContact('user-001').phoneNumber,
+    createdAt: '2025-01-10T08:00:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-002',
+    propertyId: 'prop-001',
+    userId: 'user-002',
+    unitId: 4,
+    isFirstHome: false,
+    willOccupy: false,
+    email: getUserContact('user-002').email,
+    phoneNumber: getUserContact('user-002').phoneNumber,
+    createdAt: '2025-01-11T09:30:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-003',
+    propertyId: 'prop-001',
+    userId: 'user-003',
+    unitId: 6,
+    isFirstHome: true,
+    willOccupy: true,
+    email: getUserContact('user-003').email,
+    phoneNumber: getUserContact('user-003').phoneNumber,
+    createdAt: '2025-01-12T10:15:00Z',
+    status: 'pending',
+  },
+  {
+    id: 'interest-004',
+    propertyId: 'prop-001',
+    userId: 'user-004',
+    unitId: 7,
+    isFirstHome: false,
+    willOccupy: true,
+    email: getUserContact('user-004').email,
+    phoneNumber: getUserContact('user-004').phoneNumber,
+    createdAt: '2025-01-13T11:00:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-005',
+    propertyId: 'prop-001',
+    userId: 'user-005',
+    unitId: 8,
+    isFirstHome: true,
+    willOccupy: false,
+    email: getUserContact('user-005').email,
+    phoneNumber: getUserContact('user-005').phoneNumber,
+    createdAt: '2025-01-14T14:20:00Z',
+    status: 'rejected',
+  },
+  // Interests untuk prop-002 (Bekasi - co-building dengan 5 lantai)
+  {
+    id: 'interest-006',
+    propertyId: 'prop-002',
+    userId: 'user-001',
+    unitId: 4,
+    isFirstHome: false,
+    willOccupy: true,
+    email: getUserContact('user-001').email,
+    phoneNumber: getUserContact('user-001').phoneNumber,
+    createdAt: '2025-02-01T08:30:00Z',
+    status: 'pending',
+  },
+  {
+    id: 'interest-007',
+    propertyId: 'prop-002',
+    userId: 'user-002',
+    unitId: 5,
+    isFirstHome: true,
+    willOccupy: true,
+    email: getUserContact('user-002').email,
+    phoneNumber: getUserContact('user-002').phoneNumber,
+    createdAt: '2025-02-02T09:45:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-008',
+    propertyId: 'prop-002',
+    userId: 'user-006',
+    unitId: 1,
+    isFirstHome: false,
+    willOccupy: false,
+    email: getUserContact('user-006').email,
+    phoneNumber: getUserContact('user-006').phoneNumber,
+    createdAt: '2025-02-03T10:00:00Z',
+    status: 'pending',
+  },
+  // Interests untuk prop-003 (Jakarta - co-building dengan 8 lantai)
+  {
+    id: 'interest-009',
+    propertyId: 'prop-003',
+    userId: 'user-003',
+    unitId: 3,
+    isFirstHome: true,
+    willOccupy: true,
+    email: getUserContact('user-003').email,
+    phoneNumber: getUserContact('user-003').phoneNumber,
+    createdAt: '2025-02-15T11:20:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-010',
+    propertyId: 'prop-003',
+    userId: 'user-004',
+    unitId: 6,
+    isFirstHome: false,
+    willOccupy: true,
+    email: getUserContact('user-004').email,
+    phoneNumber: getUserContact('user-004').phoneNumber,
+    createdAt: '2025-02-16T13:00:00Z',
+    status: 'pending',
+  },
+  {
+    id: 'interest-011',
+    propertyId: 'prop-003',
+    userId: 'user-005',
+    unitId: 7,
+    isFirstHome: true,
+    willOccupy: false,
+    email: getUserContact('user-005').email,
+    phoneNumber: getUserContact('user-005').phoneNumber,
+    createdAt: '2025-02-17T14:30:00Z',
+    status: 'rejected',
+  },
+  // Interests untuk prop-004 (Tangerang - flexible co-owning)
+  {
+    id: 'interest-012',
+    propertyId: 'prop-004',
+    userId: 'user-001',
+    unitSize: 250,
+    isFirstHome: false,
+    willOccupy: true,
+    email: getUserContact('user-001').email,
+    phoneNumber: getUserContact('user-001').phoneNumber,
+    createdAt: '2025-03-01T09:00:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-013',
+    propertyId: 'prop-004',
+    userId: 'user-002',
+    unitSize: 300,
+    isFirstHome: true,
+    willOccupy: true,
+    email: getUserContact('user-002').email,
+    phoneNumber: getUserContact('user-002').phoneNumber,
+    createdAt: '2025-03-02T10:15:00Z',
+    status: 'pending',
+  },
+  {
+    id: 'interest-014',
+    propertyId: 'prop-004',
+    userId: 'user-003',
+    unitSize: 200,
+    isFirstHome: false,
+    willOccupy: false,
+    email: getUserContact('user-003').email,
+    phoneNumber: getUserContact('user-003').phoneNumber,
+    createdAt: '2025-03-03T11:30:00Z',
+    status: 'approved',
+  },
+  {
+    id: 'interest-015',
+    propertyId: 'prop-004',
+    userId: 'user-006',
+    unitSize: 150,
+    isFirstHome: true,
+    willOccupy: true,
+    email: getUserContact('user-006').email,
+    phoneNumber: getUserContact('user-006').phoneNumber,
+    createdAt: '2025-03-04T12:00:00Z',
+    status: 'pending',
+  },
+];
+
+// Mock Property Submissions - Pengajuan properti dari pengguna
+export const mockPropertySubmissions: PropertySubmission[] = [
+  {
+    id: 'submission-001',
+    submittedBy: 'user-001',
+    type: 'co-owning',
+    name: 'Tanah Kavling di Depok',
+    description: 'Lahan strategis di Depok dengan akses mudah ke Jakarta. Cocok untuk pengembangan perumahan atau investasi jangka panjang. Lokasi dekat dengan pusat perbelanjaan dan fasilitas pendidikan.',
+    location: 'Depok, Jawa Barat',
+    totalArea: 1200,
+    totalUnits: 12,
+    unitSize: 100,
+    unitMeasure: 'm²',
+    askingPrice: 1500000000,
+    contactPerson: 'Adi',
+    contactPhone: '+62 812-3456-7890',
+    contactEmail: 'adi@example.com',
+    images: [
+      getLocalImage('01.png', 'property submission'),
+      getLocalImage('04.png', 'site plan'),
+    ],
+    status: 'pending',
+    createdAt: '2025-01-20T10:00:00Z',
+  },
+  {
+    id: 'submission-002',
+    submittedBy: 'user-002',
+    type: 'co-building',
+    name: 'Apartemen Co-Build di Bandung',
+    description: 'Proyek apartemen modern di pusat kota Bandung. Lokasi sangat strategis dengan view yang indah. Cocok untuk investasi atau hunian pribadi.',
+    location: 'Bandung, Jawa Barat',
+    totalUnits: 6,
+    askingPrice: 2800000000,
+    contactPerson: 'Budi',
+    contactPhone: '+62 812-3456-7891',
+    contactEmail: 'budi@example.com',
+    images: [
+      getLocalImage('02.png', 'property submission'),
+      getLocalImage('05.png', 'floor plan'),
+    ],
+    status: 'approved',
+    reviewedBy: 'admin-001',
+    reviewedAt: '2025-01-25T14:00:00Z',
+    notes: 'Properti disetujui setelah verifikasi dokumen lengkap. Lokasi strategis dan harga wajar.',
+    createdAt: '2025-01-22T09:00:00Z',
+  },
+  {
+    id: 'submission-003',
+    submittedBy: 'user-003',
+    type: 'co-owning',
+    name: 'Kavling Tanah di Bogor',
+    description: 'Tanah kavling siap bangun di kawasan perumahan eksklusif Bogor. Lingkungan asri dan aman, cocok untuk keluarga.',
+    location: 'Bogor, Jawa Barat',
+    totalArea: 800,
+    totalUnits: 8,
+    unitSize: 100,
+    unitMeasure: 'm²',
+    askingPrice: 1200000000,
+    contactPerson: 'Citra',
+    contactPhone: '+62 812-3456-7892',
+    contactEmail: 'citra@example.com',
+    images: [
+      getLocalImage('03.png', 'property submission'),
+    ],
+    status: 'pending',
+    createdAt: '2025-02-05T11:00:00Z',
+  },
+  {
+    id: 'submission-004',
+    submittedBy: 'user-004',
+    type: 'co-building',
+    name: 'Gedung Flat di Semarang',
+    description: 'Proyek flat modern di Semarang dengan desain minimalis. Fasilitas lengkap dan akses mudah ke berbagai tempat penting.',
+    location: 'Semarang, Jawa Tengah',
+    totalUnits: 7,
+    askingPrice: 2200000000,
+    contactPerson: 'Dewi',
+    contactPhone: '+62 812-3456-7893',
+    contactEmail: 'dewi@example.com',
+    images: [
+      getLocalImage('06.png', 'property submission'),
+      getLocalImage('07.png', 'property image'),
+    ],
+    status: 'rejected',
+    reviewedBy: 'admin-001',
+    reviewedAt: '2025-02-10T15:00:00Z',
+    notes: 'Dokumen tidak lengkap dan lokasi kurang strategis. Perlu perbaikan sebelum dapat disetujui.',
+    createdAt: '2025-02-08T10:00:00Z',
+  },
+  {
+    id: 'submission-005',
+    submittedBy: 'user-005',
+    type: 'co-owning',
+    name: 'Tanah Fleksibel di Yogyakarta',
+    description: 'Lahan luas di Yogyakarta dengan potensi pengembangan tinggi. Dapat dibagi sesuai kebutuhan investor.',
+    location: 'Yogyakarta, DIY',
+    totalArea: 1500,
+    askingPrice: 1800000000,
+    unitMeasure: 'm²',
+    contactPerson: 'Eka',
+    contactPhone: '+62 812-3456-7894',
+    contactEmail: 'eka@example.com',
+    images: [
+      getLocalImage('08.png', 'property submission'),
+      getLocalImage('09.png', 'site plan'),
+    ],
+    status: 'pending',
+    createdAt: '2025-02-15T13:00:00Z',
+  },
+  {
+    id: 'submission-006',
+    submittedBy: 'user-006',
+    type: 'co-building',
+    name: 'Apartemen Premium di Surabaya',
+    description: 'Proyek apartemen premium di jantung Surabaya. Desain modern dengan fasilitas lengkap dan keamanan 24 jam.',
+    location: 'Surabaya, Jawa Timur',
+    totalUnits: 10,
+    askingPrice: 3500000000,
+    contactPerson: 'Fajar',
+    contactPhone: '+62 812-3456-7895',
+    contactEmail: 'fajar@example.com',
+    images: [
+      getLocalImage('10.png', 'property submission'),
+      getLocalImage('11.png', 'floor plan'),
+    ],
+    status: 'approved',
+    reviewedBy: 'admin-001',
+    reviewedAt: '2025-02-20T16:00:00Z',
+    notes: 'Properti berkualitas tinggi dengan lokasi sangat strategis. Disetujui untuk ditampilkan di platform.',
+    createdAt: '2025-02-18T09:00:00Z',
+  },
+  {
+    id: 'submission-007',
+    submittedBy: 'user-001',
+    type: 'co-owning',
+    name: 'Kavling Tanah di Malang',
+    description: 'Tanah kavling di Malang dengan view pegunungan. Lingkungan tenang dan cocok untuk investasi atau hunian.',
+    location: 'Malang, Jawa Timur',
+    totalArea: 900,
+    totalUnits: 9,
+    unitSize: 100,
+    unitMeasure: 'm²',
+    askingPrice: 1350000000,
+    contactPerson: 'Adi',
+    contactPhone: '+62 812-3456-7890',
+    contactEmail: 'adi@example.com',
+    images: [
+      getLocalImage('12.png', 'property submission'),
+    ],
+    status: 'pending',
+    createdAt: '2025-03-01T10:00:00Z',
+  },
+  {
+    id: 'submission-008',
+    submittedBy: 'user-003',
+    type: 'co-building',
+    name: 'Flat Modern di Medan',
+    description: 'Proyek flat modern di Medan dengan konsep green building. Ramah lingkungan dan hemat energi.',
+    location: 'Medan, Sumatera Utara',
+    totalUnits: 8,
+    askingPrice: 2400000000,
+    contactPerson: 'Citra',
+    contactPhone: '+62 812-3456-7892',
+    contactEmail: 'citra@example.com',
+    images: [
+      getLocalImage('13.png', 'property submission'),
+      getLocalImage('14.png', 'property image'),
+    ],
+    status: 'pending',
+    createdAt: '2025-03-05T11:30:00Z',
+  },
+];
+
+// Fungsi untuk seeding semua mock data ke localStorage
+export function seedAllMockData(): { success: boolean; message: string } {
+  try {
+    // Seed properties
+    localStorage.setItem('admin_properties', JSON.stringify(mockProperties));
+    
+    // Seed users
+    localStorage.setItem('admin_users', JSON.stringify(mockUsers));
+    
+    // Seed projects
+    localStorage.setItem('admin_projects', JSON.stringify(mockProjects));
+    
+    // Seed interests (global)
+    localStorage.setItem('admin_interests', JSON.stringify(mockInterests));
+    
+    // Seed interests per user (untuk kompatibilitas dengan user context)
+    const interestsByUser: Record<string, PropertyInterest[]> = {};
+    mockInterests.forEach(interest => {
+      if (!interestsByUser[interest.userId]) {
+        interestsByUser[interest.userId] = [];
+      }
+      interestsByUser[interest.userId].push(interest);
+    });
+    
+    Object.entries(interestsByUser).forEach(([userId, interests]) => {
+      localStorage.setItem(`interests_${userId}`, JSON.stringify(interests));
+    });
+    
+    // Seed property submissions
+    localStorage.setItem('admin_property_submissions', JSON.stringify(mockPropertySubmissions));
+    
+    // Set flag bahwa data sudah di-seed
+    localStorage.setItem('mock_data_seeded', 'true');
+    localStorage.setItem('mock_data_seeded_at', new Date().toISOString());
+    
+    return {
+      success: true,
+      message: `Berhasil seeding ${mockProperties.length} properties, ${mockUsers.length} users, ${mockProjects.length} projects, ${mockInterests.length} interests, dan ${mockPropertySubmissions.length} submissions ke localStorage.`,
+    };
+  } catch (error) {
+    console.error('Error seeding mock data:', error);
+    return {
+      success: false,
+      message: `Gagal seeding data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
 
     

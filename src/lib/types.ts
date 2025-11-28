@@ -155,8 +155,12 @@ export type PropertyInterest = {
   unitSize?: number; // untuk flexible
   isFirstHome: boolean;
   willOccupy: boolean;
+  email?: string; // email peminat (bisa dari user atau input manual)
+  phoneNumber?: string; // nomor telepon/WhatsApp peminat (bisa dari user atau input manual)
   createdAt: string; // ISO date string
   status?: 'pending' | 'approved' | 'rejected'; // untuk admin approval
+  notes?: string; // admin notes untuk approval/rejection
+  reviewedAt?: string; // ISO date string - kapan direview
 };
 
 // Entity untuk watchlist (bookmark properti)

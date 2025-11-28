@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatCurrency } from '@/lib/payment-utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Image from 'next/image';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -37,18 +38,24 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/admin/projects">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">{project.propertyName}</h1>
             <p className="text-muted-foreground">
               Detail informasi project
             </p>
+            <div className="mt-2">
+              <Breadcrumb items={[
+                { label: 'Projects', href: '/admin/projects' },
+                { label: project.propertyName }
+              ]} />
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">

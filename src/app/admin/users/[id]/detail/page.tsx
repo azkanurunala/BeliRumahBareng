@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { ArrowLeft, Edit, User, MapPin, DollarSign, Target, Clock, Home } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -26,18 +27,24 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/admin/users">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">{user.name}</h1>
             <p className="text-muted-foreground">
               Detail informasi user
             </p>
+            <div className="mt-2">
+              <Breadcrumb items={[
+                { label: 'Users', href: '/admin/users' },
+                { label: user.name }
+              ]} />
+            </div>
           </div>
         </div>
         <Button asChild>

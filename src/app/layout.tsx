@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AdminLayoutWrapper } from '@/components/admin-layout-wrapper';
 import { AuthProvider } from '@/contexts/auth-context';
 import { UserDataProvider } from '@/contexts/user-data-context';
+import { AdminDataProvider } from '@/contexts/admin-data-context';
 
 export const metadata: Metadata = {
   title: 'BeliRumahBareng - Kepemilikan Properti Kolektif',
@@ -25,11 +26,13 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AuthProvider>
           <UserDataProvider>
-            <div className="flex min-h-screen w-full flex-col">
-              <AdminLayoutWrapper>
-                {children}
-              </AdminLayoutWrapper>
-            </div>
+            <AdminDataProvider>
+              <div className="flex min-h-screen w-full flex-col">
+                <AdminLayoutWrapper>
+                  {children}
+                </AdminLayoutWrapper>
+              </div>
+            </AdminDataProvider>
           </UserDataProvider>
         </AuthProvider>
         <Toaster />

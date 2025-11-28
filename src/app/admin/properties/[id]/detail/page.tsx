@@ -11,6 +11,7 @@ import { useAdminData } from '@/contexts/admin-data-context';
 import { ArrowLeft, Edit, Building2, MapPin, DollarSign, Home, Square, FileText, Image as ImageIcon, BadgeCheck, Users } from 'lucide-react';
 import { formatCurrency } from '@/lib/payment-utils';
 import Image from 'next/image';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -41,18 +42,24 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/admin/properties">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">{property.name}</h1>
             <p className="text-muted-foreground">
               Detail informasi properti
             </p>
+            <div className="mt-2">
+              <Breadcrumb items={[
+                { label: 'Properties', href: '/admin/properties' },
+                { label: property.name }
+              ]} />
+            </div>
           </div>
         </div>
         <Button asChild>

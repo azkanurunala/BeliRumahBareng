@@ -145,7 +145,7 @@ export function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
             name="profile.investmentGoals"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tujuan Investasi</FormLabel>
+                <FormLabel>Tujuan Kepemilikan</FormLabel>
                 <FormControl>
                   <Input {...field} placeholder="e.g., Kepemilikan rumah pertama" />
                 </FormControl>

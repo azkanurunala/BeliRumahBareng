@@ -31,12 +31,33 @@ import {
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth-context';
+import { useUserData } from '@/contexts/user-data-context';
 import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
+import { Heart } from 'lucide-react';
 
 export default function PropertyDetailClient({ property }: { property: Property }) {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const [isFirstHome, setIsFirstHome] = useState(false);
+  const [willOccupy, setWillOccupy] = useState(false);
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+  const { addInterest, addToWatchlist, removeFromWatchlist, isInWatchlist } = useUserData();
+  
+  const isWatched = isInWatchlist(property.id);
+
+  // Auto-fill email and phoneNumber from user data when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setEmail(user.email || '');
+      setPhoneNumber(user.phoneNumber || '');
+    }
+  }, [isAuthenticated, user]);
 
   // Fullscreen states for each carousel
   const [mainCarouselFullscreen, setMainCarouselFullscreen] = useState({ isOpen: false, index: 0 });
@@ -58,12 +79,14 @@ export default function PropertyDetailClient({ property }: { property: Property 
 
     setMainCarouselCurrent(mainCarouselApi.selectedScrollSnap());
 
-    mainCarouselApi.on('select', () => {
+    const onSelect = () => {
       setMainCarouselCurrent(mainCarouselApi.selectedScrollSnap());
-    });
+    };
+
+    mainCarouselApi.on('select', onSelect);
 
     return () => {
-      mainCarouselApi.off('select');
+      mainCarouselApi.off('select', onSelect);
     };
   }, [mainCarouselApi]);
 
@@ -73,12 +96,14 @@ export default function PropertyDetailClient({ property }: { property: Property 
 
     setFloorPlanCarouselCurrent(floorPlanCarouselApi.selectedScrollSnap());
 
-    floorPlanCarouselApi.on('select', () => {
+    const onSelect = () => {
       setFloorPlanCarouselCurrent(floorPlanCarouselApi.selectedScrollSnap());
-    });
+    };
+
+    floorPlanCarouselApi.on('select', onSelect);
 
     return () => {
-      floorPlanCarouselApi.off('select');
+      floorPlanCarouselApi.off('select', onSelect);
     };
   }, [floorPlanCarouselApi]);
 
@@ -88,12 +113,14 @@ export default function PropertyDetailClient({ property }: { property: Property 
 
     setDevelopmentPlanCarouselCurrent(developmentPlanCarouselApi.selectedScrollSnap());
 
-    developmentPlanCarouselApi.on('select', () => {
+    const onSelect = () => {
       setDevelopmentPlanCarouselCurrent(developmentPlanCarouselApi.selectedScrollSnap());
-    });
+    };
+
+    developmentPlanCarouselApi.on('select', onSelect);
 
     return () => {
-      developmentPlanCarouselApi.off('select');
+      developmentPlanCarouselApi.off('select', onSelect);
     };
   }, [developmentPlanCarouselApi]);
 
@@ -193,6 +220,15 @@ export default function PropertyDetailClient({ property }: { property: Property 
   }
   
   const handleJoinProject = () => {
+    if (!isAuthenticated || !user) {
+      toast({
+        variant: "destructive",
+        title: "Login Diperlukan",
+        description: "Silakan login terlebih dahulu untuk bergabung dengan proyek.",
+      });
+      return;
+    }
+
     if (!isFlexible && !selectedUnit) {
       toast({
         variant: "destructive",
@@ -201,9 +237,51 @@ export default function PropertyDetailClient({ property }: { property: Property 
       });
       return;
     }
+
+    // Validate email and phoneNumber
+    if (!email || !email.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Email Diperlukan",
+        description: "Silakan masukkan email Anda.",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        variant: "destructive",
+        title: "Email Tidak Valid",
+        description: "Silakan masukkan email yang valid.",
+      });
+      return;
+    }
+
+    if (!phoneNumber || !phoneNumber.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Nomor Telepon Diperlukan",
+        description: "Silakan masukkan nomor telepon/WhatsApp Anda.",
+      });
+      return;
+    }
+    
+    // Create interest
+    addInterest({
+      propertyId: property.id,
+      userId: user.id,
+      unitId: !isFlexible && selectedUnit ? parseInt(selectedUnit) : undefined,
+      unitSize: isFlexible ? undefined : undefined, // For flexible, will be determined later
+      isFirstHome,
+      willOccupy,
+      email: email.trim(),
+      phoneNumber: phoneNumber.trim(),
+    });
     
     toast({
-      title: "Berhasil Bergabung (Simulasi)",
+      title: "Berhasil Bergabung",
       description: isFlexible
         ? "Anda telah menyatakan minat untuk bergabung. Tim kami akan segera menghubungi Anda."
         : `Anda telah memilih ${property.unitName} ${selectedUnit}. Tim kami akan segera menghubungi Anda untuk langkah selanjutnya.`,
@@ -457,6 +535,41 @@ export default function PropertyDetailClient({ property }: { property: Property 
                   </div>
                 )}
 
+                <div className="flex gap-2">
+                  <Button
+                    variant={isWatched ? "default" : "outline"}
+                    size="lg"
+                    className="flex-1"
+                    onClick={() => {
+                      if (!isAuthenticated || !user) {
+                        toast({
+                          variant: "destructive",
+                          title: "Login Diperlukan",
+                          description: "Silakan login terlebih dahulu untuk menyimpan properti ke watchlist.",
+                        });
+                        return;
+                      }
+                      
+                      if (isWatched) {
+                        removeFromWatchlist(property.id);
+                        toast({
+                          title: "Dihapus dari Watchlist",
+                          description: "Properti telah dihapus dari watchlist Anda.",
+                        });
+                      } else {
+                        addToWatchlist(property.id);
+                        toast({
+                          title: "Ditambahkan ke Watchlist",
+                          description: "Properti telah disimpan ke watchlist Anda.",
+                        });
+                      }
+                    }}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isWatched ? 'fill-current' : ''}`} />
+                    {isWatched ? 'Di Watchlist' : 'Simpan ke Watchlist'}
+                  </Button>
+                </div>
+                
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button size="lg" className="w-full">
@@ -500,6 +613,69 @@ export default function PropertyDetailClient({ property }: { property: Property 
                           </Table>
                           </RadioGroup>
                       )}
+                      
+                      <div className='mt-4 space-y-4 rounded-lg border p-4'>
+                        <h4 className='font-semibold text-sm mb-3'>Informasi Kontak</h4>
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email *</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="nama@example.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phoneNumber">Nomor Telepon/WhatsApp *</Label>
+                            <Input
+                              id="phoneNumber"
+                              type="tel"
+                              placeholder="+62 812-3456-7890"
+                              value={phoneNumber}
+                              onChange={(e) => setPhoneNumber(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='mt-4 space-y-4 rounded-lg border p-4'>
+                        <h4 className='font-semibold text-sm mb-3'>Informasi Tambahan</h4>
+                        <div className="flex items-start space-x-3">
+                          <Checkbox 
+                            id="isFirstHome" 
+                            checked={isFirstHome}
+                            onCheckedChange={(checked) => setIsFirstHome(checked === true)}
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                            <Label
+                              htmlFor="isFirstHome"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              Apakah ini untuk rumah pertama Anda?
+                            </Label>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <Checkbox 
+                            id="willOccupy" 
+                            checked={willOccupy}
+                            onCheckedChange={(checked) => setWillOccupy(checked === true)}
+                          />
+                          <div className="grid gap-1.5 leading-none">
+                            <Label
+                              htmlFor="willOccupy"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              Apakah rumah ini akan Anda tempati sendiri?
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className='mt-4 space-y-3 rounded-lg border bg-secondary/50 p-4'>
                         <h4 className='font-semibold text-sm'>Langkah Selanjutnya</h4>
                         <ul className='space-y-2 text-xs text-muted-foreground'>

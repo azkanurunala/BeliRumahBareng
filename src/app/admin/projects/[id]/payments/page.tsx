@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatPeriod } from '@/lib/payment-utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function ProjectPaymentsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -155,19 +156,26 @@ export default function ProjectPaymentsPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/admin/projects/${id}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/admin/projects/${id}`}>
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="flex-1">
             <h1 className="text-3xl font-bold tracking-tight">Pembayaran Project</h1>
+            <p className="text-muted-foreground">
+              Kelola pembayaran untuk project: {project.propertyName}
+            </p>
+            <div className="mt-2">
+              <Breadcrumb items={[
+                { label: 'Projects', href: '/admin/projects' },
+                { label: project.propertyName, href: `/admin/projects/${id}/detail` },
+                { label: 'Pembayaran' }
+              ]} />
+            </div>
           </div>
-          <p className="text-muted-foreground">
-            Kelola pembayaran untuk project: {project.propertyName}
-          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);

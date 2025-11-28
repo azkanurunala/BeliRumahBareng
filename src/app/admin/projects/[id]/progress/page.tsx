@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale/id';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function ProjectProgressPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -54,17 +55,24 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href={`/admin/projects/${id}`}>
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">Progress Project</h1>
           <p className="text-muted-foreground">
             Detail progress untuk project: {project.propertyName}
           </p>
+          <div className="mt-2">
+            <Breadcrumb items={[
+              { label: 'Projects', href: '/admin/projects' },
+              { label: project.propertyName, href: `/admin/projects/${id}/detail` },
+              { label: 'Progress' }
+            ]} />
+          </div>
         </div>
       </div>
 

@@ -26,6 +26,7 @@ const navLinks = [
   { href: '/projects', label: 'Proyek Saya' },
   { href: '/partners', label: 'Cari Rekan' },
   { href: '/recommendations', label: 'Rekomendasi' },
+  { href: '/sell-property', label: 'Jual Properti' },
 ];
 
 export default function Header() {

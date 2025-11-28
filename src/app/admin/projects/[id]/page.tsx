@@ -10,8 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, CreditCard, TrendingUp, Calendar } from 'lucide-react';
+import { FileText, CreditCard, TrendingUp, Calendar, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Breadcrumb } from '@/components/admin/breadcrumb';
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -42,12 +43,26 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Detail Project</h1>
-          <p className="text-muted-foreground">
-            Kelola project: {project.propertyName}
-          </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/admin/projects">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold tracking-tight">Detail Project</h1>
+            <p className="text-muted-foreground">
+              Kelola project: {project.propertyName}
+            </p>
+            <div className="mt-2">
+              <Breadcrumb items={[
+                { label: 'Projects', href: '/admin/projects' },
+                { label: project.propertyName, href: `/admin/projects/${id}/detail` },
+                { label: 'Edit' }
+              ]} />
+            </div>
+          </div>
         </div>
         <Badge variant={statusVariant} className="text-lg px-4 py-2">
           {statusLabel}

@@ -10,6 +10,7 @@ import {
   CreditCard,
   FileText,
   Home,
+  Heart,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -27,7 +28,7 @@ import { CoBuyLogo } from '@/components/icons';
 const menuItems = [
   {
     title: 'Dashboard',
-    url: '/admin',
+    url: '/admin/dashboard',
     icon: LayoutDashboard,
   },
   {
@@ -53,6 +54,16 @@ const menuItems = [
   {
     title: 'Documents',
     url: '/admin/documents',
+    icon: FileText,
+  },
+  {
+    title: 'Interests',
+    url: '/admin/interests',
+    icon: Heart,
+  },
+  {
+    title: 'Submissions',
+    url: '/admin/property-submissions',
     icon: FileText,
   },
 ];
