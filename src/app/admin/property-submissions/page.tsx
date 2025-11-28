@@ -324,9 +324,7 @@ export default function AdminPropertySubmissionsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Filter</CardTitle>
-        </CardHeader>
+
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
@@ -403,12 +401,6 @@ export default function AdminPropertySubmissionsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Daftar Submissions</CardTitle>
-          <CardDescription>
-            Semua pengajuan properti dari pengguna
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <DataTable
             data={filteredSubmissions}

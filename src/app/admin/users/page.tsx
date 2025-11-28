@@ -36,17 +36,17 @@ export default function UsersPage() {
       sortable: true,
     },
     {
-      key: 'profile',
+      key: 'locationPreference',
       header: 'Preferensi Lokasi',
       cell: (row) => row.profile.locationPreference,
     },
     {
-      key: 'profile',
+      key: 'priceRange',
       header: 'Rentang Harga',
       cell: (row) => row.profile.priceRange,
     },
     {
-      key: 'profile',
+      key: 'investmentGoals',
       header: 'Tujuan Kepemilikan',
       cell: (row) => row.profile.investmentGoals,
     },
@@ -93,12 +93,6 @@ export default function UsersPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Daftar Users</CardTitle>
-          <CardDescription>
-            Semua pengguna yang terdaftar di sistem
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <DataTable
             data={users}

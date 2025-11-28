@@ -281,9 +281,7 @@ export default function AdminInterestsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Filter</CardTitle>
-        </CardHeader>
+
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -379,12 +377,6 @@ export default function AdminInterestsPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Daftar Peminat</CardTitle>
-          <CardDescription>
-            Semua pernyataan minat dari pengguna untuk properti
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <DataTable
             data={filteredInterests}

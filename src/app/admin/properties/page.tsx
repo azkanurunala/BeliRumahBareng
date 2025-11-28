@@ -95,12 +95,6 @@ export default function PropertiesPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Daftar Properties</CardTitle>
-          <CardDescription>
-            Semua properti yang terdaftar di sistem
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <DataTable
             data={properties}

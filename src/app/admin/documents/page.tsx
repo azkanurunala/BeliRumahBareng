@@ -27,8 +27,10 @@ export default function AllDocumentsPage() {
   const [editingDocument, setEditingDocument] = useState<DocumentWithProject | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<DocumentWithProject | null>(null);
-  const [projectFilter, setProjectFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [filters, setFilters] = useState<Record<string, string[]>>({
+    projectId: [],
+    status: [],
+  });
   
   const allDocuments = useMemo(() => {
     return projects.flatMap(project => 
@@ -45,17 +47,17 @@ export default function AllDocumentsPage() {
     let result = allDocuments;
     
     // Filter by project
-    if (projectFilter !== 'all') {
-      result = result.filter(doc => doc.projectId === projectFilter);
+    if (filters.projectId && filters.projectId.length > 0) {
+      result = result.filter(doc => filters.projectId.includes(doc.projectId));
     }
     
     // Filter by status
-    if (statusFilter !== 'all') {
-      result = result.filter(doc => doc.status === statusFilter);
+    if (filters.status && filters.status.length > 0) {
+      result = result.filter(doc => filters.status.includes(doc.status));
     }
     
     return result;
-  }, [allDocuments, projectFilter, statusFilter]);
+  }, [allDocuments, filters]);
 
   const columns: Column<DocumentWithProject>[] = [
     {
@@ -292,57 +294,68 @@ export default function AllDocumentsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Daftar Semua Dokumen</CardTitle>
-          <CardDescription>
-            Dokumen dari semua project di sistem
-          </CardDescription>
-        </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Filter Project:</span>
-                <Select value={projectFilter} onValueChange={setProjectFilter}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Semua Project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Project</SelectItem>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.propertyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Filter Status:</span>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Semua Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Status</SelectItem>
-                    <SelectItem value="Menunggu">Menunggu</SelectItem>
-                    <SelectItem value="Tertanda">Tertanda</SelectItem>
-                    <SelectItem value="Terverifikasi">Terverifikasi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Project</label>
+              <Select
+                value={filters.projectId?.[0] || 'all'}
+                onValueChange={(value) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    projectId: value === 'all' ? [] : [value],
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Project</SelectItem>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.propertyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
-            <DataTable
-              data={filteredDocuments}
-              columns={columns}
-              searchKeys={['name', 'projectName']}
-              searchPlaceholder="Cari dokumen atau project..."
-              actionButtons={customActions}
-              actions={true}
-            />
+            <div>
+              <label className="text-sm font-medium mb-2 block">Status</label>
+              <Select
+                value={filters.status?.[0] || 'all'}
+                onValueChange={(value) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    status: value === 'all' ? [] : [value],
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Semua Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="Menunggu">Menunggu</SelectItem>
+                  <SelectItem value="Tertanda">Tertanda</SelectItem>
+                  <SelectItem value="Terverifikasi">Terverifikasi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <DataTable
+            data={filteredDocuments}
+            columns={columns}
+            searchKeys={['name', 'projectName']}
+            searchPlaceholder="Cari dokumen atau project..."
+            actionButtons={customActions}
+            actions={true}
+          />
         </CardContent>
       </Card>
 

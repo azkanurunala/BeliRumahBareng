@@ -99,12 +99,6 @@ export default function ProjectsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Daftar Projects</CardTitle>
-          <CardDescription>
-            Semua proyek yang terdaftar di sistem
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           <DataTable
             data={projects}
