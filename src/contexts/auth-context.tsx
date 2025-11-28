@@ -29,28 +29,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize: check if user is logged in (from localStorage or session)
   useEffect(() => {
-    const storedUserId = localStorage.getItem('currentUserId');
-    if (storedUserId) {
-      // Check both mockUsers and registeredUsers
-      let foundUser = mockUsers.find(u => u.id === storedUserId);
-      
-      if (!foundUser && typeof window !== 'undefined') {
-        const storedRegisteredUsers = localStorage.getItem('registeredUsers');
-        if (storedRegisteredUsers) {
-          try {
-            const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
-            foundUser = registeredUsers.find(u => u.id === storedUserId);
-          } catch (e) {
-            console.error('Failed to parse registeredUsers', e);
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const storedUserId = localStorage.getItem('currentUserId');
+      if (storedUserId) {
+        // Check both mockUsers and registeredUsers
+        let foundUser = mockUsers.find(u => u.id === storedUserId);
+        
+        if (!foundUser) {
+          const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+          if (storedRegisteredUsers) {
+            try {
+              const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
+              foundUser = registeredUsers.find(u => u.id === storedUserId);
+            } catch (e) {
+              console.error('Failed to parse registeredUsers', e);
+            }
           }
         }
+        
+        if (foundUser) {
+          setUser(foundUser);
+        }
       }
-      
-      if (foundUser) {
-        setUser(foundUser);
-      }
+    } catch (error) {
+      console.error('Error initializing auth:', error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
   const login = useCallback(async (emailOrPhone: string, password: string): Promise<boolean> => {
