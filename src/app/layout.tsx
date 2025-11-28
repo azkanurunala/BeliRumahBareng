@@ -1,9 +1,9 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
-import Header from '@/components/header';
-import MobileNav from '@/components/mobile-nav';
-import Footer from '@/components/footer';
+import { AdminLayoutWrapper } from '@/components/admin-layout-wrapper';
+import { AuthProvider } from '@/contexts/auth-context';
+import { UserDataProvider } from '@/contexts/user-data-context';
 
 export const metadata: Metadata = {
   title: 'BeliRumahBareng - Kepemilikan Properti Kolektif',
@@ -23,14 +23,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <div className="flex min-h-screen w-full flex-col">
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          <MobileNav />
-        </div>
+        <AuthProvider>
+          <UserDataProvider>
+            <div className="flex min-h-screen w-full flex-col">
+              <AdminLayoutWrapper>
+                {children}
+              </AdminLayoutWrapper>
+            </div>
+          </UserDataProvider>
+        </AuthProvider>
         <Toaster />
       </body>
     </html>

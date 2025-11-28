@@ -29,10 +29,16 @@ export type UserProfile = {
 
 export type User = {
   id: string;
-  name:string;
+  name: string;
+  email: string;
+  phoneNumber: string;
   avatarUrl: string;
   avatarHint: string;
   profile: UserProfile;
+  // Auth fields
+  passwordHash?: string; // untuk email/password
+  oauthProvider?: 'google' | 'facebook' | null; // untuk OAuth
+  oauthId?: string; // untuk OAuth
 };
 
 export type UnitAssignment = {
@@ -138,6 +144,51 @@ export type Project = {
   }[];
   status?: 'active' | 'closed' | 'completed'; // status project
   installmentPlans?: InstallmentPlan[]; // rencana cicilan per unit
+};
+
+// Entity baru untuk pernyataan minat (tahap sebelum jadi member project)
+export type PropertyInterest = {
+  id: string;
+  propertyId: string;
+  userId: string;
+  unitId?: number; // untuk co-building/co-owning non-flexible
+  unitSize?: number; // untuk flexible
+  isFirstHome: boolean;
+  willOccupy: boolean;
+  createdAt: string; // ISO date string
+  status?: 'pending' | 'approved' | 'rejected'; // untuk admin approval
+};
+
+// Entity untuk watchlist (bookmark properti)
+export type Watchlist = {
+  id: string;
+  propertyId: string;
+  userId: string;
+  createdAt: string; // ISO date string
+};
+
+// Entity untuk form jual properti (user submit properti)
+export type PropertySubmission = {
+  id: string;
+  submittedBy: string; // userId
+  type: 'co-building' | 'co-owning';
+  name: string;
+  description: string;
+  location: string;
+  totalArea?: number;
+  totalUnits?: number;
+  unitSize?: number;
+  unitMeasure?: string;
+  askingPrice: number;
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
+  images?: { url: string; hint: string }[];
+  status: 'pending' | 'approved' | 'rejected';
+  reviewedBy?: string; // admin userId
+  reviewedAt?: string; // ISO date string
+  notes?: string; // admin notes
+  createdAt: string; // ISO date string
 };
 
     
