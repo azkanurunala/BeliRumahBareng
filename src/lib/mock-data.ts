@@ -1,4 +1,4 @@
-import type { Property, User, Project, PropertyInterest, PropertySubmission } from './types';
+import type { Property, User, Project, PropertyInterest, PropertySubmission, Watchlist } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const getImage = (id: string) => {
@@ -140,6 +140,38 @@ Dari sisi fasilitas pendukung, lokasi ini tidak perlu diragukan lagi. Berbagai f
 export const mockUsers: User[] = [
   {
     id: 'user-001',
+    name: 'User',
+    email: 'user@mail.com',
+    phoneNumber: '+62 812-3456-7890',
+    avatarUrl: getImage('user-1').url,
+    avatarHint: getImage('user-1').hint,
+    passwordHash: 'password123', // Demo password
+    profile: {
+      locationPreference: 'Surabaya',
+      priceRange: '300-600 juta IDR',
+      investmentGoals: 'Kepemilikan rumah pertama',
+      financialCapacity: '500 juta IDR',
+      timeHorizon: 'Jangka panjang (10+ tahun)',
+    },
+  },
+  {
+    id: 'admin-001',
+    name: 'Admin',
+    email: 'admin@mail.com',
+    phoneNumber: '+62 812-3456-9999',
+    avatarUrl: getImage('user-1').url,
+    avatarHint: getImage('user-1').hint,
+    passwordHash: 'password123', // Demo password
+    profile: {
+      locationPreference: 'Jakarta',
+      priceRange: '500-1000 juta IDR',
+      investmentGoals: 'Administrasi sistem',
+      financialCapacity: '1000 juta IDR',
+      timeHorizon: 'Jangka panjang (10+ tahun)',
+    },
+  },
+  {
+    id: 'user-002',
     name: 'Adi',
     email: 'adi@example.com',
     phoneNumber: '+62 812-3456-7890',
@@ -154,7 +186,7 @@ export const mockUsers: User[] = [
     },
   },
   {
-    id: 'user-002',
+    id: 'user-003',
     name: 'Budi',
     email: 'budi@example.com',
     phoneNumber: '+62 812-3456-7891',
@@ -169,7 +201,7 @@ export const mockUsers: User[] = [
     },
   },
   {
-    id: 'user-003',
+    id: 'user-004',
     name: 'Citra',
     email: 'citra@example.com',
     phoneNumber: '+62 812-3456-7892',
@@ -184,7 +216,7 @@ export const mockUsers: User[] = [
     },
   },
   {
-    id: 'user-004',
+    id: 'user-005',
     name: 'Dewi',
     email: 'dewi@example.com',
     phoneNumber: '+62 812-3456-7893',
@@ -199,7 +231,7 @@ export const mockUsers: User[] = [
     },
   },
   {
-    id: 'user-005',
+    id: 'user-006',
     name: 'Eka',
     email: 'eka@example.com',
     phoneNumber: '+62 812-3456-7894',
@@ -214,7 +246,7 @@ export const mockUsers: User[] = [
     },
   },
   {
-    id: 'user-006',
+    id: 'user-007',
     name: 'Fajar',
     email: 'fajar@example.com',
     phoneNumber: '+62 812-3456-7895',
@@ -1285,6 +1317,62 @@ export const mockInterests: PropertyInterest[] = [
   },
 ];
 
+// Mock Watchlists - Properti yang disimpan user untuk dilihat nanti
+export const mockWatchlists: Watchlist[] = [
+  // Watchlist untuk user-001 (minimal 2-3 entries)
+  {
+    id: 'watchlist-001',
+    propertyId: 'prop-002',
+    userId: 'user-001',
+    createdAt: '2025-01-15T10:00:00Z',
+  },
+  {
+    id: 'watchlist-002',
+    propertyId: 'prop-003',
+    userId: 'user-001',
+    createdAt: '2025-01-20T14:30:00Z',
+  },
+  {
+    id: 'watchlist-003',
+    propertyId: 'prop-004',
+    userId: 'user-001',
+    createdAt: '2025-02-05T09:15:00Z',
+  },
+  // Watchlist untuk user-002
+  {
+    id: 'watchlist-004',
+    propertyId: 'prop-001',
+    userId: 'user-002',
+    createdAt: '2025-01-18T11:20:00Z',
+  },
+  {
+    id: 'watchlist-005',
+    propertyId: 'prop-003',
+    userId: 'user-002',
+    createdAt: '2025-02-10T15:45:00Z',
+  },
+  // Watchlist untuk user-003
+  {
+    id: 'watchlist-006',
+    propertyId: 'prop-002',
+    userId: 'user-003',
+    createdAt: '2025-01-25T08:30:00Z',
+  },
+  {
+    id: 'watchlist-007',
+    propertyId: 'prop-004',
+    userId: 'user-003',
+    createdAt: '2025-02-12T13:00:00Z',
+  },
+  // Watchlist untuk user-004
+  {
+    id: 'watchlist-008',
+    propertyId: 'prop-001',
+    userId: 'user-004',
+    createdAt: '2025-02-01T10:00:00Z',
+  },
+];
+
 // Mock Property Submissions - Pengajuan properti dari pengguna
 export const mockPropertySubmissions: PropertySubmission[] = [
   {
@@ -1486,6 +1574,19 @@ export function seedAllMockData(): { success: boolean; message: string } {
       localStorage.setItem(`interests_${userId}`, JSON.stringify(interests));
     });
     
+    // Seed watchlists per user (untuk kompatibilitas dengan user context)
+    const watchlistsByUser: Record<string, Watchlist[]> = {};
+    mockWatchlists.forEach(watchlist => {
+      if (!watchlistsByUser[watchlist.userId]) {
+        watchlistsByUser[watchlist.userId] = [];
+      }
+      watchlistsByUser[watchlist.userId].push(watchlist);
+    });
+    
+    Object.entries(watchlistsByUser).forEach(([userId, watchlists]) => {
+      localStorage.setItem(`watchlists_${userId}`, JSON.stringify(watchlists));
+    });
+    
     // Seed property submissions
     localStorage.setItem('admin_property_submissions', JSON.stringify(mockPropertySubmissions));
     
@@ -1495,7 +1596,7 @@ export function seedAllMockData(): { success: boolean; message: string } {
     
     return {
       success: true,
-      message: `Berhasil seeding ${mockProperties.length} properties, ${mockUsers.length} users, ${mockProjects.length} projects, ${mockInterests.length} interests, dan ${mockPropertySubmissions.length} submissions ke localStorage.`,
+      message: `Berhasil seeding ${mockProperties.length} properties, ${mockUsers.length} users, ${mockProjects.length} projects, ${mockInterests.length} interests, ${mockWatchlists.length} watchlists, dan ${mockPropertySubmissions.length} submissions ke localStorage.`,
     };
   } catch (error) {
     console.error('Error seeding mock data:', error);

@@ -4,9 +4,11 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { useAdminData } from '@/contexts/admin-data-context';
+import { useAuth } from '@/contexts/auth-context';
 import type { MonthlyPayment } from '@/lib/types';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatPeriod } from '@/lib/payment-utils';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,23 +20,60 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { ApprovalConfirmDialog } from '@/components/admin/approval-confirm-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { mockUsers } from '@/lib/mock-data';
+import type { User } from '@/lib/types';
 
 export default function AllPaymentsPage() {
-  const { projects } = useAdminData();
+  const { projects, verifyPayment } = useAdminData();
+  const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   const [filters, setFilters] = useState<Record<string, string[]>>({
     userId: [],
     projectId: [],
     period: [],
     status: [],
   });
+  const [verificationDialog, setVerificationDialog] = useState<{
+    open: boolean;
+    payment: (MonthlyPayment & { projectName: string; userName: string; userAvatar?: string; projectId: string; planId: string }) | null;
+  }>({ open: false, payment: null });
+
+  // Helper function to get user by ID from all sources
+  const getUserById = useCallback((userId: string, projectMembers: User[]): User | undefined => {
+    // 1. Check project members first (priority)
+    let foundUser = projectMembers.find(m => m.id === userId);
+    if (foundUser) return foundUser;
+
+    // 2. Check mockUsers
+    foundUser = mockUsers.find(u => u.id === userId);
+    if (foundUser) return foundUser;
+
+    // 3. Check registeredUsers from localStorage
+    if (typeof window !== 'undefined') {
+      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+      if (storedRegisteredUsers) {
+        try {
+          const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
+          foundUser = registeredUsers.find(u => u.id === userId);
+          if (foundUser) return foundUser;
+        } catch (e) {
+          console.error('Failed to parse registeredUsers', e);
+        }
+      }
+    }
+
+    return undefined;
+  }, []);
   
   const allPayments = useMemo(() => {
-    const payments: (MonthlyPayment & { projectName: string; userName: string; userAvatar?: string; projectId: string })[] = [];
+    const payments: (MonthlyPayment & { projectName: string; userName: string; userAvatar?: string; projectId: string; planId: string })[] = [];
     
     projects.forEach(project => {
       if (project.installmentPlans) {
         project.installmentPlans.forEach(plan => {
-          const user = project.members.find(m => m.id === plan.userId);
+          const user = getUserById(plan.userId, project.members);
           plan.payments.forEach(payment => {
             payments.push({
               ...payment,
@@ -42,6 +81,7 @@ export default function AllPaymentsPage() {
               userName: user?.name || 'Unknown',
               userAvatar: user?.avatarUrl,
               projectId: project.id,
+              planId: plan.id,
             });
           });
         });
@@ -49,7 +89,7 @@ export default function AllPaymentsPage() {
     });
     
     return payments;
-  }, [projects]);
+  }, [projects, getUserById]);
 
   // Get unique values for filters
   const uniqueUsers = useMemo(() => {
@@ -174,7 +214,57 @@ export default function AllPaymentsPage() {
       header: 'Tanggal Bayar',
       cell: (row) => row.paymentDate ? new Date(row.paymentDate).toLocaleDateString('id-ID') : '-',
     },
+    {
+      key: 'actions',
+      header: 'Aksi',
+      cell: (row) => {
+        if (row.status !== 'pending') {
+          return null;
+        }
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setVerificationDialog({ open: true, payment: row })}
+            className="flex items-center gap-2"
+          >
+            <CheckCircle className="h-4 w-4" />
+            Verifikasi
+          </Button>
+        );
+      },
+    },
   ];
+
+  const handleVerifyPayment = (notes?: string) => {
+    if (!verificationDialog.payment || !currentUser) {
+      return;
+    }
+
+    const { payment } = verificationDialog;
+    
+    try {
+      verifyPayment(
+        payment.projectId,
+        payment.planId,
+        payment.id,
+        currentUser.id
+      );
+
+      toast({
+        title: 'Berhasil',
+        description: 'Pembayaran berhasil diverifikasi.',
+      });
+
+      setVerificationDialog({ open: false, payment: null });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Gagal memverifikasi pembayaran. Silakan coba lagi.',
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -301,6 +391,18 @@ export default function AllPaymentsPage() {
           />
         </CardContent>
       </Card>
+
+      <ApprovalConfirmDialog
+        open={verificationDialog.open}
+        onOpenChange={(open) =>
+          setVerificationDialog({ ...verificationDialog, open })
+        }
+        type="approve"
+        title="Verifikasi Pembayaran?"
+        description="Apakah Anda yakin ingin memverifikasi pembayaran ini? Status akan berubah menjadi 'Terbayar' dan tanggal pembayaran akan diisi."
+        onConfirm={handleVerifyPayment}
+        requireNotes={false}
+      />
     </div>
   );
 }

@@ -1,7 +1,37 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 import ProjectsList from "@/components/projects-list";
 import { mockProjects } from "@/lib/mock-data";
 
 export default function ProjectsPage() {
+    const { isAuthenticated, isLoading, isAdmin } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading) {
+            if (isAdmin) {
+                router.push('/admin/dashboard');
+            } else if (!isAuthenticated) {
+                router.push('/auth/login');
+            }
+        }
+    }, [isAuthenticated, isLoading, isAdmin, router]);
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto py-6 sm:py-10">
+                <div className="text-center">Memuat...</div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated || isAdmin) {
+        return null;
+    }
+
     return (
         <div className="container mx-auto py-6 sm:py-10">
             <div className="space-y-6">

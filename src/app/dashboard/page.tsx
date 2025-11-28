@@ -14,15 +14,19 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
   const { getUserInterests, getUserWatchlists } = useUserData();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/auth/login');
+    if (!isLoading) {
+      if (isAdmin) {
+        router.push('/admin/dashboard');
+      } else if (!isAuthenticated) {
+        router.push('/auth/login');
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, isAdmin, router]);
 
   if (isLoading) {
     return (
@@ -32,7 +36,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !user || isAdmin) {
     return null;
   }
 
@@ -53,7 +57,7 @@ export default function DashboardPage() {
     <main className="flex-1 bg-muted/20">
       <div className="container mx-auto py-6 sm:py-10">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Dashboard Saya</h1>
+          <h1 className="text-3xl font-bold">Minat dan Watchlist</h1>
           <p className="text-muted-foreground mt-2">
             Kelola minat dan properti yang Anda simpan
           </p>

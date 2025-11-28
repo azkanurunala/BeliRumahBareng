@@ -6,7 +6,7 @@ import { LoginForm } from '@/components/auth/login-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   return (
     <div className="container mx-auto py-6 sm:py-10">
       <div className="mb-4">
@@ -21,24 +21,17 @@ export default function LoginPage() {
       <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl">Masuk ke Akun</CardTitle>
+            <CardTitle className="text-2xl">Login Admin</CardTitle>
             <CardDescription>
-              Masuk untuk melanjutkan ke BeliRumahBareng
+              Masuk ke Akun Admin BeliRumahBareng
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm />
-            <div className="mt-4 text-center text-sm">
-              <span className="text-muted-foreground">Belum punya akun? </span>
-              <Link href="/auth/register" className="text-primary hover:underline">
-                Daftar di sini
-              </Link>
-            </div>
+            <LoginForm hideOAuth={true} hideRegister={true} redirectPath="/admin/dashboard" />
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
-
 

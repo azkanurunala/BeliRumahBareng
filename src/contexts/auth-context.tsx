@@ -18,6 +18,7 @@ interface AuthContextType {
   }) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,7 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedUserId = localStorage.getItem('currentUserId');
     if (storedUserId) {
-      const foundUser = mockUsers.find(u => u.id === storedUserId);
+      // Check both mockUsers and registeredUsers
+      let foundUser = mockUsers.find(u => u.id === storedUserId);
+      
+      if (!foundUser && typeof window !== 'undefined') {
+        const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+        if (storedRegisteredUsers) {
+          try {
+            const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
+            foundUser = registeredUsers.find(u => u.id === storedUserId);
+          } catch (e) {
+            console.error('Failed to parse registeredUsers', e);
+          }
+        }
+      }
+      
       if (foundUser) {
         setUser(foundUser);
       }
@@ -44,13 +59,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Find user by email or phone
-      const foundUser = mockUsers.find(u => 
+      // Find user by email or phone in mockUsers
+      let foundUser = mockUsers.find(u => 
         u.email === emailOrPhone || u.phoneNumber === emailOrPhone
       );
       
+      // If not found in mockUsers, check registeredUsers
+      if (!foundUser && typeof window !== 'undefined') {
+        const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+        if (storedRegisteredUsers) {
+          try {
+            const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
+            foundUser = registeredUsers.find(u => 
+              u.email === emailOrPhone || u.phoneNumber === emailOrPhone
+            );
+          } catch (e) {
+            console.error('Failed to parse registeredUsers', e);
+          }
+        }
+      }
+      
       if (foundUser) {
-        // In real app, verify password hash
+        // Verify password (in real app, compare hashed password)
+        if (foundUser.passwordHash && foundUser.passwordHash !== password) {
+          setIsLoading(false);
+          return false;
+        }
+        
         setUser(foundUser);
         localStorage.setItem('currentUserId', foundUser.id);
         setIsLoading(false);
@@ -132,6 +167,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('currentUserId');
   }, []);
 
+  // Check if current user is admin (based on email)
+  const isAdmin = user?.email === 'admin@mail.com';
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -140,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     logout,
     isAuthenticated: !!user,
+    isAdmin,
   };
 
   return (

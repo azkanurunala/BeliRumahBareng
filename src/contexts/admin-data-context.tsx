@@ -25,6 +25,7 @@ interface AdminDataContextType {
   updateProject: (id: string, project: Partial<Project>) => void;
   deleteProject: (id: string) => boolean;
   getProject: (id: string) => Project | undefined;
+  verifyPayment: (projectId: string, planId: string, paymentId: string, adminUserId: string) => void;
   
   // Interests
   interests: PropertyInterest[];
@@ -369,6 +370,47 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return projects.find(p => p.id === id);
   }, [projects]);
 
+  const verifyPayment = useCallback((projectId: string, planId: string, paymentId: string, adminUserId: string) => {
+    setProjects(prev => {
+      const updated = prev.map(project => {
+        if (project.id === projectId && project.installmentPlans) {
+          const updatedPlans = project.installmentPlans.map(plan => {
+            if (plan.id === planId) {
+              const updatedPayments = plan.payments.map(payment => {
+                if (payment.id === paymentId) {
+                  return {
+                    ...payment,
+                    status: 'paid' as const,
+                    paymentDate: new Date().toISOString(),
+                    verifiedBy: adminUserId,
+                    verifiedAt: new Date().toISOString(),
+                  };
+                }
+                return payment;
+              });
+              return {
+                ...plan,
+                payments: updatedPayments,
+              };
+            }
+            return plan;
+          });
+          return {
+            ...project,
+            installmentPlans: updatedPlans,
+          };
+        }
+        return project;
+      });
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('admin_projects', JSON.stringify(updated));
+      }
+      
+      return updated;
+    });
+  }, []);
+
   // Interests
   const updateInterest = useCallback((id: string, updates: Partial<PropertyInterest>) => {
     setInterests(prev => {
@@ -464,6 +506,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     updateProject,
     deleteProject,
     getProject,
+    verifyPayment,
     interests,
     updateInterest,
     getInterestsByProperty,
