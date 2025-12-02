@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ApprovalConfirmDialog } from '@/components/admin/approval-confirm-dialog';
+import { PaymentVerificationDialog } from '@/components/admin/payment-verification-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { mockUsers } from '@/lib/mock-data';
 import type { User } from '@/lib/types';
@@ -403,16 +403,13 @@ export default function AllPaymentsPage() {
         </CardContent>
       </Card>
 
-      <ApprovalConfirmDialog
+      <PaymentVerificationDialog
         open={verificationDialog.open}
         onOpenChange={(open) =>
           setVerificationDialog({ ...verificationDialog, open })
         }
-        type="approve"
-        title="Verifikasi Pembayaran?"
-        description="Apakah Anda yakin ingin memverifikasi pembayaran ini? Status akan berubah menjadi 'Terbayar' dan tanggal pembayaran akan diisi."
+        payment={verificationDialog.payment}
         onConfirm={handleVerifyPayment}
-        requireNotes={false}
       />
     </div>
   );

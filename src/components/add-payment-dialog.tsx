@@ -20,9 +20,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { ChevronDown } from 'lucide-react';
 import type { InstallmentPlan } from '@/lib/types';
 import { formatCurrency } from '@/lib/payment-utils';
-import { Calendar, Upload, FileText, X } from 'lucide-react';
+import { Upload, FileText, X } from 'lucide-react';
+import { useEffect } from 'react';
 
 type AddPaymentDialogProps = {
   open: boolean;
@@ -56,6 +64,7 @@ export default function AddPaymentDialog({
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [paymentReference, setPaymentReference] = useState<string>('');
   const [validationError, setValidationError] = useState<string>('');
+  const [periodPopoverOpen, setPeriodPopoverOpen] = useState(false);
 
   // Generate available periods (next unpaid months)
   const getAvailablePeriods = () => {
@@ -77,6 +86,38 @@ export default function AddPaymentDialog({
   };
 
   const availablePeriods = getAvailablePeriods();
+
+  // Get current month period
+  const getCurrentMonthPeriod = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  // Get payment number (ke berapa) based on selected period
+  const getPaymentNumber = (selectedPeriod: string) => {
+    if (!selectedPeriod) return null;
+    const startDate = new Date(plan.startDate);
+    const [year, month] = selectedPeriod.split('-');
+    const periodDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+    
+    const monthsDiff = (periodDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                       (periodDate.getMonth() - startDate.getMonth());
+    return monthsDiff + 1; // +1 because first payment is payment #1
+  };
+
+  // Set default period to current month if available
+  useEffect(() => {
+    if (open && !period && availablePeriods.length > 0) {
+      const currentPeriod = getCurrentMonthPeriod();
+      if (availablePeriods.includes(currentPeriod)) {
+        setPeriod(currentPeriod);
+      } else {
+        // If current month not available, use first available period
+        setPeriod(availablePeriods[0]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,6 +207,7 @@ export default function AddPaymentDialog({
       setReceiptPreview(null);
       setPaymentReference('');
       setValidationError('');
+      setPeriodPopoverOpen(false);
     }
     onOpenChange(open);
   };
@@ -185,25 +227,75 @@ export default function AddPaymentDialog({
           <div className="space-y-4 py-4">
             {/* Period Selection */}
             <div className="space-y-2">
-              <Label htmlFor="period">Periode *</Label>
-              <Select value={period} onValueChange={setPeriod} required>
-                <SelectTrigger id="period">
-                  <SelectValue placeholder="Pilih periode pembayaran" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availablePeriods.length > 0 ? (
-                    availablePeriods.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {formatPeriod(p)}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="" disabled>
-                      Semua periode sudah dibayar
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="period">Periode *</Label>
+                {period && getPaymentNumber(period) && (
+                  <Badge variant="secondary" className="text-xs">
+                    Pembayaran ke {getPaymentNumber(period)} dari {plan.totalInstallments}
+                  </Badge>
+                )}
+              </div>
+              {availablePeriods.length > 0 ? (
+                <Popover open={periodPopoverOpen} onOpenChange={setPeriodPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-between"
+                    >
+                      {period ? (
+                        <span>
+                          {formatPeriod(period)}
+                          {getPaymentNumber(period) && (
+                            <span className="ml-2 text-muted-foreground">
+                              (ke {getPaymentNumber(period)})
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Pilih periode pembayaran</span>
+                      )}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-3" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                    <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto">
+                      {availablePeriods.map((p) => {
+                        const isSelected = period === p;
+                        const paymentNum = getPaymentNumber(p);
+                        return (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => {
+                              setPeriod(p);
+                              setPeriodPopoverOpen(false);
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                            }`}
+                          >
+                            {formatPeriod(p)}
+                            {paymentNum && (
+                              <span className="ml-1.5 text-xs opacity-80">
+                                (ke {paymentNum})
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div className="p-3 rounded-lg border bg-muted/50 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Semua periode sudah dibayar
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Amount */}
@@ -232,17 +324,14 @@ export default function AddPaymentDialog({
             {/* Payment Date */}
             <div className="space-y-2">
               <Label htmlFor="paymentDate">Tanggal Pembayaran *</Label>
-              <div className="relative">
-                <Input
-                  id="paymentDate"
-                  type="date"
-                  value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
-                  required
-                  max={new Date().toISOString().split('T')[0]}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
+              <Input
+                id="paymentDate"
+                type="date"
+                value={paymentDate}
+                onChange={(e) => setPaymentDate(e.target.value)}
+                required
+                max={new Date().toISOString().split('T')[0]}
+              />
             </div>
 
             {/* Payment Method */}
@@ -297,7 +386,7 @@ export default function AddPaymentDialog({
                     type="file"
                     accept="image/*,.pdf"
                     onChange={handleFileChange}
-                    className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    className="h-auto cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
                 </div>
               ) : (
