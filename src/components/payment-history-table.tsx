@@ -23,7 +23,6 @@ import type { MonthlyPayment, User, Property } from '@/lib/types';
 import { formatCurrency, formatPeriod, isPaymentOverdue } from '@/lib/payment-utils';
 import { Download, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
