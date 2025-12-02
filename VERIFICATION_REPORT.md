@@ -132,3 +132,7 @@ Secara keseluruhan, struktur data dan validasi sudah konsisten antara user dan a
 **Masalah Sedang**: 3 (Interest Sync, Interest Update Sync, Interest Loading)
 
 
+
+
+
+

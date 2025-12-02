@@ -95,6 +95,7 @@ export type MonthlyPayment = {
   status: 'paid' | 'pending' | 'overdue' | 'partial';
   paymentMethod?: string; // 'transfer', 'cash', 'other'
   receiptUrl?: string; // URL bukti pembayaran
+  paymentReference?: string; // nomor referensi pembayaran (untuk transfer)
   notes?: string;
   verifiedBy?: string; // userId admin yang verifikasi
   verifiedAt?: string; // ISO date string

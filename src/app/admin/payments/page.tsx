@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { useAdminData } from '@/contexts/admin-data-context';
@@ -213,6 +213,17 @@ export default function AllPaymentsPage() {
       key: 'paymentDate',
       header: 'Tanggal Bayar',
       cell: (row) => row.paymentDate ? new Date(row.paymentDate).toLocaleDateString('id-ID') : '-',
+    },
+    {
+      key: 'paymentReference',
+      header: 'Referensi',
+      cell: (row) => row.paymentReference ? (
+        <Badge variant="outline" className="font-mono text-xs">
+          {row.paymentReference}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground text-sm">-</span>
+      ),
     },
     {
       key: 'actions',

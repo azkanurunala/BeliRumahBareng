@@ -35,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const storedUserId = localStorage.getItem('currentUserId');
-      if (storedUserId) {
+    const storedUserId = localStorage.getItem('currentUserId');
+    if (storedUserId) {
         // Check both mockUsers and registeredUsers
         let foundUser = mockUsers.find(u => u.id === storedUserId);
         
@@ -52,14 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        if (foundUser) {
-          setUser(foundUser);
-        }
+      if (foundUser) {
+        setUser(foundUser);
       }
+    }
     } catch (error) {
       console.error('Error initializing auth:', error);
     } finally {
-      setIsLoading(false);
+    setIsLoading(false);
     }
   }, []);
 

@@ -35,6 +35,7 @@ type AddPaymentDialogProps = {
     paymentMethod: string;
     notes?: string;
     receiptFile?: File;
+    paymentReference?: string;
   }) => void;
 };
 
@@ -53,6 +54,8 @@ export default function AddPaymentDialog({
   const [notes, setNotes] = useState<string>('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [paymentReference, setPaymentReference] = useState<string>('');
+  const [validationError, setValidationError] = useState<string>('');
 
   // Generate available periods (next unpaid months)
   const getAvailablePeriods = () => {
@@ -82,6 +85,14 @@ export default function AddPaymentDialog({
       return;
     }
 
+    // Validation: if payment method is transfer, require either receiptFile or paymentReference
+    if (paymentMethod === 'transfer' && !receiptFile && !paymentReference.trim()) {
+      setValidationError('Untuk transfer, wajib upload bukti pembayaran atau isi nomor referensi pembayaran');
+      return;
+    }
+
+    setValidationError('');
+
     onSubmit?.({
       amount: parseFloat(amount),
       paymentDate: new Date(paymentDate).toISOString(),
@@ -89,6 +100,7 @@ export default function AddPaymentDialog({
       paymentMethod,
       notes: notes || undefined,
       receiptFile: receiptFile || undefined,
+      paymentReference: paymentReference.trim() || undefined,
     });
 
     // Reset form
@@ -99,6 +111,8 @@ export default function AddPaymentDialog({
     setNotes('');
     setReceiptFile(null);
     setReceiptPreview(null);
+    setPaymentReference('');
+    setValidationError('');
     onOpenChange(false);
   };
 
@@ -150,6 +164,8 @@ export default function AddPaymentDialog({
       setNotes('');
       setReceiptFile(null);
       setReceiptPreview(null);
+      setPaymentReference('');
+      setValidationError('');
     }
     onOpenChange(open);
   };
@@ -232,7 +248,10 @@ export default function AddPaymentDialog({
             {/* Payment Method */}
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">Metode Pembayaran *</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod} required>
+              <Select value={paymentMethod} onValueChange={(value) => {
+                setPaymentMethod(value);
+                setValidationError(''); // Clear validation error when method changes
+              }} required>
                 <SelectTrigger id="paymentMethod">
                   <SelectValue />
                 </SelectTrigger>
@@ -244,9 +263,33 @@ export default function AddPaymentDialog({
               </Select>
             </div>
 
+            {/* Payment Reference - shown when method is transfer */}
+            {paymentMethod === 'transfer' && (
+              <div className="space-y-2">
+                <Label htmlFor="paymentReference">
+                  Nomor Referensi Pembayaran {!receiptFile && '(Wajib jika tidak upload bukti)'}
+                </Label>
+                <Input
+                  id="paymentReference"
+                  type="text"
+                  value={paymentReference}
+                  onChange={(e) => {
+                    setPaymentReference(e.target.value);
+                    setValidationError(''); // Clear validation error when typing
+                  }}
+                  placeholder="Masukkan nomor referensi transfer (opsional jika sudah upload bukti)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Untuk transfer, wajib upload bukti pembayaran atau isi nomor referensi
+                </p>
+              </div>
+            )}
+
             {/* Receipt Upload */}
             <div className="space-y-2">
-              <Label htmlFor="receipt">Bukti Pembayaran (Opsional)</Label>
+              <Label htmlFor="receipt">
+                Bukti Pembayaran {paymentMethod === 'transfer' && !paymentReference.trim() && '(Wajib jika tidak isi referensi)'}
+              </Label>
               {!receiptFile ? (
                 <div className="relative">
                   <Input
@@ -306,6 +349,13 @@ export default function AddPaymentDialog({
                 rows={3}
               />
             </div>
+
+            {/* Validation Error */}
+            {validationError && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-sm text-destructive">{validationError}</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

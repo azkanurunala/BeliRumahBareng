@@ -77,45 +77,45 @@ export default function Header() {
       <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
         {isAuthenticated ? (
           <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="relative rounded-full">
-                  <Bell className="h-5 w-5" />
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs" variant="destructive">2</Badge>
-                  <span className="sr-only">Buka notifikasi</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="items-start">
-                  <Link href="/property/prop-001" className="flex flex-col gap-1 cursor-pointer">
-                    <p className='font-semibold'>Kecocokan Proyek Baru</p>
-                    <p className='text-xs text-muted-foreground'>Sebuah lahan di Sidoarjo cocok dengan profil Anda.</p>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="items-start">
-                  <Link href="/projects/proj-001" className="flex flex-col gap-1 cursor-pointer">
-                    <p className='font-semibold'>Pembaruan Dana Grup</p>
-                    <p className='text-xs text-muted-foreground'>Proyek Sidoarjo Anda sekarang 50% didanai.</p>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/notifications" className='justify-center text-sm text-muted-foreground cursor-pointer'>
-                    Lihat semua notifikasi
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="icon" className="relative rounded-full">
+              <Bell className="h-5 w-5" />
+              <Badge className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs" variant="destructive">2</Badge>
+              <span className="sr-only">Buka notifikasi</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="items-start">
+              <Link href="/property/prop-001" className="flex flex-col gap-1 cursor-pointer">
+                <p className='font-semibold'>Kecocokan Proyek Baru</p>
+                <p className='text-xs text-muted-foreground'>Sebuah lahan di Sidoarjo cocok dengan profil Anda.</p>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="items-start">
+              <Link href="/projects/proj-001" className="flex flex-col gap-1 cursor-pointer">
+                <p className='font-semibold'>Pembaruan Dana Grup</p>
+                <p className='text-xs text-muted-foreground'>Proyek Sidoarjo Anda sekarang 50% didanai.</p>
+              </Link>
+            </DropdownMenuItem>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem asChild>
+                <Link href="/notifications" className='justify-center text-sm text-muted-foreground cursor-pointer'>
+                  Lihat semua notifikasi
+                </Link>
+             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full">
-                  <CircleUser className="h-5 w-5" />
-                  <span className="sr-only">Buka menu pengguna</span>
-                </Button>
-              </DropdownMenuTrigger>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="icon" className="rounded-full">
+              <CircleUser className="h-5 w-5" />
+              <span className="sr-only">Buka menu pengguna</span>
+            </Button>
+          </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
                 {/* Header dengan Avatar, Nama, Email */}
                 {user && (
@@ -132,7 +132,7 @@ export default function Header() {
                         </div>
                       </div>
                     </div>
-                    <DropdownMenuSeparator />
+            <DropdownMenuSeparator />
                   </>
                 )}
                 
@@ -158,18 +158,18 @@ export default function Header() {
                         <Eye className="h-4 w-4" />
                         <span>Minat dan Watchlist</span>
                       </Link>
-                    </DropdownMenuItem>
+            </DropdownMenuItem>
                   </>
                 )}
                 
-                <DropdownMenuSeparator />
+            <DropdownMenuSeparator />
                 
                 <DropdownMenuItem onClick={handleLogout} className="px-4 py-2.5 flex items-center gap-3">
                   <LogOut className="h-4 w-4" />
                   <span>Keluar</span>
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
           </>
         ) : (
           <>

@@ -40,6 +40,10 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
+import { useAdminData } from '@/contexts/admin-data-context';
+import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
+import type { MonthlyPayment } from '@/lib/types';
 
 type ProjectDashboardProps = {
   project: Project;
@@ -47,6 +51,9 @@ type ProjectDashboardProps = {
 
 export default function ProjectDashboard({ project }: ProjectDashboardProps) {
   const property = mockProperties.find(p => p.id === project.propertyId);
+  const { updateProject } = useAdminData();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   // State for dialogs
   const [selectedProgress, setSelectedProgress] = useState<'kyc' | 'funding' | 'legal' | 'closing' | null>(null);
@@ -757,10 +764,79 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
           open={selectedPlanForPayment !== null}
           onOpenChange={(open) => !open && setSelectedPlanForPayment(null)}
           plan={project.installmentPlans.find(p => p.id === selectedPlanForPayment)!}
-          onSubmit={(paymentData) => {
-            // Handle payment submission
-            console.log('Payment submitted:', paymentData);
-            // In real app, this would call an API to save the payment
+          onSubmit={async (paymentData) => {
+            if (!user) {
+              toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Anda harus login untuk menambahkan pembayaran',
+              });
+              return;
+            }
+
+            const plan = project.installmentPlans?.find(p => p.id === selectedPlanForPayment);
+            if (!plan) return;
+
+            // Convert file to base64 data URL if provided
+            let receiptUrl: string | undefined;
+            if (paymentData.receiptFile) {
+              try {
+                receiptUrl = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(paymentData.receiptFile!);
+                });
+              } catch (error) {
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: 'Gagal membaca file bukti pembayaran',
+                });
+                return;
+              }
+            }
+
+            // Calculate dueDate based on period
+            // Parse period (YYYY-MM) and set to first day of that month
+            const [year, month] = paymentData.period.split('-');
+            const dueDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
+
+            // Create new payment
+            const newPayment: MonthlyPayment = {
+              id: `pay-${Date.now()}`,
+              projectId: project.id,
+              userId: user.id,
+              unitId: plan.unitId,
+              amount: paymentData.amount,
+              paymentDate: paymentData.paymentDate,
+              dueDate: dueDate,
+              period: paymentData.period,
+              status: 'pending',
+              paymentMethod: paymentData.paymentMethod,
+              receiptUrl: receiptUrl,
+              paymentReference: paymentData.paymentReference,
+              notes: paymentData.notes,
+              createdAt: new Date().toISOString(),
+            };
+
+            // Update project with new payment
+            const updatedPlans = project.installmentPlans.map(p => {
+              if (p.id === selectedPlanForPayment) {
+                return {
+                  ...p,
+                  payments: [...p.payments, newPayment],
+                };
+              }
+              return p;
+            });
+
+            updateProject(project.id, { installmentPlans: updatedPlans });
+
+            toast({
+              title: 'Berhasil',
+              description: 'Pembayaran berhasil ditambahkan dan menunggu verifikasi admin',
+            });
           }}
         />
       )}

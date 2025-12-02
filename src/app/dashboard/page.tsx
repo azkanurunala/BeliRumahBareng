@@ -23,8 +23,8 @@ export default function DashboardPage() {
       if (isAdmin) {
         router.push('/admin/dashboard');
       } else if (!isAuthenticated) {
-        router.push('/auth/login');
-      }
+      router.push('/auth/login');
+    }
     }
   }, [isAuthenticated, isLoading, isAdmin, router]);
 

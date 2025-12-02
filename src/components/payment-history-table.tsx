@@ -23,6 +23,7 @@ import type { MonthlyPayment, User, Property } from '@/lib/types';
 import { formatCurrency, formatPeriod, isPaymentOverdue } from '@/lib/payment-utils';
 import { Download, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
@@ -216,6 +217,7 @@ export default function PaymentHistoryTable({
                 <TableHead className="text-right">Jumlah</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Metode</TableHead>
+                <TableHead>Referensi</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -262,6 +264,15 @@ export default function PaymentHistoryTable({
                     <TableCell>
                       {payment.paymentMethod ? (
                         <span className="text-sm capitalize">{payment.paymentMethod}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {payment.paymentReference ? (
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {payment.paymentReference}
+                        </Badge>
                       ) : (
                         <span className="text-sm text-muted-foreground">-</span>
                       )}

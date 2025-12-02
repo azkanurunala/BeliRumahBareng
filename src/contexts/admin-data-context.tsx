@@ -83,15 +83,15 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     
     // Also merge registered users from localStorage
     if (typeof window !== 'undefined') {
-      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
+    const storedRegisteredUsers = localStorage.getItem('registeredUsers');
       if (storedRegisteredUsers) {
         try {
           const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
-          registeredUsers.forEach(regUser => {
-            if (!allUsers.find(u => u.id === regUser.id)) {
-              allUsers.push(regUser);
-            }
-          });
+    registeredUsers.forEach(regUser => {
+      if (!allUsers.find(u => u.id === regUser.id)) {
+        allUsers.push(regUser);
+      }
+    });
         } catch (e) {
           console.error('Failed to parse registeredUsers from localStorage', e);
         }
@@ -327,26 +327,26 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const updateProject = useCallback((id: string, updates: Partial<Project>) => {
     setProjects(prev => {
       const updated = prev.map(p => {
-        if (p.id === id) {
+      if (p.id === id) {
           const updatedProject = { ...p, ...updates };
-          // If propertyId changed, update propertyName and images
-          if (updates.propertyId && updates.propertyId !== p.propertyId) {
-            const property = properties.find(prop => prop.id === updates.propertyId);
-            if (property) {
+        // If propertyId changed, update propertyName and images
+        if (updates.propertyId && updates.propertyId !== p.propertyId) {
+          const property = properties.find(prop => prop.id === updates.propertyId);
+          if (property) {
               updatedProject.propertyName = property.name;
               updatedProject.propertyImageUrl = property.images[0]?.url || '';
               updatedProject.propertyImageHint = property.images[0]?.hint || '';
-            }
           }
-          // If members changed, update members array
-          if (updates.members) {
-            const memberIds = updates.members as string[];
-            const memberObjects = users.filter(u => memberIds.includes(u.id));
-            updatedProject.members = memberObjects;
-          }
-          return updatedProject;
         }
-        return p;
+        // If members changed, update members array
+        if (updates.members) {
+          const memberIds = updates.members as string[];
+          const memberObjects = users.filter(u => memberIds.includes(u.id));
+            updatedProject.members = memberObjects;
+        }
+          return updatedProject;
+      }
+      return p;
       });
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_projects', JSON.stringify(updated));
@@ -453,7 +453,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_property_submissions', JSON.stringify(updated));
         // Also save to old key for backward compatibility
-        localStorage.setItem('propertySubmissions', JSON.stringify(updated));
+      localStorage.setItem('propertySubmissions', JSON.stringify(updated));
       }
       return updated;
     });
@@ -466,7 +466,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_property_submissions', JSON.stringify(updated));
         // Also save to old key for backward compatibility
-        localStorage.setItem('propertySubmissions', JSON.stringify(updated));
+      localStorage.setItem('propertySubmissions', JSON.stringify(updated));
       }
       return updated;
     });
@@ -479,7 +479,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       if (typeof window !== 'undefined') {
         localStorage.setItem('admin_property_submissions', JSON.stringify(updated));
         // Also save to old key for backward compatibility
-        localStorage.setItem('propertySubmissions', JSON.stringify(updated));
+      localStorage.setItem('propertySubmissions', JSON.stringify(updated));
       }
       return updated;
     });

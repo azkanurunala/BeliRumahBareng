@@ -91,6 +91,17 @@ export default function ProjectPaymentsPage({ params }: { params: Promise<{ id: 
       header: 'Tanggal Bayar',
       cell: (row) => row.paymentDate ? new Date(row.paymentDate).toLocaleDateString('id-ID') : '-',
     },
+    {
+      key: 'paymentReference',
+      header: 'Referensi',
+      cell: (row) => row.paymentReference ? (
+        <Badge variant="outline" className="font-mono text-xs">
+          {row.paymentReference}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground text-sm">-</span>
+      ),
+    },
   ];
 
   const handleSubmit = (data: any) => {
