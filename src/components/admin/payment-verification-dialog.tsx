@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Download, FileText, Eye, X } from 'lucide-react';
+import { CheckCircle, Download, FileText } from 'lucide-react';
 import type { MonthlyPayment } from '@/lib/types';
 import { formatCurrency, formatPeriod } from '@/lib/payment-utils';
 import { format } from 'date-fns';
@@ -33,7 +33,6 @@ export function PaymentVerificationDialog({
   onConfirm,
 }: PaymentVerificationDialogProps) {
   const [notes, setNotes] = useState('');
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleConfirm = () => {
     onConfirm(notes.trim() || undefined);
@@ -43,7 +42,6 @@ export function PaymentVerificationDialog({
 
   const handleCancel = () => {
     setNotes('');
-    setPreviewOpen(false);
     onOpenChange(false);
   };
 
@@ -64,11 +62,6 @@ export function PaymentVerificationDialog({
     }
   };
 
-  const handlePreview = () => {
-    if (payment?.receiptUrl) {
-      setPreviewOpen(true);
-    }
-  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -87,9 +80,8 @@ export function PaymentVerificationDialog({
                 payment.receiptUrl?.startsWith('data:application/pdf');
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={handleCancel}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleCancel}>
+      <DialogContent className="max-w-[95vw] w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
@@ -164,18 +156,8 @@ export function PaymentVerificationDialog({
             {/* Receipt Section */}
             {payment.receiptUrl && (
               <div className="space-y-3 border-t pt-4">
-                <Label className="text-xs text-muted-foreground uppercase">Bukti Pembayaran</Label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePreview}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Preview
-                  </Button>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground uppercase">Bukti Pembayaran</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -187,15 +169,37 @@ export function PaymentVerificationDialog({
                     Download
                   </Button>
                 </div>
-                {isImage && (
-                  <div className="mt-3 rounded-lg border overflow-hidden">
-                    <img
-                      src={payment.receiptUrl}
-                      alt="Bukti pembayaran"
-                      className="w-full h-auto max-h-64 object-contain"
-                    />
-                  </div>
-                )}
+                <div className="rounded-lg border overflow-hidden bg-muted/30">
+                  {isImage ? (
+                    <div className="w-full">
+                      <img
+                        src={payment.receiptUrl}
+                        alt="Bukti pembayaran"
+                        className="w-full h-auto max-h-[70vh] object-contain mx-auto"
+                      />
+                    </div>
+                  ) : isPdf ? (
+                    <div className="w-full h-[70vh]">
+                      <iframe
+                        src={payment.receiptUrl}
+                        className="w-full h-full border-0"
+                        title="Bukti pembayaran PDF"
+                        type="application/pdf"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-8 flex flex-col items-center justify-center min-h-[300px]">
+                      <FileText className="h-16 w-16 text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Format file tidak didukung untuk preview
+                      </p>
+                      <Button onClick={handleDownload} variant="outline">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download File
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -234,63 +238,6 @@ export function PaymentVerificationDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Preview Dialog */}
-      {previewOpen && payment.receiptUrl && (
-        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Preview Bukti Pembayaran</DialogTitle>
-              <DialogDescription>
-                {payment.userName} - {formatPeriod(payment.period)}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {isImage ? (
-                <div className="rounded-lg border overflow-hidden">
-                  <img
-                    src={payment.receiptUrl}
-                    alt="Bukti pembayaran"
-                    className="w-full h-auto"
-                  />
-                </div>
-              ) : isPdf ? (
-                <div className="rounded-lg border p-8 bg-muted/50 flex flex-col items-center justify-center min-h-[400px]">
-                  <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Preview PDF tidak tersedia. Silakan download untuk melihat.
-                  </p>
-                  <Button onClick={handleDownload} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </div>
-              ) : (
-                <div className="rounded-lg border p-8 bg-muted/50 flex flex-col items-center justify-center min-h-[400px]">
-                  <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Format file tidak didukung untuk preview
-                  </p>
-                  <Button onClick={handleDownload} variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download File
-                  </Button>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setPreviewOpen(false)}>
-                Tutup
-              </Button>
-              <Button onClick={handleDownload}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
   );
 }
 
