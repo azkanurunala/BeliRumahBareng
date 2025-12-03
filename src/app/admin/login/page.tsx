@@ -27,7 +27,7 @@ export default function AdminLoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm hideOAuth={true} hideRegister={true} redirectPath="/admin/dashboard" />
+            <LoginForm hideOAuth={true} hideRegister={true} redirectPath="/admin/dashboard" requiredRole={2} />
           </CardContent>
         </Card>
       </div>

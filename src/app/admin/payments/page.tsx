@@ -22,11 +22,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { PaymentVerificationDialog } from '@/components/admin/payment-verification-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { mockUsers } from '@/lib/mock-data';
 import type { User } from '@/lib/types';
 
 export default function AllPaymentsPage() {
-  const { projects, verifyPayment } = useAdminData();
+  const { projects, verifyPayment, users } = useAdminData();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [filters, setFilters] = useState<Record<string, string[]>>({
@@ -40,32 +39,18 @@ export default function AllPaymentsPage() {
     payment: (MonthlyPayment & { projectName: string; userName: string; userAvatar?: string; projectId: string; planId: string }) | null;
   }>({ open: false, payment: null });
 
-  // Helper function to get user by ID from all sources
+  // Helper function to get user by ID from database
   const getUserById = useCallback((userId: string, projectMembers: User[]): User | undefined => {
     // 1. Check project members first (priority)
     let foundUser = projectMembers.find(m => m.id === userId);
     if (foundUser) return foundUser;
 
-    // 2. Check mockUsers
-    foundUser = mockUsers.find(u => u.id === userId);
+    // 2. Check users from context (database)
+    foundUser = users.find(u => u.id === userId);
     if (foundUser) return foundUser;
 
-    // 3. Check registeredUsers from localStorage
-    if (typeof window !== 'undefined') {
-      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
-      if (storedRegisteredUsers) {
-        try {
-          const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
-          foundUser = registeredUsers.find(u => u.id === userId);
-          if (foundUser) return foundUser;
-        } catch (e) {
-          console.error('Failed to parse registeredUsers', e);
-        }
-      }
-    }
-
     return undefined;
-  }, []);
+  }, [users]);
   
   const allPayments = useMemo(() => {
     const payments: (MonthlyPayment & { projectName: string; userName: string; userAvatar?: string; projectId: string; planId: string })[] = [];

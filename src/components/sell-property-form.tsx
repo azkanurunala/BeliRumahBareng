@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
 
 const sellPropertySchema = z.object({
   type: z.enum(['co-building', 'co-owning'], {
@@ -67,6 +67,9 @@ export function SellPropertyForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [uploadedImages, setUploadedImages] = React.useState<Array<{ url: string; hint: string }>>([]);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const form = useForm<SellPropertyFormValues>({
     resolver: zodResolver(sellPropertySchema),
@@ -74,27 +77,107 @@ export function SellPropertyForm() {
       type: undefined,
       name: '',
       description: '',
-      location: '',
+      location: user?.profile?.locationPreference || '',
       totalArea: undefined,
       totalUnits: undefined,
       unitSize: undefined,
       unitMeasure: 'm²',
       askingPrice: 0,
-      contactPerson: '',
-      contactPhone: '',
-      contactEmail: '',
+      contactPerson: user?.name || '',
+      contactPhone: user?.phoneNumber || '',
+      contactEmail: user?.email || '',
     },
   });
+
+  // Update form values when user data is available
+  React.useEffect(() => {
+    if (user) {
+      form.setValue('contactPerson', user.name);
+      form.setValue('contactPhone', user.phoneNumber);
+      form.setValue('contactEmail', user.email);
+      if (user.profile?.locationPreference) {
+        form.setValue('location', user.profile.locationPreference);
+      }
+    }
+  }, [user, form]);
 
   const propertyType = form.watch('type');
   const isCoBuilding = propertyType === 'co-building';
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('images', file);
+      });
+
+      const response = await fetch('/api/upload/images', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setUploadedImages((prev) => [...prev, ...result.data]);
+        toast({
+          title: 'Berhasil',
+          description: `${result.data.length} gambar berhasil diupload`,
+        });
+      } else {
+        throw new Error(result.error?.message || 'Failed to upload images');
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal mengupload gambar',
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (data: SellPropertyFormValues) => {
+    // Validate images
+    if (uploadedImages.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Minimal 1 gambar diperlukan',
+      });
+      return;
+    }
+
+    // Validate user is logged in (should not happen due to page check, but double check)
+    if (!user?.id) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Anda harus login terlebih dahulu',
+      });
+      router.push('/auth/register?redirect=/sell-property');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const submission = {
         id: `submission-${Date.now()}`,
-        submittedBy: user?.id || `guest-${Date.now()}`, // Use user ID if logged in, otherwise use guest ID
+        submittedBy: user.id, // User must be logged in
         type: data.type,
         name: data.name,
         description: data.description,
@@ -107,21 +190,35 @@ export function SellPropertyForm() {
         contactPerson: data.contactPerson,
         contactPhone: data.contactPhone,
         contactEmail: data.contactEmail,
-        images: [],
+        images: uploadedImages,
         status: 'pending' as const,
         createdAt: new Date().toISOString(),
       };
 
-      createPropertySubmission(submission);
+      await createPropertySubmission(submission);
       
       toast({
         title: 'Berhasil',
         description: 'Form jual properti telah dikirim. Tim kami akan menghubungi Anda untuk proses selanjutnya.',
       });
       
-      form.reset();
-      // Redirect to home instead of dashboard if not logged in
-      router.push(user ? '/dashboard' : '/');
+      // Reset form dengan default values dari user
+      form.reset({
+        type: undefined,
+        name: '',
+        description: '',
+        location: user?.profile?.locationPreference || '',
+        totalArea: undefined,
+        totalUnits: undefined,
+        unitSize: undefined,
+        unitMeasure: 'm²',
+        askingPrice: 0,
+        contactPerson: user?.name || '',
+        contactPhone: user?.phoneNumber || '',
+        contactEmail: user?.email || '',
+      });
+      setUploadedImages([]);
+      router.push('/dashboard');
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -214,8 +311,12 @@ export function SellPropertyForm() {
                   <FormControl>
                     <Input
                       type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === '' ? undefined : parseInt(value) || undefined);
+                      }}
+                      onBlur={field.onBlur}
                       placeholder="Contoh: 16"
                     />
                   </FormControl>
@@ -234,8 +335,12 @@ export function SellPropertyForm() {
                     <FormControl>
                       <Input
                         type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === '' ? undefined : parseInt(value) || undefined);
+                        }}
+                        onBlur={field.onBlur}
                         placeholder="Contoh: 9"
                       />
                     </FormControl>
@@ -255,8 +360,12 @@ export function SellPropertyForm() {
                     <FormControl>
                       <Input
                         type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === '' ? undefined : parseFloat(value) || undefined);
+                        }}
+                        onBlur={field.onBlur}
                         placeholder="Contoh: 1000"
                       />
                     </FormControl>
@@ -282,8 +391,12 @@ export function SellPropertyForm() {
                   <FormControl>
                     <Input
                       type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === '' ? undefined : parseFloat(value) || undefined);
+                      }}
+                      onBlur={field.onBlur}
                       placeholder="Contoh: 110"
                     />
                   </FormControl>
@@ -323,8 +436,9 @@ export function SellPropertyForm() {
               <FormControl>
                 <Input
                   type="number"
-                  {...field}
+                  value={field.value ?? 0}
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  onBlur={field.onBlur}
                   placeholder="Contoh: 1800000000"
                 />
               </FormControl>
@@ -335,6 +449,75 @@ export function SellPropertyForm() {
             </FormItem>
           )}
         />
+
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold mb-4">Gambar Properti</h3>
+          <div className="space-y-4">
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+                id="property-images"
+                disabled={isUploading || isLoading}
+              />
+              <label htmlFor="property-images">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isUploading || isLoading}
+                  asChild
+                >
+                  <span>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {isUploading ? 'Mengupload...' : 'Upload Gambar (Multiple)'}
+                  </span>
+                </Button>
+              </label>
+              <FormDescription className="mt-2">
+                Upload minimal 1 gambar properti. Format yang didukung: JPEG, PNG, WebP. Maksimal 5MB per gambar.
+              </FormDescription>
+            </div>
+
+            {uploadedImages.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {uploadedImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <div className="aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+                      <img
+                        src={image.url}
+                        alt={image.hint || `Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemoveImage(index)}
+                      disabled={isLoading}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1 truncate">{image.hint}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {uploadedImages.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-8 border-2 border-dashed rounded-lg border-muted-foreground/25">
+                <ImageIcon className="h-12 w-12 text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">Belum ada gambar yang diupload</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="border-t pt-6">
           <h3 className="text-lg font-semibold mb-4">Kontak Person</h3>
@@ -383,12 +566,14 @@ export function SellPropertyForm() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+        <Button type="submit" className="w-full" size="lg" disabled={isLoading || isUploading || uploadedImages.length === 0}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Mengirim...
             </>
+          ) : uploadedImages.length === 0 ? (
+            'Upload Minimal 1 Gambar Terlebih Dahulu'
           ) : (
             'Kirim Form Jual Properti'
           )}

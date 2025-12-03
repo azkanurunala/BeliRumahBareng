@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import type { Property } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Building, Users, BadgeCheck, Home, Square, ArrowLeft, AreaChart, DraftingCompass, Microscope, CheckCircle, Info, Maximize2 } from 'lucide-react';
@@ -36,6 +35,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
 import { useUserData } from '@/contexts/user-data-context';
+import { useAdminData } from '@/contexts/admin-data-context';
 import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
 import { Heart } from 'lucide-react';
 
@@ -48,6 +48,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
   const { addInterest, addToWatchlist, removeFromWatchlist, isInWatchlist } = useUserData();
+  const { users } = useAdminData();
   
   const isWatched = isInWatchlist(property.id);
 
@@ -182,7 +183,8 @@ export default function PropertyDetailClient({ property }: { property: Property 
     minimumFractionDigits: 0,
   }).format(price);
   
-  const interestedUsers = mockUsers.slice(1, 4);
+  // Get interested users from property interests (first 3 users who showed interest)
+  const interestedUsers = users.slice(0, 3).filter(u => u.id !== user?.id);
 
   const getBadgeText = () => {
     if (isFlexible) return 'Patungan Fleksibel';
@@ -707,18 +709,24 @@ export default function PropertyDetailClient({ property }: { property: Property 
                  <CardDescription>Pengguna lain yang tertarik dengan properti ini.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {interestedUsers.map(user => (
-                   <Link href={`/profile/${user.id}`} key={user.id} className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/50">
-                     <Avatar>
-                       <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} className="object-cover"/>
-                       <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                     </Avatar>
-                     <div>
-                       <p className="font-semibold">{user.name}</p>
-                       <p className="text-xs text-muted-foreground">Ingin tinggal di {user.profile.locationPreference}</p>
-                     </div>
-                   </Link>
-                ))}
+                {interestedUsers.length > 0 ? (
+                  interestedUsers.map(user => (
+                    <Link href={`/profile/${user.id}`} key={user.id} className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/50">
+                      <Avatar>
+                        <AvatarImage src={user.avatarUrl} alt={user.name} data-ai-hint={user.avatarHint} className="object-cover"/>
+                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">Ingin tinggal di {user.profile.locationPreference}</p>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Belum ada anggota yang tertarik
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

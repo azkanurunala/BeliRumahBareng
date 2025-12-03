@@ -9,12 +9,32 @@ export const userProfileSchema = z.object({
   timeHorizon: z.string().min(1, 'Time horizon wajib diisi'),
 });
 
+// Avatar URL validation: accepts full URL, relative path starting with /, or empty string
+const avatarUrlSchema = z.string().refine(
+  (val) => {
+    // Empty string is valid
+    if (val === '') return true;
+    // Relative path starting with / is valid
+    if (val.startsWith('/')) return true;
+    // Full URL (http:// or https://) is valid
+    try {
+      new URL(val);
+      return val.startsWith('http://') || val.startsWith('https://');
+    } catch {
+      return false;
+    }
+  },
+  {
+    message: 'URL avatar tidak valid. Harus berupa URL penuh (http:// atau https://), path relatif (dimulai dengan /), atau string kosong',
+  }
+);
+
 // User Create Schema
 export const createUserSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi').max(255, 'Nama terlalu panjang'),
   email: z.string().email('Email tidak valid'),
   phoneNumber: z.string().min(10, 'Nomor telepon minimal 10 karakter').max(20, 'Nomor telepon terlalu panjang'),
-  avatarUrl: z.string().url('URL avatar tidak valid').or(z.literal('')),
+  avatarUrl: avatarUrlSchema,
   avatarHint: z.string().min(1, 'Avatar hint wajib diisi'),
   role: z.number().int().min(1).max(2).default(1), // 1 = user biasa, 2 = admin
   locationPreference: z.string().min(1, 'Lokasi preferensi wajib diisi'),
@@ -44,7 +64,7 @@ export const oauthUserSchema = z.object({
   name: z.string().min(1, 'Nama wajib diisi'),
   oauthProvider: z.enum(['google', 'facebook']),
   oauthId: z.string().min(1, 'OAuth ID wajib diisi'),
-  avatarUrl: z.string().url('URL avatar tidak valid').optional(),
+  avatarUrl: avatarUrlSchema.optional(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;

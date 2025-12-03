@@ -24,7 +24,7 @@ export const createPropertySubmissionSchema = z.object({
   contactPerson: z.string().min(1, 'Nama kontak wajib diisi'),
   contactPhone: z.string().min(10, 'Nomor telepon minimal 10 karakter'),
   contactEmail: z.string().email('Email kontak tidak valid'),
-  images: z.array(propertySubmissionImageSchema).optional(),
+  images: z.array(propertySubmissionImageSchema).min(1, 'Minimal 1 gambar diperlukan'),
 });
 
 // Property Submission Update Schema

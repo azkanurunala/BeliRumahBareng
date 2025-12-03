@@ -1,14 +1,15 @@
-
-import { mockProperties } from '@/lib/mock-data';
 import { notFound } from 'next/navigation';
 import PropertyDetailClient from './property-detail-client';
+import { getProperty } from '@/lib/actions/property.actions';
 
-export default function PropertyDetailPage({ params }: { params: { id: string } }) {
-  const property = mockProperties.find((p) => p.id === params.id);
+export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
+  const result = await getProperty(id);
 
-  if (!property) {
+  if (!result.success || !result.data) {
     notFound();
   }
 
-  return <PropertyDetailClient property={property} />;
+  return <PropertyDetailClient property={result.data} />;
 }

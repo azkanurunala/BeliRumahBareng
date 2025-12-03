@@ -15,3 +15,5 @@ export const deleteWatchlistSchema = z.object({
 export type CreateWatchlistInput = z.infer<typeof createWatchlistSchema>;
 export type DeleteWatchlistInput = z.infer<typeof deleteWatchlistSchema>;
 
+
+

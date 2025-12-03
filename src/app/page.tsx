@@ -1,15 +1,26 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Search, Users, KeyRound, ArrowRight } from 'lucide-react';
+import { Search, Users, KeyRound, ArrowRight, Loader2 } from 'lucide-react';
 import PropertyCard from '@/components/property-card';
-import { mockProperties } from '@/lib/mock-data';
+import { useAdminData } from '@/contexts/admin-data-context';
+import type { Property } from '@/lib/types';
 
 export default function HomePage() {
-  const featuredProperties = mockProperties.slice(0, 3);
+  const { properties } = useAdminData();
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (properties.length > 0) {
+      setFeaturedProperties(properties.slice(0, 3));
+      setIsLoading(false);
+    }
+  }, [properties]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -117,9 +128,19 @@ export default function HomePage() {
               </p>
             </div>
             <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
+              {isLoading ? (
+                <div className="col-span-full flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : featuredProperties.length > 0 ? (
+                featuredProperties.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  Belum ada properti yang tersedia
+                </div>
+              )}
             </div>
             <div className="mt-12 text-center">
               <Button asChild variant="outline" className="border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 hover:scale-105">

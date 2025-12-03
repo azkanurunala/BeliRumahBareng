@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,8 +22,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import type { PersonalizedPropertyRecommendationsOutput } from '@/ai/flows/personalized-property-recommendations';
 import { useToast } from '@/hooks/use-toast';
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
-import { mockUsers } from '@/lib/mock-data';
+import { useAuth } from '@/contexts/auth-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const cities: ComboboxOption[] = [
     { value: "jakarta", label: "Jakarta" },
@@ -64,9 +66,8 @@ const FormSchema = z.object({
   timeHorizon: z.string().min(1, { message: 'Horison waktu harus dipilih.' }),
 });
 
-const currentUser = mockUsers[0];
-
 export default function Recommendations() {
+  const { user: currentUser, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<PersonalizedPropertyRecommendationsOutput['recommendations']>([]);
   const { toast } = useToast();
@@ -74,13 +75,26 @@ export default function Recommendations() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      location: currentUser.profile.locationPreference.toLowerCase(),
-      priceRange: '200-400',
+      location: currentUser?.profile.locationPreference?.toLowerCase() || 'jakarta',
+      priceRange: currentUser?.profile.priceRange || '200-400',
       investmentGoals: "first-home",
       financialCapacity: 500000000,
-      timeHorizon: 'long',
+      timeHorizon: currentUser?.profile.timeHorizon || 'long',
     },
   });
+
+  // Update form when user data is loaded
+  useEffect(() => {
+    if (currentUser) {
+      form.reset({
+        location: currentUser.profile.locationPreference?.toLowerCase() || 'jakarta',
+        priceRange: currentUser.profile.priceRange || '200-400',
+        investmentGoals: "first-home",
+        financialCapacity: 500000000,
+        timeHorizon: currentUser.profile.timeHorizon || 'long',
+      });
+    }
+  }, [currentUser, form]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true);
@@ -118,6 +132,31 @@ export default function Recommendations() {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(price);
+
+  if (authLoading) {
+    return (
+      <div className="space-y-6 rounded-lg border p-4">
+        <div className="text-center py-8">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="mt-2 text-muted-foreground">Memuat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="space-y-6 rounded-lg border p-4">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Login Diperlukan</AlertTitle>
+          <AlertDescription>
+            Anda harus login terlebih dahulu untuk menggunakan fitur rekomendasi properti.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 rounded-lg border p-4">

@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -48,6 +48,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export function RegisterForm() {
   const { register: registerUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -89,7 +90,14 @@ export function RegisterForm() {
           title: 'Berhasil',
           description: 'Akun berhasil dibuat. Selamat datang!',
         });
-        router.push('/');
+        
+        // Check for redirect parameter
+        const redirectTo = searchParams.get('redirect');
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else {
+          router.push('/');
+        }
       } else {
         toast({
           variant: 'destructive',

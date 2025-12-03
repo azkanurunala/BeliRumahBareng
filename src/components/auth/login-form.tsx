@@ -31,14 +31,50 @@ interface LoginFormProps {
   hideOAuth?: boolean;
   hideRegister?: boolean;
   redirectPath?: string | null; // null = auto-detect based on isAdmin
+  requiredRole?: 1 | 2; // 1 = user biasa, 2 = admin
 }
 
-export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPath = null }: LoginFormProps = {}) {
-  const { login, loginWithOAuth, isAdmin } = useAuth();
+export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPath = null, requiredRole }: LoginFormProps = {}) {
+  const { login, loginWithOAuth, isAdmin, user, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = React.useState<string | null>(null);
+  const [loginSuccess, setLoginSuccess] = React.useState(false);
+
+  // Watch user changes after login to validate role
+  React.useEffect(() => {
+    if (loginSuccess && user) {
+      setIsLoading(false);
+      
+      // Check role validation if requiredRole is specified
+      if (requiredRole !== undefined && user.role !== requiredRole) {
+        // Role tidak sesuai, logout dan tampilkan error yang generic
+        logout();
+        toast({
+          variant: 'destructive',
+          title: 'Gagal',
+          description: 'Email/nomor telepon atau password salah.',
+        });
+        setLoginSuccess(false);
+        return;
+      }
+
+      // Role sesuai atau tidak ada requiredRole, redirect
+      toast({
+        title: 'Berhasil',
+        description: 'Selamat datang kembali!',
+      });
+
+      if (redirectPath !== null) {
+        router.push(redirectPath);
+      } else {
+        const isAdminUser = isAdmin;
+        router.push(isAdminUser ? '/admin/dashboard' : '/');
+      }
+      setLoginSuccess(false);
+    }
+  }, [user, loginSuccess, requiredRole, isAdmin, redirectPath, router, logout, toast]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -54,26 +90,15 @@ export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPat
       const success = await login(data.emailOrPhone, data.password);
 
       if (success) {
-        toast({
-          title: 'Berhasil',
-          description: 'Selamat datang kembali!',
-        });
-        // Wait a bit for state update, then check isAdmin from context
-        // Fallback to email check if state hasn't updated yet
-        setTimeout(() => {
-          if (redirectPath !== null) {
-            router.push(redirectPath);
-          } else {
-            const isAdminUser = isAdmin;
-            router.push(isAdminUser ? '/admin/dashboard' : '/');
-          }
-        }, 100);
+        // Set flag untuk trigger useEffect yang akan validate role
+        setLoginSuccess(true);
       } else {
         toast({
           variant: 'destructive',
           title: 'Gagal',
           description: 'Email/nomor telepon atau password salah.',
         });
+        setIsLoading(false);
       }
     } catch (error) {
       toast({
@@ -81,7 +106,6 @@ export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPat
         title: 'Error',
         description: 'Terjadi kesalahan. Silakan coba lagi.',
       });
-    } finally {
       setIsLoading(false);
     }
   };

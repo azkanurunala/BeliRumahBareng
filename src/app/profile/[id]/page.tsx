@@ -1,28 +1,55 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockUsers } from '@/lib/mock-data';
+import { getUser } from '@/lib/actions/user.actions';
 import { notFound } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import ProfileDetailClient from './profile-detail-client';
-
+import { LoadingScreen } from '@/components/loading-screen';
+import type { User } from '@/lib/types';
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
-  const { isAdmin, isLoading } = useAuth();
+  const { isAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const user = mockUsers.find((u) => u.id === params.id);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isLoading && isAdmin) {
+    if (!authLoading && isAdmin) {
       router.push('/admin/dashboard');
     }
-  }, [isAdmin, isLoading, router]);
+  }, [isAdmin, authLoading, router]);
 
-  if (isLoading) {
+  useEffect(() => {
+    const loadUser = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await getUser(params.id);
+        if (result.success && result.data) {
+          setUser(result.data);
+        } else {
+          setError(result.error?.message || 'User tidak ditemukan');
+        }
+      } catch (err) {
+        console.error('Error loading user:', err);
+        setError('Terjadi kesalahan saat memuat profil');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!authLoading && !isAdmin) {
+      loadUser();
+    }
+  }, [params.id, authLoading, isAdmin]);
+
+  if (authLoading || isLoading) {
     return (
       <div className="container mx-auto py-6 sm:py-10">
-        <div className="text-center">Memuat...</div>
+        <LoadingScreen message="Memuat profil..." fullScreen={false} />
       </div>
     );
   }
@@ -31,7 +58,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
     return null;
   }
 
-  if (!user) {
+  if (error || !user) {
     notFound();
   }
 

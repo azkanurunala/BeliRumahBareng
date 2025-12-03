@@ -27,7 +27,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LoginForm />
+            <LoginForm requiredRole={1} />
             <div className="mt-4 text-center text-sm">
               <span className="text-muted-foreground">Belum punya akun? </span>
               <Link href="/auth/register" className="text-primary hover:underline">
@@ -40,6 +40,8 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
 
 
 

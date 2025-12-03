@@ -43,3 +43,5 @@ export type UpdateNotificationInput = z.infer<typeof updateNotificationSchema>;
 export type MarkNotificationReadInput = z.infer<typeof markNotificationReadSchema>;
 export type MarkAllNotificationsReadInput = z.infer<typeof markAllNotificationsReadSchema>;
 
+
+

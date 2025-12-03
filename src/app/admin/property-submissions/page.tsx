@@ -130,47 +130,80 @@ export default function AdminPropertySubmissionsPage() {
     });
   };
 
-  const handleApproveConfirm = (notes?: string) => {
+  const handleApproveConfirm = async (notes?: string) => {
     if (!approvalDialog.submissionId) return;
 
     const submission = propertySubmissions.find((s) => s.id === approvalDialog.submissionId);
-    if (!submission) return;
+    if (!submission) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Property submission tidak ditemukan',
+      });
+      return;
+    }
 
-    // Create property from submission
-    const newProperty = {
-      id: `prop-${Date.now()}`,
-      name: submission.name,
-      description: submission.description,
-      price: submission.askingPrice,
-      totalArea: submission.totalArea,
-      location: submission.location,
-      images: submission.images || [],
-      type: submission.type,
-      totalUnits: submission.totalUnits,
-      unitSize: submission.unitSize,
-      unitMeasure: submission.unitMeasure || 'm²',
-      unitName: (submission.type === 'co-building'
-        ? 'Lantai'
-        : submission.totalUnits
-        ? 'Kavling'
-        : 'Kepemilikan') as const,
-    };
+    // Validate images
+    if (!submission.images || submission.images.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Property submission harus memiliki minimal 1 gambar untuk bisa disetujui',
+      });
+      return;
+    }
 
-    createProperty(newProperty);
+    try {
+      // Create property from submission
+      const newProperty = {
+        id: `prop-${Date.now()}`,
+        name: submission.name,
+        description: submission.description,
+        price: submission.askingPrice,
+        totalArea: submission.totalArea,
+        location: submission.location,
+        images: submission.images,
+        type: submission.type,
+        totalUnits: submission.totalUnits,
+        unitSize: submission.unitSize,
+        unitMeasure: submission.unitMeasure || 'm²',
+        unitName: (submission.type === 'co-building'
+          ? 'Lantai'
+          : submission.totalUnits
+          ? 'Kavling'
+          : 'Kepemilikan') as const,
+        planningInfo: {
+          sitePlanUrl: '',
+          sitePlanHint: '',
+          developmentPlan: '',
+          environmentalAnalysis: '',
+        },
+      };
 
-    // Update submission status
-    updatePropertySubmission(approvalDialog.submissionId, {
-      status: 'approved',
-      reviewedAt: new Date().toISOString(),
-      notes: notes,
-    });
+      // Create property (async)
+      await createProperty(newProperty);
 
-    toast({
-      title: 'Berhasil',
-      description: 'Property submission telah disetujui dan properti baru telah dibuat.',
-    });
+      // Update submission status (async)
+      await updatePropertySubmission(approvalDialog.submissionId, {
+        status: 'approved',
+        reviewedAt: new Date().toISOString(),
+        notes: notes,
+      });
 
-    setApprovalDialog({ open: false, type: 'approve', submissionId: null });
+      toast({
+        title: 'Berhasil',
+        description: 'Property submission telah disetujui dan properti baru telah dibuat.',
+      });
+
+      setApprovalDialog({ open: false, type: 'approve', submissionId: null });
+    } catch (error) {
+      console.error('Error approving property submission:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal menyetujui property submission',
+      });
+    }
   };
 
   const handleRejectConfirm = (notes?: string) => {
