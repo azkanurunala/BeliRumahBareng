@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingScreen } from '@/components/loading-screen';
 
-export default function RegisterRedirectPage() {
+function RegisterRedirectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -21,6 +21,14 @@ export default function RegisterRedirectPage() {
     <main className="flex-1 bg-muted/20">
       <LoadingScreen message="Mengarahkan ke halaman pendaftaran..." />
     </main>
+  );
+}
+
+export default function RegisterRedirectPage() {
+  return (
+    <Suspense fallback={<LoadingScreen message="Memuat..." />}>
+      <RegisterRedirectContent />
+    </Suspense>
   );
 }
 

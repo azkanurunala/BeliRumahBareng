@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
+import sharp from 'sharp';
 
-// POST /api/upload/images - Upload multiple images
+// POST /api/upload/images - Upload multiple images with compression
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -48,15 +50,33 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Convert file to base64 data URL
-      // In production, you should upload to Firebase Storage, Vercel Blob, or similar service
+      // Read file buffer
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      const base64 = buffer.toString('base64');
-      const dataUrl = `data:${file.type};base64,${base64}`;
+
+      // Compress and resize image using sharp
+      const compressedBuffer = await sharp(buffer)
+        .resize(1920, 1920, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 45 }) // 40-50% quality as specified
+        .toBuffer();
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const extension = 'webp';
+      const filename = `images/${timestamp}-${randomString}.${extension}`;
+
+      // Upload to Vercel Blob
+      const blob = await put(filename, compressedBuffer, {
+        access: 'public',
+        contentType: 'image/webp',
+      });
 
       uploadedImages.push({
-        url: dataUrl,
+        url: blob.url,
         hint: file.name,
       });
     }
@@ -73,6 +93,7 @@ export async function POST(request: NextRequest) {
         error: {
           message: 'Failed to upload images',
           code: 'UPLOAD_ERROR',
+          details: error instanceof Error ? error.message : 'Unknown error',
         },
       },
       { status: 500 }

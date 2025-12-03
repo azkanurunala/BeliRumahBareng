@@ -1,10 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RegisterForm } from '@/components/auth/register-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { LoadingScreen } from '@/components/loading-screen';
 
 export default function RegisterPage() {
   return (
@@ -28,7 +30,9 @@ export default function RegisterPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RegisterForm />
+              <Suspense fallback={<LoadingScreen message="Memuat formulir..." fullScreen={false} />}>
+                <RegisterForm />
+              </Suspense>
               <div className="mt-4 text-center text-sm">
                 <span className="text-muted-foreground">Sudah punya akun? </span>
                 <Link href="/auth/login" className="text-primary hover:underline">
