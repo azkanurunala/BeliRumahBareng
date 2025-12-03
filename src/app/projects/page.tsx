@@ -3,11 +3,12 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useAdminData } from '@/contexts/admin-data-context';
 import ProjectsList from "@/components/projects-list";
-import { mockProjects } from "@/lib/mock-data";
 
 export default function ProjectsPage() {
     const { isAuthenticated, isLoading, isAdmin } = useAuth();
+    const { projects } = useAdminData();
     const router = useRouter();
 
     useEffect(() => {
@@ -43,7 +44,7 @@ export default function ProjectsPage() {
                         Kelola dan pantau semua proyek co-buy Anda di sini
                     </p>
                 </div>
-                <ProjectsList projects={mockProjects} />
+                <ProjectsList projects={projects} />
             </div>
         </div>
     )

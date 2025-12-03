@@ -1,8 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import type { PropertyInterest, Watchlist } from '@/lib/types';
 import { useAuth } from './auth-context';
+import { getWatchlists, addToWatchlist as addToWatchlistAction, removeFromWatchlist as removeFromWatchlistAction, isInWatchlist as isInWatchlistAction } from '@/lib/actions/watchlist.actions';
+import { getPropertyInterests, createPropertyInterest, deletePropertyInterest } from '@/lib/actions/property-interest.actions';
 
 interface UserDataContextType {
   // Interests
@@ -25,118 +27,129 @@ const UserDataContext = createContext<UserDataContextType | undefined>(undefined
 export function UserDataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [interests, setInterests] = useState<PropertyInterest[]>([]);
+  const [interestsLoading, setInterestsLoading] = useState(true);
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
 
-  // Load from localStorage on mount
-  const loadUserData = React.useCallback(() => {
-    if (user) {
-      const storedInterests = localStorage.getItem(`interests_${user.id}`);
-      const storedWatchlists = localStorage.getItem(`watchlists_${user.id}`);
-      
-      if (storedInterests) {
-        try {
-          setInterests(JSON.parse(storedInterests));
-        } catch (e) {
-          console.error('Failed to parse interests', e);
-        }
-      }
-      
-      if (storedWatchlists) {
-        try {
-          setWatchlists(JSON.parse(storedWatchlists));
-        } catch (e) {
-          console.error('Failed to parse watchlists', e);
-        }
-      }
+  // Load interests from API
+  const loadInterests = useCallback(async () => {
+    if (!user?.id) {
+      setInterests([]);
+      setInterestsLoading(false);
+      return;
     }
-  }, [user]);
 
-  React.useEffect(() => {
-    loadUserData();
-  }, [loadUserData]);
+    try {
+      setInterestsLoading(true);
+      const result = await getPropertyInterests({
+        userId: user.id,
+        limit: 1000,
+      });
 
-  // Listen for localStorage changes (for interest status updates from admin)
+      if (result.success && result.data) {
+        setInterests(result.data);
+      } else {
+        console.error('Failed to load interests:', result.error);
+        setInterests([]);
+      }
+    } catch (error) {
+      console.error('Error loading interests:', error);
+      setInterests([]);
+    } finally {
+      setInterestsLoading(false);
+    }
+  }, [user?.id]);
+
+  // Load watchlists from API
+  const loadWatchlists = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const result = await getWatchlists({
+        userId: user.id,
+        page: 1,
+        limit: 1000,
+      });
+
+      if (result.success && result.data) {
+        setWatchlists(result.data);
+      } else {
+        console.error('Failed to load watchlists:', result.error);
+      }
+    } catch (error) {
+      console.error('Error loading watchlists:', error);
+    }
+  }, [user?.id]);
+
+  // Load watchlists and interests on mount and when user changes
+  useEffect(() => {
+    loadWatchlists();
+    loadInterests();
+  }, [loadWatchlists, loadInterests]);
+
+  // Listen for custom events (for interest status updates from admin)
   React.useEffect(() => {
     if (!user) return;
 
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `interests_${user.id}` && e.newValue) {
-        try {
-          setInterests(JSON.parse(e.newValue));
-        } catch (e) {
-          console.error('Failed to parse interests from storage event', e);
-        }
-      }
-    };
-
-    // Also listen for custom events (for same-tab updates)
     const handleInterestUpdate = () => {
-      loadUserData();
+      loadInterests();
     };
 
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('interestUpdated', handleInterestUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('interestUpdated', handleInterestUpdate);
     };
-  }, [user, loadUserData]);
+  }, [user, loadInterests]);
 
-  // Save to localStorage whenever interests or watchlists change
-  React.useEffect(() => {
-    if (user) {
-      localStorage.setItem(`interests_${user.id}`, JSON.stringify(interests));
-    }
-  }, [interests, user]);
-
-  React.useEffect(() => {
-    if (user) {
-      localStorage.setItem(`watchlists_${user.id}`, JSON.stringify(watchlists));
-    }
-  }, [watchlists, user]);
+  // Watchlists are now managed via API, no need to save to localStorage
 
   // Interests
-  const addInterest = useCallback((interestData: Omit<PropertyInterest, 'id' | 'createdAt' | 'status'>) => {
-    if (!user) return;
+  const addInterest = useCallback(async (interestData: Omit<PropertyInterest, 'id' | 'createdAt' | 'status'>) => {
+    if (!user?.id) return;
     
-    // Auto-fill email and phoneNumber from user data if not provided
-    const email = interestData.email || user.email || '';
-    const phoneNumber = interestData.phoneNumber || user.phoneNumber || '';
-    
-    const newInterest: PropertyInterest = {
-      ...interestData,
-      email,
-      phoneNumber,
-      id: `interest-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      status: 'pending',
-    };
-    
-    setInterests(prev => [...prev, newInterest]);
-    
-    // Also save to admin_interests in localStorage for admin to see
-    if (typeof window !== 'undefined') {
-      try {
-        const adminInterestsKey = 'admin_interests';
-        const storedAdminInterests = localStorage.getItem(adminInterestsKey);
-        const adminInterests: PropertyInterest[] = storedAdminInterests 
-          ? JSON.parse(storedAdminInterests) 
-          : [];
-        
-        adminInterests.push(newInterest);
-        localStorage.setItem(adminInterestsKey, JSON.stringify(adminInterests));
-        
+    try {
+      // Auto-fill email and phoneNumber from user data if not provided
+      const email = interestData.email || user.email || '';
+      const phoneNumber = interestData.phoneNumber || user.phoneNumber || '';
+      
+      const result = await createPropertyInterest({
+        propertyId: interestData.propertyId,
+        userId: user.id,
+        unitId: interestData.unitId,
+        unitSize: interestData.unitSize,
+        isFirstHome: interestData.isFirstHome,
+        willOccupy: interestData.willOccupy,
+        email,
+        phoneNumber,
+      });
+
+      if (result.success && result.data) {
+        setInterests(prev => [...prev, result.data!]);
         // Dispatch event to notify admin context
-        window.dispatchEvent(new CustomEvent('adminInterestAdded'));
-      } catch (e) {
-        console.error('Failed to save interest to admin_interests', e);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('adminInterestAdded'));
+        }
+        return;
       }
+      throw new Error(result.error?.message || 'Failed to create interest');
+    } catch (error) {
+      console.error('Error adding interest:', error);
+      throw error;
     }
   }, [user]);
 
-  const removeInterest = useCallback((interestId: string) => {
-    setInterests(prev => prev.filter(i => i.id !== interestId));
+  const removeInterest = useCallback(async (interestId: string) => {
+    try {
+      const result = await deletePropertyInterest(interestId);
+      if (result.success) {
+        setInterests(prev => prev.filter(i => i.id !== interestId));
+        return;
+      }
+      throw new Error(result.error?.message || 'Failed to delete interest');
+    } catch (error) {
+      console.error('Error removing interest:', error);
+      throw error;
+    }
   }, []);
 
   const getInterestsByProperty = useCallback((propertyId: string) => {
@@ -149,33 +162,53 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
   }, [interests, user]);
 
   // Watchlist
-  const addToWatchlist = useCallback((propertyId: string) => {
-    if (!user) return;
+  const addToWatchlist = useCallback(async (propertyId: string) => {
+    if (!user?.id) return;
     
-    // Check if already in watchlist
-    if (watchlists.some(w => w.propertyId === propertyId && w.userId === user.id)) {
-      return;
-    }
-    
-    const newWatchlist: Watchlist = {
-      id: `watchlist-${Date.now()}`,
-      propertyId,
-      userId: user.id,
-      createdAt: new Date().toISOString(),
-    };
-    
-    setWatchlists(prev => [...prev, newWatchlist]);
-  }, [user, watchlists]);
+    try {
+      // Check if already in watchlist
+      if (watchlists.some(w => w.propertyId === propertyId && w.userId === user.id)) {
+        return;
+      }
 
-  const removeFromWatchlist = useCallback((propertyId: string) => {
-    if (!user) return;
-    setWatchlists(prev => prev.filter(w => !(w.propertyId === propertyId && w.userId === user.id)));
-  }, [user]);
+      const result = await addToWatchlistAction({
+        propertyId,
+        userId: user.id,
+      });
+
+      if (result.success && result.data) {
+        setWatchlists(prev => [...prev, result.data!]);
+      } else {
+        console.error('Failed to add to watchlist:', result.error);
+      }
+    } catch (error) {
+      console.error('Error adding to watchlist:', error);
+    }
+  }, [user?.id, watchlists]);
+
+  const removeFromWatchlist = useCallback(async (propertyId: string) => {
+    if (!user?.id) return;
+
+    try {
+      const result = await removeFromWatchlistAction({
+        propertyId,
+        userId: user.id,
+      });
+
+      if (result.success) {
+        setWatchlists(prev => prev.filter(w => !(w.propertyId === propertyId && w.userId === user.id)));
+      } else {
+        console.error('Failed to remove from watchlist:', result.error);
+      }
+    } catch (error) {
+      console.error('Error removing from watchlist:', error);
+    }
+  }, [user?.id]);
 
   const isInWatchlist = useCallback((propertyId: string) => {
-    if (!user) return false;
+    if (!user?.id) return false;
     return watchlists.some(w => w.propertyId === propertyId && w.userId === user.id);
-  }, [user, watchlists]);
+  }, [user?.id, watchlists]);
 
   const getUserWatchlists = useCallback(() => {
     if (!user) return [];
@@ -184,6 +217,7 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
 
   const value: UserDataContextType = {
     interests,
+    interestsLoading,
     addInterest,
     removeInterest,
     getInterestsByProperty,

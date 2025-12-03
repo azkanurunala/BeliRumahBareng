@@ -64,7 +64,7 @@ export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPat
           if (redirectPath !== null) {
             router.push(redirectPath);
           } else {
-            const isAdminUser = isAdmin || data.emailOrPhone === 'admin@mail.com';
+            const isAdminUser = isAdmin;
             router.push(isAdminUser ? '/admin/dashboard' : '/');
           }
         }, 100);

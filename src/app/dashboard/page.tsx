@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useUserData } from '@/contexts/user-data-context';
-import { mockProperties } from '@/lib/mock-data';
+import { useAdminData } from '@/contexts/admin-data-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { useEffect } from 'react';
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
   const { getUserInterests, getUserWatchlists } = useUserData();
+  const { properties } = useAdminData();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,12 +45,12 @@ export default function DashboardPage() {
   const watchlists = getUserWatchlists();
 
   const interestProperties = interests.map(interest => {
-    const property = mockProperties.find(p => p.id === interest.propertyId);
+    const property = properties.find(p => p.id === interest.propertyId);
     return { interest, property };
   }).filter(item => item.property);
 
   const watchlistProperties = watchlists.map(watchlist => {
-    const property = mockProperties.find(p => p.id === watchlist.propertyId);
+    const property = properties.find(p => p.id === watchlist.propertyId);
     return { watchlist, property };
   }).filter(item => item.property);
 

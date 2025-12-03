@@ -2,41 +2,28 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, FolderKanban, CreditCard, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
-import { mockProperties, mockUsers, mockProjects } from '@/lib/mock-data';
+import { useAdminData } from '@/contexts/admin-data-context';
 import { useMemo } from 'react';
 
 export function DashboardStats() {
+  const { properties, users, projects } = useAdminData();
+  
   const stats = useMemo(() => {
-    const totalProperties = mockProperties.length;
-    const totalUsers = mockUsers.length;
-    const totalProjects = mockProjects.length;
+    const totalProperties = properties.length;
+    const totalUsers = users.length;
+    const totalProjects = projects.length;
     
-    const activeProjects = mockProjects.filter(p => p.status === 'active').length;
-    const closedProjects = mockProjects.filter(p => p.status === 'closed').length;
-    const completedProjects = mockProjects.filter(p => p.status === 'completed').length;
+    const activeProjects = projects.filter(p => p.status === 'active').length;
+    const closedProjects = projects.filter(p => p.status === 'closed').length;
+    const completedProjects = projects.filter(p => p.status === 'completed').length;
     
-    // Calculate payments stats
-    let totalPayments = 0;
-    let paidPayments = 0;
-    let pendingPayments = 0;
-    let overduePayments = 0;
-    
-    mockProjects.forEach(project => {
-      if (project.installmentPlans) {
-        project.installmentPlans.forEach(plan => {
-          plan.payments.forEach(payment => {
-            totalPayments++;
-            if (payment.status === 'paid') {
-              paidPayments++;
-            } else if (payment.status === 'pending') {
-              pendingPayments++;
-            } else if (payment.status === 'overdue') {
-              overduePayments++;
-            }
-          });
-        });
-      }
-    });
+    // Calculate payments stats from projects
+    // Note: Payment stats would need to be calculated from PaymentPlan and Payment tables
+    // For now, we'll set them to 0 as they need to be fetched separately
+    const totalPayments = 0;
+    const paidPayments = 0;
+    const pendingPayments = 0;
+    const overduePayments = 0;
     
     return {
       totalProperties,
@@ -50,7 +37,7 @@ export function DashboardStats() {
       pendingPayments,
       overduePayments,
     };
-  }, []);
+  }, [properties, users, projects]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

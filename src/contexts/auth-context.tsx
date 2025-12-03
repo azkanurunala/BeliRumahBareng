@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import type { User } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
+import { createUser as createUserAction } from '@/lib/actions/user.actions';
+import { login as loginAction, getUserById } from '@/lib/actions/auth.actions';
 
 interface AuthContextType {
   user: User | null;
@@ -27,84 +28,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize: check if user is logged in (from localStorage or session)
+  // Initialize: check if user is logged in (from localStorage)
   useEffect(() => {
     if (typeof window === 'undefined') {
       setIsLoading(false);
       return;
     }
 
-    try {
-    const storedUserId = localStorage.getItem('currentUserId');
-    if (storedUserId) {
-        // Check both mockUsers and registeredUsers
-        let foundUser = mockUsers.find(u => u.id === storedUserId);
-        
-        if (!foundUser) {
-          const storedRegisteredUsers = localStorage.getItem('registeredUsers');
-          if (storedRegisteredUsers) {
-            try {
-              const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
-              foundUser = registeredUsers.find(u => u.id === storedUserId);
-            } catch (e) {
-              console.error('Failed to parse registeredUsers', e);
-            }
+    const initializeAuth = async () => {
+      try {
+        const storedUserId = localStorage.getItem('currentUserId');
+        if (storedUserId) {
+          // Fetch user from database
+          const result = await getUserById(storedUserId);
+          if (result.success && result.data) {
+            setUser(result.data);
+          } else {
+            // User not found or error, clear stored ID
+            localStorage.removeItem('currentUserId');
           }
         }
-        
-      if (foundUser) {
-        setUser(foundUser);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        localStorage.removeItem('currentUserId');
+      } finally {
+        setIsLoading(false);
       }
-    }
-    } catch (error) {
-      console.error('Error initializing auth:', error);
-    } finally {
-    setIsLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = useCallback(async (emailOrPhone: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Find user by email or phone in mockUsers
-      let foundUser = mockUsers.find(u => 
-        u.email === emailOrPhone || u.phoneNumber === emailOrPhone
-      );
-      
-      // If not found in mockUsers, check registeredUsers
-      if (!foundUser && typeof window !== 'undefined') {
-        const storedRegisteredUsers = localStorage.getItem('registeredUsers');
-        if (storedRegisteredUsers) {
-          try {
-            const registeredUsers: User[] = JSON.parse(storedRegisteredUsers);
-            foundUser = registeredUsers.find(u => 
-              u.email === emailOrPhone || u.phoneNumber === emailOrPhone
-            );
-          } catch (e) {
-            console.error('Failed to parse registeredUsers', e);
-          }
-        }
-      }
-      
-      if (foundUser) {
-        // Verify password (in real app, compare hashed password)
-        if (foundUser.passwordHash && foundUser.passwordHash !== password) {
-          setIsLoading(false);
-          return false;
-        }
-        
-        setUser(foundUser);
-        localStorage.setItem('currentUserId', foundUser.id);
+      const result = await loginAction({
+        emailOrPhone,
+        password,
+      });
+
+      if (result.success && result.data) {
+        setUser(result.data);
+        localStorage.setItem('currentUserId', result.data.id);
         setIsLoading(false);
         return true;
       }
-      
+
       setIsLoading(false);
       return false;
     } catch (error) {
+      console.error('Error logging in:', error);
       setIsLoading(false);
       return false;
     }
@@ -138,26 +111,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // In real app, hash password and create user in database
-      const newUser: User = {
-        id: `user-${Date.now()}`,
+      // Create user in database
+      const result = await createUserAction({
         name: data.name,
         email: data.email,
         phoneNumber: data.phoneNumber,
         avatarUrl: '/images/default-avatar.png',
         avatarHint: 'default avatar',
-        profile: data.profile,
-        passwordHash: data.password, // In real app, hash this
-      };
-      
-      // Save to registeredUsers in localStorage for admin context
-      const storedRegisteredUsers = localStorage.getItem('registeredUsers');
-      const registeredUsers: User[] = storedRegisteredUsers ? JSON.parse(storedRegisteredUsers) : [];
-      registeredUsers.push(newUser);
-      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+        locationPreference: data.profile.locationPreference,
+        priceRange: data.profile.priceRange,
+        investmentGoals: data.profile.investmentGoals,
+        financialCapacity: data.profile.financialCapacity,
+        timeHorizon: data.profile.timeHorizon,
+        passwordHash: data.password, // In real app, hash this with bcrypt
+        oauthProvider: null,
+        oauthId: undefined,
+      });
+
+      if (!result.success || !result.data) {
+        console.error('Failed to create user:', result.error);
+        setIsLoading(false);
+        return false;
+      }
+
+      const newUser: User = result.data;
       
       // Trigger custom event to notify admin context
       window.dispatchEvent(new CustomEvent('userRegistered', { detail: newUser }));
@@ -167,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       return true;
     } catch (error) {
+      console.error('Error registering user:', error);
       setIsLoading(false);
       return false;
     }
@@ -177,8 +155,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('currentUserId');
   }, []);
 
-  // Check if current user is admin (based on email)
-  const isAdmin = user?.email === 'admin@mail.com';
+  // Check if current user is admin (based on role)
+  const isAdmin = user?.role === 2;
 
   const value: AuthContextType = {
     user,

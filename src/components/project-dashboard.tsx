@@ -27,7 +27,6 @@ import { FileText, MessageCircle, Paperclip, Send, Building, BadgeCheck, Home, S
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
-import { mockProperties } from '@/lib/mock-data';
 import ProgressDetailDialog from './progress-detail-dialog';
 import DocumentDetailDialog from './document-detail-dialog';
 import InstallmentOverview from './installment-overview';
@@ -50,8 +49,8 @@ type ProjectDashboardProps = {
 };
 
 export default function ProjectDashboard({ project }: ProjectDashboardProps) {
-  const property = mockProperties.find(p => p.id === project.propertyId);
-  const { updateProject } = useAdminData();
+  const { properties, updateProject } = useAdminData();
+  const property = properties.find(p => p.id === project.propertyId);
   const { user } = useAuth();
   const { toast } = useToast();
   
