@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { reviewPropertyInterestSchema } from '@/lib/validations';
 import { NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
+import { createProject } from '@/lib/actions/project.actions';
+import { addProjectMember } from '@/lib/actions/project.actions';
 
 // POST /api/property-interests/[id]/review - Review property interest (approve/reject)
 export async function POST(
@@ -32,6 +34,21 @@ export async function POST(
 
     if (!reviewer) {
       throw new NotFoundError('Reviewer not found');
+    }
+
+    // Get property info dengan images untuk project creation
+    const property = await db.property.findUnique({
+      where: { id: interest.propertyId },
+      include: {
+        images: {
+          orderBy: { order: 'asc' },
+          take: 1,
+        },
+      },
+    });
+
+    if (!property) {
+      throw new NotFoundError('Property not found');
     }
 
     // Update interest dengan review
@@ -76,6 +93,63 @@ export async function POST(
       reviewedAt: updatedInterest.reviewedAt?.toISOString(),
       createdAt: updatedInterest.createdAt.toISOString(),
     };
+
+    // Jika interest di-approve, buat project dan tambahkan user sebagai member
+    if (validatedData.status === 'approved') {
+      // Cek apakah sudah ada project untuk property ini
+      let existingProject = await db.project.findFirst({
+        where: { propertyId: interest.propertyId },
+      });
+
+      // Jika belum ada project, buat project baru
+      if (!existingProject) {
+        const firstImage = property.images[0];
+        const projectResult = await createProject({
+          propertyId: property.id,
+          propertyName: property.name,
+          propertyImageUrl: firstImage?.url || '',
+          propertyImageHint: firstImage?.hint || property.name,
+          status: 'active',
+          kycProgress: 0,
+          fundingProgress: 0,
+          legalProgress: 0,
+          closingProgress: 0,
+        });
+
+        if (!projectResult.success || !projectResult.data) {
+          console.error('Failed to create project:', projectResult.error);
+          // Tetap lanjutkan proses meskipun project creation gagal
+        } else {
+          existingProject = { id: projectResult.data.id } as { id: string };
+        }
+      }
+
+      // Tambahkan user sebagai projectMember jika project berhasil dibuat/ditemukan
+      if (existingProject) {
+        // Cek apakah user sudah menjadi member
+        const existingMember = await db.projectMember.findUnique({
+          where: {
+            projectId_userId: {
+              projectId: existingProject.id,
+              userId: interest.userId,
+            },
+          },
+        });
+
+        // Jika belum menjadi member, tambahkan
+        if (!existingMember) {
+          const memberResult = await addProjectMember({
+            projectId: existingProject.id,
+            userId: interest.userId,
+          });
+
+          if (!memberResult.success) {
+            console.error('Failed to add project member:', memberResult.error);
+            // Tetap lanjutkan proses meskipun add member gagal
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAdminData } from '@/contexts/admin-data-context';
+import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ interface InterestWithDetails extends PropertyInterest {
 
 export default function AdminInterestsPage() {
   const { interests, properties, users, updateInterest } = useAdminData();
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [filters, setFilters] = useState<Record<string, string[]>>({
     propertyId: [],
@@ -107,16 +109,31 @@ export default function AdminInterestsPage() {
     return result;
   }, [interestsWithDetails, filters]);
 
-  const handleUpdateStatus = (interestId: string, status: 'approved' | 'rejected' | 'pending', notes?: string) => {
-    updateInterest(interestId, { 
-      status, 
-      notes,
-      reviewedAt: new Date().toISOString(),
-    });
-    toast({
-      title: 'Berhasil',
-      description: `Status interest telah diubah menjadi ${status === 'approved' ? 'Disetujui' : status === 'rejected' ? 'Ditolak' : 'Menunggu'}`,
-    });
+  const handleUpdateStatus = async (interestId: string, status: 'approved' | 'rejected' | 'pending', notes?: string) => {
+    try {
+      // Jika status adalah 'approved' atau 'rejected', sertakan reviewedBy
+      const updates: any = {
+        status,
+        notes,
+        reviewedAt: new Date().toISOString(),
+      };
+      
+      if ((status === 'approved' || status === 'rejected') && currentUser?.id) {
+        updates.reviewedBy = currentUser.id;
+      }
+      
+      await updateInterest(interestId, updates);
+      toast({
+        title: 'Berhasil',
+        description: `Status interest telah diubah menjadi ${status === 'approved' ? 'Disetujui' : status === 'rejected' ? 'Ditolak' : 'Menunggu'}`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Gagal mengupdate status interest',
+      });
+    }
   };
 
   const handleViewDetail = (interest: InterestWithDetails) => {

@@ -5,6 +5,8 @@ import { createPropertyInterestSchema, updatePropertyInterestSchema, reviewPrope
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createNotificationForUser } from '@/lib/notifications';
+import { createProject } from './project.actions';
+import { addProjectMember } from './project.actions';
 
 /**
  * Server Actions untuk Property Interest Operations
@@ -437,11 +439,26 @@ export async function reviewPropertyInterest(data: z.infer<typeof reviewProperty
       };
     }
 
-    // Get property info untuk notification
+    // Get property info untuk notification dan project creation
     const property = await db.property.findUnique({
       where: { id: interest.propertyId },
-      select: { name: true },
+      include: {
+        images: {
+          orderBy: { order: 'asc' },
+          take: 1,
+        },
+      },
     });
+
+    if (!property) {
+      return {
+        success: false,
+        error: {
+          message: 'Property not found',
+          code: 'NOT_FOUND',
+        },
+      };
+    }
 
     // Update interest dengan review
     const updatedInterest = await db.propertyInterest.update({
@@ -474,6 +491,71 @@ export async function reviewPropertyInterest(data: z.infer<typeof reviewProperty
     revalidatePath(`/property/${updatedInterest.propertyId}`);
     revalidatePath('/api/property-interests');
 
+    // Jika interest di-approve, buat project dan tambahkan user sebagai member
+    if (validatedData.status === 'approved') {
+      // Cek apakah sudah ada project untuk property ini
+      let existingProject = await db.project.findFirst({
+        where: { propertyId: interest.propertyId },
+      });
+
+      // Jika belum ada project, buat project baru
+      if (!existingProject) {
+        const firstImage = property.images[0];
+        const projectResult = await createProject({
+          propertyId: property.id,
+          propertyName: property.name,
+          propertyImageUrl: firstImage?.url || '',
+          propertyImageHint: firstImage?.hint || property.name,
+          status: 'active',
+          kycProgress: 0,
+          fundingProgress: 0,
+          legalProgress: 0,
+          closingProgress: 0,
+        });
+
+        if (!projectResult.success || !projectResult.data) {
+          console.error('Failed to create project:', projectResult.error);
+          // Tetap lanjutkan proses meskipun project creation gagal
+        } else {
+          existingProject = { id: projectResult.data.id } as { id: string };
+        }
+      }
+
+      // Tambahkan user sebagai projectMember jika project berhasil dibuat/ditemukan
+      if (existingProject) {
+        // Cek apakah user sudah menjadi member
+        const existingMember = await db.projectMember.findUnique({
+          where: {
+            projectId_userId: {
+              projectId: existingProject.id,
+              userId: interest.userId,
+            },
+          },
+        });
+
+        // Jika belum menjadi member, tambahkan
+        if (!existingMember) {
+          const memberResult = await addProjectMember({
+            projectId: existingProject.id,
+            userId: interest.userId,
+          });
+
+          if (!memberResult.success) {
+            console.error('Failed to add project member:', memberResult.error);
+            // Tetap lanjutkan proses meskipun add member gagal
+          }
+        }
+      }
+
+      // Revalidate project paths
+      if (existingProject) {
+        revalidatePath('/admin/projects');
+        revalidatePath(`/admin/projects/${existingProject.id}`);
+        revalidatePath('/api/projects');
+        revalidatePath(`/projects/${existingProject.id}`);
+      }
+    }
+
     // Create notification untuk user jika interest direview
     if (validatedData.status === 'approved' || validatedData.status === 'rejected') {
       const notificationType = validatedData.status === 'approved'
@@ -483,8 +565,8 @@ export async function reviewPropertyInterest(data: z.infer<typeof reviewProperty
         ? 'Minat Properti Disetujui'
         : 'Minat Properti Ditolak';
       const notificationDesc = validatedData.status === 'approved'
-        ? `Minat Anda pada properti "${property?.name || 'properti'}" telah disetujui.`
-        : `Minat Anda pada properti "${property?.name || 'properti'}" telah ditolak.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`;
+        ? `Minat Anda pada properti "${property.name || 'properti'}" telah disetujui.`
+        : `Minat Anda pada properti "${property.name || 'properti'}" telah ditolak.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`;
 
       await createNotificationForUser(
         interest.userId,

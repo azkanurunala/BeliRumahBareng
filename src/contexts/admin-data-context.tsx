@@ -486,8 +486,31 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   }, [loadProjects]);
 
   // Interests
-  const updateInterest = useCallback(async (id: string, updates: Partial<PropertyInterest>) => {
+  const updateInterest = useCallback(async (id: string, updates: Partial<PropertyInterest & { reviewedBy?: string }>) => {
     try {
+      // Jika status adalah 'approved' atau 'rejected' dan ada reviewedBy, gunakan reviewPropertyInterest
+      if ((updates.status === 'approved' || updates.status === 'rejected') && updates.reviewedBy) {
+        const result = await reviewPropertyInterest({
+          id,
+          status: updates.status,
+          notes: updates.notes,
+          reviewedBy: updates.reviewedBy,
+        });
+        
+        if (result.success && result.data) {
+          setInterests(prev => prev.map(i => i.id === id ? result.data! : i));
+          // Reload projects untuk mendapatkan project yang baru dibuat
+          await loadProjects();
+          // Trigger custom event to notify user context
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('interestUpdated'));
+          }
+          return;
+        }
+        throw new Error(result.error?.message || 'Failed to review interest');
+      }
+      
+      // Untuk update biasa, gunakan updatePropertyInterest
       const result = await updatePropertyInterest(id, updates);
       if (result.success && result.data) {
         setInterests(prev => prev.map(i => i.id === id ? result.data! : i));
@@ -502,7 +525,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       console.error('Error updating interest:', error);
       throw error;
     }
-  }, []);
+  }, [loadProjects]);
 
   const getInterestsByProperty = useCallback((propertyId: string) => {
     return interests.filter(i => i.propertyId === propertyId);

@@ -578,8 +578,8 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       {getButtonText()}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[480px]">
-                    <DialogHeader>
+                  <DialogContent className="sm:max-w-[480px] max-h-[70vh] flex flex-col">
+                    <DialogHeader className="flex-shrink-0">
                       <DialogTitle>Gabung Proyek: {property.name}</DialogTitle>
                       <DialogDescription>
                         {isFlexible 
@@ -588,7 +588,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                         }
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-4 py-4 overflow-y-auto flex-1 min-h-0">
                       {!isFlexible && (
                           <RadioGroup onValueChange={setSelectedUnit} className="max-h-60 overflow-y-auto pr-4">
                           <Table>
@@ -687,7 +687,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                         </ul>
                       </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="flex-shrink-0">
                       <DialogClose asChild>
                         <Button variant="outline">Batal</Button>
                       </DialogClose>
