@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,14 +25,16 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ProjectDocument, User, Project } from '@/lib/types';
-import { mockUsers } from '@/lib/mock-data';
+import { Upload, X, Loader2, FileText, ExternalLink } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 const createDocumentSchema = z.object({
   name: z.string().min(1, 'Nama dokumen wajib diisi'),
   status: z.enum(['Menunggu', 'Tertanda', 'Terverifikasi'], {
     required_error: 'Status wajib dipilih',
   }),
-  url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  url: z.string().min(1, 'Dokumen wajib diupload').optional().or(z.literal('')),
   description: z.string().optional(),
   uploadedBy: z.string().optional(),
   signedBy: z.array(z.string()).optional(),
@@ -44,7 +47,7 @@ const editDocumentSchema = z.object({
   status: z.enum(['Menunggu', 'Tertanda', 'Terverifikasi'], {
     required_error: 'Status wajib dipilih',
   }),
-  url: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  url: z.string().min(1, 'Dokumen wajib diupload').optional().or(z.literal('')),
   description: z.string().optional(),
   uploadedBy: z.string().optional(),
   signedBy: z.array(z.string()).optional(),
@@ -66,8 +69,18 @@ interface DocumentFormProps {
 }
 
 export function DocumentForm({ document, projectMembers, projects, selectedProjectId, onSubmit, onCancel }: DocumentFormProps) {
+  const { toast } = useToast();
   const isEditing = !!document;
   const schema = isEditing ? editDocumentSchema : createDocumentSchema;
+  
+  const [uploadedDocument, setUploadedDocument] = useState<{ url: string; hint: string } | null>(
+    document?.url ? {
+      url: document.url,
+      hint: document.name,
+    } : null
+  );
+  const [isUploading, setIsUploading] = useState(false);
+  const documentFileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<DocumentFormValues>({
     resolver: zodResolver(schema),
@@ -94,6 +107,13 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
         },
   });
 
+  // Update form when uploadedDocument changes
+  useEffect(() => {
+    if (uploadedDocument) {
+      form.setValue('url', uploadedDocument.url);
+    }
+  }, [uploadedDocument, form]);
+
   const watchStatus = form.watch('status');
   const watchSignedBy = form.watch('signedBy') || [];
   const watchProjectId = form.watch('projectId');
@@ -103,9 +123,73 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
     ? projects.find(p => p.id === watchProjectId)?.members || projectMembers
     : projectMembers;
 
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const response = await fetch('/api/upload/document', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setUploadedDocument(result.data);
+        toast({
+          title: 'Berhasil',
+          description: 'Dokumen berhasil diupload',
+        });
+      } else {
+        throw new Error(result.error?.message || 'Failed to upload document');
+      }
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal mengupload dokumen',
+      });
+    } finally {
+      setIsUploading(false);
+      if (documentFileInputRef.current) {
+        documentFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveDocument = () => {
+    setUploadedDocument(null);
+    form.setValue('url', '');
+  };
+
+  const handleSubmit = (data: DocumentFormValues) => {
+    // Validate document
+    if (!uploadedDocument && !isEditing) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Dokumen wajib diupload',
+      });
+      return;
+    }
+
+    // Use uploaded document
+    if (uploadedDocument) {
+      data.url = uploadedDocument.url;
+    }
+
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {projects && !isEditing && (
           <FormField
             control={form.control}
@@ -170,19 +254,73 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL Dokumen (Opsional)</FormLabel>
-              <FormControl>
-                <Input {...field} type="url" value={field.value || ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div className="space-y-2">
+          <FormLabel>Dokumen</FormLabel>
+          {uploadedDocument ? (
+            <div className="flex items-center gap-4 p-4 border rounded-lg">
+              <FileText className="h-8 w-8 text-muted-foreground" />
+              <div className="flex-1">
+                <p className="font-medium">{uploadedDocument.hint}</p>
+                <Link 
+                  href={uploadedDocument.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
+                >
+                  Lihat dokumen <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleRemoveDocument}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <input
+                ref={documentFileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={handleDocumentUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => documentFileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Mengupload...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Dokumen
+                  </>
+                )}
+              </Button>
+              <FormDescription className="mt-2">
+                Upload dokumen (JPEG, PNG, WebP, PDF, DOC, DOCX). Maksimal 10MB.
+              </FormDescription>
+            </div>
           )}
-        />
+          <FormField
+            control={form.control}
+            name="url"
+            render={() => (
+              <FormItem>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

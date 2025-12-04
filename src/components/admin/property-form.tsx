@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,7 +24,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Property } from '@/lib/types';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 const propertySchema = z.object({
   name: z.string().min(1, 'Nama properti wajib diisi'),
@@ -39,11 +42,11 @@ const propertySchema = z.object({
   unitMeasure: z.string().optional(),
   totalArea: z.number().optional(),
   images: z.array(z.object({
-    url: z.string().url('URL gambar tidak valid'),
+    url: z.string().min(1, 'URL gambar wajib diisi'),
     hint: z.string().optional(),
   })).min(1, 'Minimal 1 gambar diperlukan'),
   planningInfo: z.object({
-    sitePlanUrl: z.string().url('URL denah tidak valid'),
+    sitePlanUrl: z.string().optional(),
     sitePlanHint: z.string().optional(),
     developmentPlan: z.string().optional(),
     environmentalAnalysis: z.string().optional(),
@@ -88,6 +91,21 @@ interface PropertyFormProps {
 }
 
 export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps) {
+  const { toast } = useToast();
+  const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; hint: string }>>(
+    property?.images || []
+  );
+  const [uploadedSitePlan, setUploadedSitePlan] = useState<{ url: string; hint: string } | null>(
+    property?.planningInfo?.sitePlanUrl ? {
+      url: property.planningInfo.sitePlanUrl,
+      hint: property.planningInfo.sitePlanHint || '',
+    } : null
+  );
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isUploadingSitePlan, setIsUploadingSitePlan] = useState(false);
+  const imagesFileInputRef = useRef<HTMLInputElement>(null);
+  const sitePlanFileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
     defaultValues: property
@@ -111,7 +129,7 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
           price: 0,
           location: '',
           type: 'co-owning',
-          images: [{ url: '', hint: '' }],
+          images: [],
         },
   });
 
@@ -119,7 +137,146 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
   const watchTotalArea = form.watch('totalArea');
   const isFlexible = watchType === 'co-owning' && watchTotalArea;
 
+  // Update form when uploadedImages change
+  useEffect(() => {
+    if (uploadedImages.length > 0) {
+      form.setValue('images', uploadedImages);
+    }
+  }, [uploadedImages, form]);
+
+  // Update form when uploadedSitePlan change
+  useEffect(() => {
+    if (uploadedSitePlan) {
+      form.setValue('planningInfo.sitePlanUrl', uploadedSitePlan.url);
+      form.setValue('planningInfo.sitePlanHint', uploadedSitePlan.hint);
+    }
+  }, [uploadedSitePlan, form]);
+
+  const handleImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploadingImages(true);
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => {
+        formData.append('images', file);
+      });
+
+      const response = await fetch('/api/upload/images', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setUploadedImages((prev) => [...prev, ...result.data]);
+        form.setValue('images', [...uploadedImages, ...result.data]);
+        toast({
+          title: 'Berhasil',
+          description: `${result.data.length} gambar berhasil diupload`,
+        });
+      } else {
+        throw new Error(result.error?.message || 'Failed to upload images');
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal mengupload gambar',
+      });
+    } finally {
+      setIsUploadingImages(false);
+      if (imagesFileInputRef.current) {
+        imagesFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleSitePlanUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingSitePlan(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setUploadedSitePlan(result.data);
+        form.setValue('planningInfo.sitePlanUrl', result.data.url);
+        form.setValue('planningInfo.sitePlanHint', result.data.hint);
+        toast({
+          title: 'Berhasil',
+          description: 'Denah lokasi berhasil diupload',
+        });
+      } else {
+        throw new Error(result.error?.message || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Error uploading site plan:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal mengupload denah',
+      });
+    } finally {
+      setIsUploadingSitePlan(false);
+      if (sitePlanFileInputRef.current) {
+        sitePlanFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    setUploadedImages(newImages);
+    form.setValue('images', newImages);
+  };
+
+  const handleRemoveSitePlan = () => {
+    setUploadedSitePlan(null);
+    form.setValue('planningInfo.sitePlanUrl', '');
+    form.setValue('planningInfo.sitePlanHint', '');
+  };
+
   const handleSubmit = (data: PropertyFormValues) => {
+    // Validate images
+    if (uploadedImages.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Minimal 1 gambar diperlukan',
+      });
+      return;
+    }
+
+    // Use uploaded images
+    data.images = uploadedImages;
+
+    // Use uploaded site plan if available
+    if (uploadedSitePlan) {
+      if (!data.planningInfo) {
+        data.planningInfo = {
+          sitePlanUrl: '',
+          sitePlanHint: '',
+          developmentPlan: '',
+          environmentalAnalysis: '',
+        };
+      }
+      data.planningInfo.sitePlanUrl = uploadedSitePlan.url;
+      data.planningInfo.sitePlanHint = uploadedSitePlan.hint;
+    }
+
     // Auto-set unitName berdasarkan tipe
     if (data.type === 'co-building') {
       data.unitName = 'Lantai';
@@ -137,8 +294,6 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
     }
     onSubmit(data);
   };
-
-  const images = form.watch('images');
 
   return (
     <Form {...form}>
@@ -389,82 +544,162 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
 
         <div className="space-y-4">
           <FormLabel>Gambar Properti</FormLabel>
-          {images.map((image, index) => (
-            <div key={index} className="flex gap-2">
-              <FormField
-                control={form.control}
-                name={`images.${index}.url`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input {...field} placeholder="URL gambar" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`images.${index}.hint`}
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormControl>
-                      <Input {...field} placeholder="Hint (opsional)" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {images.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    const newImages = images.filter((_, i) => i !== index);
-                    form.setValue('images', newImages);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              form.setValue('images', [...images, { url: '', hint: '' }]);
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Gambar
-          </Button>
-        </div>
+          <div className="space-y-4">
+            {/* Image Previews */}
+            {uploadedImages.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {uploadedImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <div className="relative aspect-square rounded-lg overflow-hidden border">
+                      <Image
+                        src={image.url}
+                        alt={image.hint || `Gambar ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {image.hint && (
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{image.hint}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
-        <div className="space-y-4">
-          <FormLabel>Informasi Perencanaan (Opsional)</FormLabel>
+            {/* Upload Button */}
+            <div>
+              <input
+                ref={imagesFileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                multiple
+                onChange={handleImagesUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => imagesFileInputRef.current?.click()}
+                disabled={isUploadingImages}
+              >
+                {isUploadingImages ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Mengupload...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Gambar
+                  </>
+                )}
+              </Button>
+              <FormDescription className="mt-2">
+                Upload gambar properti (JPEG, PNG, WebP). Maksimal 5MB per gambar.
+              </FormDescription>
+            </div>
+          </div>
           <FormField
             control={form.control}
-            name="planningInfo.sitePlanUrl"
-            render={({ field }) => (
+            name="images"
+            render={() => (
               <FormItem>
-                <FormLabel>URL Denah Lokasi</FormLabel>
-                <FormControl>
-                  <Input {...field} value={field.value || ''} />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="space-y-4">
+          <FormLabel>Informasi Perencanaan (Opsional)</FormLabel>
+          
+          {/* Site Plan Upload */}
+          <div className="space-y-2">
+            <FormLabel>Denah Lokasi</FormLabel>
+            {uploadedSitePlan ? (
+              <div className="relative group">
+                <div className="relative aspect-video rounded-lg overflow-hidden border">
+                  <Image
+                    src={uploadedSitePlan.url}
+                    alt={uploadedSitePlan.hint || 'Denah lokasi'}
+                    fill
+                    className="object-contain"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={handleRemoveSitePlan}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {uploadedSitePlan.hint && (
+                  <p className="text-xs text-muted-foreground mt-1">{uploadedSitePlan.hint}</p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <input
+                  ref={sitePlanFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleSitePlanUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => sitePlanFileInputRef.current?.click()}
+                  disabled={isUploadingSitePlan}
+                >
+                  {isUploadingSitePlan ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Mengupload...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      Upload Denah Lokasi
+                    </>
+                  )}
+                </Button>
+                <FormDescription className="mt-2">
+                  Upload denah lokasi (JPEG, PNG, WebP). Maksimal 5MB.
+                </FormDescription>
+              </div>
+            )}
+          </div>
+          
           <FormField
             control={form.control}
             name="planningInfo.sitePlanHint"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hint Denah</FormLabel>
+                <FormLabel>Hint Denah (Opsional)</FormLabel>
                 <FormControl>
-                  <Input {...field} value={field.value || ''} />
+                  <Input 
+                    {...field} 
+                    value={field.value || ''} 
+                    placeholder="Deskripsi singkat denah"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      if (uploadedSitePlan) {
+                        setUploadedSitePlan({ ...uploadedSitePlan, hint: e.target.value });
+                      }
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

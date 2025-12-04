@@ -9,7 +9,7 @@ dotenv.config({ path: '.env' });
 
 // Setup connection pooling untuk Neon serverless (sama seperti di db.ts)
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DB_URL,
 });
 
 const adapter = new PrismaPg(pool);

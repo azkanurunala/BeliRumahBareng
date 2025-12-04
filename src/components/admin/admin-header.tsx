@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, CircleUser, User, LogOut } from 'lucide-react';
@@ -16,10 +17,94 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/auth-context';
+import { getNotifications, markNotificationAsRead } from '@/lib/actions/notification.actions';
+import { formatDistanceToNow } from 'date-fns';
+import { id } from 'date-fns/locale';
+
+type Notification = {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  href: string | null;
+  type: string;
+  read: boolean;
+  readAt: string | null;
+  createdAt: string;
+};
 
 export function AdminHeader() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadNotifications();
+      // Polling setiap 30 detik
+      const interval = setInterval(() => {
+        loadNotifications();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
+
+  const loadNotifications = async () => {
+    if (!user?.id) return;
+
+    try {
+      const result = await getNotifications({
+        userId: user.id,
+        page: 1,
+        limit: 10, // Max 10 untuk dropdown
+      });
+
+      if (result.success && result.data) {
+        setNotifications(result.data);
+        setUnreadCount(result.meta?.unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      try {
+        await markNotificationAsRead(notification.id);
+        setNotifications(prev =>
+          prev.map(n =>
+            n.id === notification.id
+              ? { ...n, read: true, readAt: new Date().toISOString() }
+              : n
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    }
+
+    if (notification.href) {
+      router.push(notification.href);
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: id,
+      });
+    } catch {
+      return dateString;
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -34,37 +119,55 @@ export function AdminHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative rounded-full">
               <Bell className="h-5 w-5" />
-              <Badge className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs" variant="destructive">3</Badge>
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 justify-center p-0 text-xs" variant="destructive">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
               <span className="sr-only">Buka notifikasi</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="items-start">
-              <Link href="/admin/property-submissions" className="flex flex-col gap-1 cursor-pointer">
-                <p className='font-semibold'>Pengajuan Properti Baru</p>
-                <p className='text-xs text-muted-foreground'>Ada pengajuan properti baru yang perlu ditinjau.</p>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild className="items-start">
-              <Link href="/admin/users" className="flex flex-col gap-1 cursor-pointer">
-                <p className='font-semibold'>Pengguna Baru Terdaftar</p>
-                <p className='text-xs text-muted-foreground'>2 pengguna baru telah mendaftar hari ini.</p>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild className="items-start">
-              <Link href="/admin/payments" className="flex flex-col gap-1 cursor-pointer">
-                <p className='font-semibold'>Pembayaran Baru</p>
-                <p className='text-xs text-muted-foreground'>Ada pembayaran baru yang perlu diverifikasi.</p>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/admin/dashboard" className='justify-center text-sm text-muted-foreground cursor-pointer'>
-                Lihat semua notifikasi
-              </Link>
-            </DropdownMenuItem>
+            {loading ? (
+              <DropdownMenuItem disabled>
+                <p className="text-sm text-muted-foreground">Memuat notifikasi...</p>
+              </DropdownMenuItem>
+            ) : notifications.length === 0 ? (
+              <DropdownMenuItem disabled>
+                <p className="text-sm text-muted-foreground">Tidak ada notifikasi</p>
+              </DropdownMenuItem>
+            ) : (
+              <>
+                {notifications.map((notif) => (
+                  <DropdownMenuItem
+                    key={notif.id}
+                    className="items-start cursor-pointer"
+                    onClick={() => handleNotificationClick(notif)}
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="flex items-center gap-2">
+                        <p className={`font-semibold text-sm ${notif.read ? '' : 'text-foreground'}`}>
+                          {notif.title}
+                        </p>
+                        {!notif.read && (
+                          <Badge variant="default" className="h-2 w-2 p-0 rounded-full" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{notif.description}</p>
+                      <p className="text-xs text-muted-foreground/80">{formatTime(notif.createdAt)}</p>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/notifications" className='justify-center text-sm text-muted-foreground cursor-pointer'>
+                    Lihat semua notifikasi
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 

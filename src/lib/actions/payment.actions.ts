@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { createPaymentPlanSchema, updatePaymentPlanSchema, createPaymentSchema, updatePaymentSchema, verifyPaymentSchema } from '@/lib/validations';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { createNotificationForAdmin, createNotificationForUser } from '@/lib/notifications';
 
 /**
  * Server Actions untuk Payment Operations
@@ -608,6 +609,16 @@ export async function createPayment(data: z.infer<typeof createPaymentSchema>) {
     revalidatePath('/admin/payments');
     revalidatePath('/api/payments');
 
+    // Create notification untuk admin jika payment perlu verifikasi
+    if (validatedData.status === 'pending') {
+      await createNotificationForAdmin(
+        'Pembayaran Baru Perlu Verifikasi',
+        `Pembayaran baru dari ${user.name} untuk project ${project.propertyName} sebesar ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(validatedData.amount)}`,
+        'payment_new',
+        `/admin/payments`
+      );
+    }
+
     return {
       success: true,
       data: transformedPayment,
@@ -1086,6 +1097,15 @@ export async function verifyPayment(data: z.infer<typeof verifyPaymentSchema>) {
     revalidatePath(`/admin/projects/${updatedPayment.projectId}`);
     revalidatePath('/admin/payments');
     revalidatePath('/api/payments');
+
+    // Create notification untuk user bahwa payment telah diverifikasi
+    await createNotificationForUser(
+      updatedPayment.userId,
+      'Pembayaran Telah Diverifikasi',
+      `Pembayaran Anda untuk project ${updatedPayment.project.propertyName} sebesar ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(updatedPayment.amount))} telah diverifikasi.`,
+      'payment_verified',
+      `/projects/${updatedPayment.projectId}`
+    );
 
     return {
       success: true,

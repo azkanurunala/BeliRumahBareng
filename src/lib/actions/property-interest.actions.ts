@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { createPropertyInterestSchema, updatePropertyInterestSchema, reviewPropertyInterestSchema } from '@/lib/validations';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { createNotificationForUser } from '@/lib/notifications';
 
 /**
  * Server Actions untuk Property Interest Operations
@@ -436,6 +437,12 @@ export async function reviewPropertyInterest(data: z.infer<typeof reviewProperty
       };
     }
 
+    // Get property info untuk notification
+    const property = await db.property.findUnique({
+      where: { id: interest.propertyId },
+      select: { name: true },
+    });
+
     // Update interest dengan review
     const updatedInterest = await db.propertyInterest.update({
       where: { id: validatedData.id },
@@ -466,6 +473,27 @@ export async function reviewPropertyInterest(data: z.infer<typeof reviewProperty
     revalidatePath('/admin/properties');
     revalidatePath(`/property/${updatedInterest.propertyId}`);
     revalidatePath('/api/property-interests');
+
+    // Create notification untuk user jika interest direview
+    if (validatedData.status === 'approved' || validatedData.status === 'rejected') {
+      const notificationType = validatedData.status === 'approved'
+        ? 'property_interest_approved'
+        : 'property_interest_rejected';
+      const notificationTitle = validatedData.status === 'approved'
+        ? 'Minat Properti Disetujui'
+        : 'Minat Properti Ditolak';
+      const notificationDesc = validatedData.status === 'approved'
+        ? `Minat Anda pada properti "${property?.name || 'properti'}" telah disetujui.`
+        : `Minat Anda pada properti "${property?.name || 'properti'}" telah ditolak.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`;
+
+      await createNotificationForUser(
+        interest.userId,
+        notificationTitle,
+        notificationDesc,
+        notificationType,
+        validatedData.status === 'approved' ? `/property/${updatedInterest.propertyId}` : null
+      );
+    }
 
     return {
       success: true,

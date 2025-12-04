@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { createPropertySubmissionSchema, updatePropertySubmissionSchema, reviewPropertySubmissionSchema } from '@/lib/validations';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { createNotificationForAdmin, createNotificationForUser } from '@/lib/notifications';
 
 /**
  * Server Actions untuk Property Submission Operations
@@ -69,6 +70,15 @@ export async function createPropertySubmission(data: z.infer<typeof createProper
 
     revalidatePath('/admin/property-submissions');
     revalidatePath('/api/property-submissions');
+    
+    // Create notification untuk admin
+    await createNotificationForAdmin(
+      'Pengajuan Properti Baru',
+      `Pengajuan properti baru: ${submission.name} dari ${submitter.name}`,
+      'property_submission_new',
+      `/admin/property-submissions`
+    );
+    
     return { success: true, data: transformed };
   } catch (error) {
     console.error('Error creating property submission:', error);
@@ -319,6 +329,26 @@ export async function reviewPropertySubmission(data: z.infer<typeof reviewProper
     revalidatePath('/admin/property-submissions');
     revalidatePath(`/admin/property-submissions/${validatedData.id}`);
     revalidatePath('/api/property-submissions');
+    
+    // Create notification untuk user yang submit
+    const notificationType = validatedData.status === 'approved' 
+      ? 'property_submission_approved' 
+      : 'property_submission_rejected';
+    const notificationTitle = validatedData.status === 'approved'
+      ? 'Pengajuan Properti Disetujui'
+      : 'Pengajuan Properti Ditolak';
+    const notificationDesc = validatedData.status === 'approved'
+      ? `Pengajuan properti "${updated.name}" telah disetujui oleh admin.`
+      : `Pengajuan properti "${updated.name}" telah ditolak.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`;
+    
+    await createNotificationForUser(
+      submission.submittedBy,
+      notificationTitle,
+      notificationDesc,
+      notificationType,
+      validatedData.status === 'approved' ? `/property/${updated.id}` : null
+    );
+    
     return { success: true, data: transformed };
   } catch (error) {
     console.error('Error reviewing property submission:', error);
