@@ -133,15 +133,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Polling for interests and submissions changes (every 5 seconds)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadInterests();
-      loadPropertySubmissions();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [loadInterests, loadPropertySubmissions]);
+  // Load interests and submissions once on mount (polling removed to save database quota)
 
   // Load properties from API
   const loadProperties = useCallback(async () => {

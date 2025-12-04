@@ -58,12 +58,7 @@ export default function Header() {
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       loadNotifications();
-      // Polling setiap 30 detik
-      const interval = setInterval(() => {
-        loadNotifications();
-      }, 30000);
-
-      return () => clearInterval(interval);
+      // Polling removed to save database quota - notifications load once on mount
     }
   }, [isAuthenticated, user?.id]);
 
