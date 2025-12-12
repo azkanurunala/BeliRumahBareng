@@ -342,14 +342,17 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
           render={({ field }) => (
             <FormItem>
               <FormLabel>Diupload Oleh (Opsional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
+                value={field.value || "none"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih user" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Tidak ada</SelectItem>
+                  <SelectItem value="none">Tidak ada</SelectItem>
                   {availableMembers.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.name}

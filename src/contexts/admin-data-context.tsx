@@ -32,6 +32,7 @@ interface AdminDataContextType {
   updateProject: (id: string, project: Partial<Project>) => void;
   deleteProject: (id: string) => boolean;
   getProject: (id: string) => Project | undefined;
+  loadProjects: () => Promise<void>;
   verifyPayment: (projectId: string, planId: string, paymentId: string, adminUserId: string) => void;
   
   // Interests
@@ -438,7 +439,12 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
 
       const result = await updateProjectAction(id, updateData);
       if (result.success && result.data) {
-        setProjects(prev => prev.map(p => p.id === id ? result.data! : p));
+        // Merge documents from updates if provided
+        const updatedProject = result.data;
+        if (updates.documents !== undefined) {
+          updatedProject.documents = updates.documents;
+        }
+        setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
         return;
       }
       throw new Error(result.error?.message || 'Failed to update project');
@@ -612,6 +618,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     updateProject,
     deleteProject,
     getProject,
+    loadProjects,
     verifyPayment,
     interests,
     interestsLoading,

@@ -205,6 +205,16 @@ export async function updateProjectDocument(
       verifiedAt: document.verifiedAt?.toISOString(),
     };
 
+    // Calculate and update legal progress if document status changed to 'Terverifikasi'
+    const wasVerified = existingDocument.status === 'Terverifikasi';
+    const isNowVerified = document.status === 'Terverifikasi';
+    if (!wasVerified && isNowVerified) {
+      const { calculateLegalProgress } = await import('@/lib/progress-calculator');
+      const { updateProjectProgress } = await import('./project.actions');
+      const progressValue = await calculateLegalProgress(document.projectId);
+      await updateProjectProgress(document.projectId, { legal: progressValue });
+    }
+
     revalidatePath('/admin/projects');
     revalidatePath(`/admin/projects/${document.projectId}`);
     revalidatePath(`/admin/projects/${document.projectId}/documents`);
@@ -742,6 +752,8 @@ export async function getDocumentSignatures(documentId: string) {
     };
   }
 }
+
+
 
 
 

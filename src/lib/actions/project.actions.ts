@@ -227,6 +227,45 @@ export async function updateProject(
   }
 }
 
+/**
+ * Helper function to update project progress values
+ * This is called by progress calculator functions
+ */
+export async function updateProjectProgress(
+  projectId: string,
+  progress: { kyc?: number; funding?: number; legal?: number; closing?: number }
+) {
+  try {
+    const updateData: any = {};
+    if (progress.kyc !== undefined) updateData.kycProgress = progress.kyc;
+    if (progress.funding !== undefined) updateData.fundingProgress = progress.funding;
+    if (progress.legal !== undefined) updateData.legalProgress = progress.legal;
+    if (progress.closing !== undefined) updateData.closingProgress = progress.closing;
+
+    // Only update if there are changes
+    if (Object.keys(updateData).length === 0) {
+      return { success: true };
+    }
+
+    await db.project.update({
+      where: { id: projectId },
+      data: updateData,
+    });
+
+    // Revalidate paths that display progress
+    revalidatePath('/admin/projects');
+    revalidatePath(`/admin/projects/${projectId}`);
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath('/api/projects');
+    revalidatePath(`/api/projects/${projectId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating project progress:', error);
+    return { success: false };
+  }
+}
+
 export async function deleteProject(id: string) {
   try {
     // Check if project exists
@@ -564,6 +603,21 @@ export async function getProjects(options?: {
             },
           },
           unitAssignments: true,
+          documents: {
+            include: {
+              signatures: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       }),
       db.project.count({ where }),
@@ -609,7 +663,18 @@ export async function getProjects(options?: {
         legal: { title: 'Legal', percentage: 0, checklist: [], completedMembers: [] },
         closing: { title: 'Closing', percentage: 0, checklist: [], completedMembers: [] },
       },
-      documents: [],
+      documents: project.documents.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        status: doc.status as 'Menunggu' | 'Tertanda' | 'Terverifikasi',
+        url: doc.url,
+        uploadDate: doc.uploadDate?.toISOString(),
+        size: doc.size,
+        description: doc.description,
+        uploadedBy: doc.uploadedBy,
+        signedBy: doc.signatures.map((s) => s.userId),
+        verifiedAt: doc.verifiedAt?.toISOString(),
+      })),
       messages: [],
       installmentPlans: [],
     }));
@@ -846,6 +911,8 @@ export async function removeUnitAssignment(projectId: string, unitId: number) {
     };
   }
 }
+
+
 
 
 

@@ -46,9 +46,10 @@ import type { MonthlyPayment } from '@/lib/types';
 
 type ProjectDashboardProps = {
   project: Project;
+  onProjectUpdate?: () => void;
 };
 
-export default function ProjectDashboard({ project }: ProjectDashboardProps) {
+export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDashboardProps) {
   const { properties, updateProject } = useAdminData();
   const property = properties.find(p => p.id === project.propertyId);
   const { user } = useAuth();
@@ -754,6 +755,7 @@ export default function ProjectDashboard({ project }: ProjectDashboardProps) {
           onOpenChange={(open) => !open && setSelectedDocument(null)}
           document={project.documents.find(d => d.id === selectedDocument)!}
           members={project.members}
+          onDocumentUpdate={onProjectUpdate}
         />
       )}
 

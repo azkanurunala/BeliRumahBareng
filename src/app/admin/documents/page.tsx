@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DataTable, Column, CustomAction } from '@/components/admin/data-table';
 import { useAdminData } from '@/contexts/admin-data-context';
 import type { ProjectDocument } from '@/lib/types';
+import { createProjectDocument, updateProjectDocument, deleteProjectDocument } from '@/lib/actions/document.actions';
 import { FileText, Plus, Eye, Download, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -21,7 +22,7 @@ type DocumentWithProject = ProjectDocument & {
 };
 
 export default function AllDocumentsPage() {
-  const { projects, updateProject } = useAdminData();
+  const { projects, loadProjects } = useAdminData();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentWithProject | null>(null);
@@ -94,60 +95,77 @@ export default function AllDocumentsPage() {
     },
   ];
 
-  const handleSubmit = (data: any) => {
-    if (editingDocument) {
-      // Update existing document
-      const project = projects.find(p => p.id === editingDocument.projectId);
-      if (!project) return;
-
-      const updatedDocuments = project.documents.map(doc => 
-        doc.id === editingDocument.id 
-          ? { ...doc, ...data, id: doc.id }
-          : doc
-      );
-      
-      updateProject(editingDocument.projectId, { documents: updatedDocuments });
-      
-      toast({
-        title: 'Berhasil',
-        description: 'Dokumen berhasil diperbarui',
-      });
-    } else {
-      // Create new document
-      if (!data.projectId) {
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editingDocument) {
+        // Update existing document using server action
+        const updateData: any = {
+          name: data.name,
+          status: data.status,
+          url: data.url || undefined,
+          description: data.description || undefined,
+          uploadedBy: data.uploadedBy || undefined,
+          verifiedAt: data.verifiedAt || undefined,
+        };
+        
+        const result = await updateProjectDocument(editingDocument.id, updateData);
+        
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Gagal memperbarui dokumen');
+        }
+        
+        // Reload projects to get updated data
+        await loadProjects();
+        
         toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Project harus dipilih',
+          title: 'Berhasil',
+          description: 'Dokumen berhasil diperbarui',
         });
-        return;
+      } else {
+        // Create new document using server action
+        if (!data.projectId) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Project harus dipilih',
+          });
+          return;
+        }
+
+        const createData: any = {
+          projectId: data.projectId,
+          name: data.name,
+          status: data.status,
+          url: data.url || undefined,
+          description: data.description || undefined,
+          uploadedBy: data.uploadedBy || undefined,
+          uploadDate: new Date().toISOString(),
+        };
+
+        const result = await createProjectDocument(createData);
+        
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Gagal membuat dokumen');
+        }
+        
+        // Reload projects to get updated data
+        await loadProjects();
+        
+        toast({
+          title: 'Berhasil',
+          description: 'Dokumen berhasil ditambahkan',
+        });
       }
-
-      const project = projects.find(p => p.id === data.projectId);
-      if (!project) return;
-
-      const newDoc: ProjectDocument = {
-        id: `doc-${Date.now()}`,
-        name: data.name,
-        status: data.status,
-        url: data.url || undefined,
-        description: data.description || undefined,
-        uploadedBy: data.uploadedBy || undefined,
-        signedBy: data.signedBy || undefined,
-        verifiedAt: data.verifiedAt || undefined,
-        uploadDate: new Date().toISOString(),
-      };
-
-      updateProject(data.projectId, { documents: [...project.documents, newDoc] });
       
+      setIsDialogOpen(false);
+      setEditingDocument(null);
+    } catch (error) {
       toast({
-        title: 'Berhasil',
-        description: 'Dokumen berhasil ditambahkan',
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Terjadi kesalahan',
       });
     }
-    
-    setIsDialogOpen(false);
-    setEditingDocument(null);
   };
 
   const handleEdit = (doc: DocumentWithProject) => {
@@ -160,22 +178,33 @@ export default function AllDocumentsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!documentToDelete) return;
 
-    const project = projects.find(p => p.id === documentToDelete.projectId);
-    if (!project) return;
+    try {
+      const result = await deleteProjectDocument(documentToDelete.id);
 
-    const updatedDocuments = project.documents.filter(d => d.id !== documentToDelete.id);
-    updateProject(documentToDelete.projectId, { documents: updatedDocuments });
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Gagal menghapus dokumen');
+      }
 
-    toast({
-      title: 'Berhasil',
-      description: 'Dokumen berhasil dihapus',
-    });
+      // Reload projects to get updated data
+      await loadProjects();
 
-    setDeleteDialogOpen(false);
-    setDocumentToDelete(null);
+      toast({
+        title: 'Berhasil',
+        description: 'Dokumen berhasil dihapus',
+      });
+
+      setDeleteDialogOpen(false);
+      setDocumentToDelete(null);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Terjadi kesalahan',
+      });
+    }
   };
 
   const handleView = (doc: DocumentWithProject) => {

@@ -1093,6 +1093,15 @@ export async function verifyPayment(data: z.infer<typeof verifyPaymentSchema>) {
       createdAt: updatedPayment.createdAt.toISOString(),
     };
 
+    // Calculate and update funding progress after payment is verified
+    // Only update if payment was not previously verified
+    if (!payment.verifiedAt) {
+      const { calculateFundingProgress } = await import('@/lib/progress-calculator');
+      const { updateProjectProgress } = await import('./project.actions');
+      const progressValue = await calculateFundingProgress(updatedPayment.projectId);
+      await updateProjectProgress(updatedPayment.projectId, { funding: progressValue });
+    }
+
     revalidatePath('/admin/projects');
     revalidatePath(`/admin/projects/${updatedPayment.projectId}`);
     revalidatePath('/admin/payments');

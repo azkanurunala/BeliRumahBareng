@@ -13,6 +13,8 @@ import {
 } from '@/lib/validations';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress } from '@/lib/progress-calculator';
+import { updateProjectProgress } from './project.actions';
 
 /**
  * Server Actions untuk Progress Operations
@@ -397,6 +399,18 @@ export async function completeProgressChecklistItem(data: z.infer<typeof complet
 
     const progressDetail = await db.progressDetail.findUnique({ where: { id: updated.progressDetailId } });
     if (progressDetail) {
+      // Calculate and update progress based on category
+      if (progressDetail.category === 'kyc') {
+        const progressValue = await calculateKYCProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { kyc: progressValue });
+      } else if (progressDetail.category === 'legal') {
+        const progressValue = await calculateLegalProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { legal: progressValue });
+      } else if (progressDetail.category === 'closing') {
+        const progressValue = await calculateClosingProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { closing: progressValue });
+      }
+
       revalidatePath('/admin/projects');
       revalidatePath(`/admin/projects/${progressDetail.projectId}`);
     }
@@ -441,6 +455,12 @@ export async function createProgressMilestone(data: z.infer<typeof createProgres
 
     const progressDetail2 = await db.progressDetail.findUnique({ where: { id: validatedData.progressDetailId } });
     if (progressDetail2) {
+      // Calculate and update closing progress if milestone is created as completed
+      if (progressDetail2.category === 'closing' && validatedData.status === 'completed') {
+        const progressValue = await calculateClosingProgress(progressDetail2.projectId);
+        await updateProjectProgress(progressDetail2.projectId, { closing: progressValue });
+      }
+
       const project = await db.project.findUnique({ where: { id: progressDetail2.projectId } });
       if (project) {
         revalidatePath('/admin/projects');
@@ -484,6 +504,12 @@ export async function updateProgressMilestone(id: string, data: Partial<z.infer<
 
     const progressDetail = await db.progressDetail.findUnique({ where: { id: milestone.progressDetailId } });
     if (progressDetail) {
+      // Calculate and update closing progress when milestone status changes
+      if (progressDetail.category === 'closing' && validatedData.status === 'completed') {
+        const progressValue = await calculateClosingProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { closing: progressValue });
+      }
+
       const project = await db.project.findUnique({ where: { id: progressDetail.projectId } });
       if (project) {
         revalidatePath('/admin/projects');
@@ -557,6 +583,12 @@ export async function addProgressCompletedMember(data: z.infer<typeof addProgres
 
     const progressDetail2 = await db.progressDetail.findUnique({ where: { id: validatedData.progressDetailId } });
     if (progressDetail2) {
+      // Calculate and update KYC progress when member completes
+      if (progressDetail2.category === 'kyc') {
+        const progressValue = await calculateKYCProgress(progressDetail2.projectId);
+        await updateProjectProgress(progressDetail2.projectId, { kyc: progressValue });
+      }
+
       const project = await db.project.findUnique({ where: { id: progressDetail2.projectId } });
       if (project) {
         revalidatePath('/admin/projects');
@@ -601,6 +633,8 @@ export async function removeProgressCompletedMember(progressDetailId: string, us
     return { success: false, error: { message: 'Failed to remove completed member', code: 'DELETE_ERROR' } };
   }
 }
+
+
 
 
 
