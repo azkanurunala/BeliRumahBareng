@@ -563,6 +563,7 @@ export async function addDocumentSignature(data: z.infer<typeof createDocumentSi
     revalidatePath('/admin/projects');
     revalidatePath(`/admin/projects/${document.projectId}`);
     revalidatePath(`/admin/projects/${document.projectId}/documents`);
+    revalidatePath(`/projects/${document.projectId}`);
     revalidatePath('/admin/documents');
     revalidatePath('/api/project-documents');
 

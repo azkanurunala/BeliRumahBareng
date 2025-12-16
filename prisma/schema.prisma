@@ -44,6 +44,9 @@ model User {
   progressCompletions   ProgressCompletedMember[] @relation("ProgressCompleter")
   documentSignatures    DocumentSignature[] @relation("DocumentSigner")
   messages              ProjectMessage[] @relation("MessageSender")
+  purchaseTransactions  PurchaseTransaction[]
+  interviewRecords     InterviewRecord[] @relation("Interviewer")
+  activityLogs         ActivityLog[] @relation("ActivityActor")
 }
 
 model Property {
@@ -109,6 +112,7 @@ model Project {
   progressDetails ProgressDetail[]
   messages        ProjectMessage[]
   payments        Payment[]
+  purchaseTransactions PurchaseTransaction[]
 }
 
 model PaymentPlan {
@@ -124,6 +128,9 @@ model PaymentPlan {
   startDate       DateTime?
   endDate         DateTime?
   status          String
+  paymentType     String?  // 'cash', 'kpr' - untuk membedakan flow
+  bookingFeePaid  Boolean  @default(false)
+  bookingFeeAmount Decimal? @db.Decimal(15, 2)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -371,6 +378,9 @@ model UnitAssignment {
   userId    String
   price     Decimal  @db.Decimal(15, 2)
   size      Decimal? @db.Decimal(10, 2)
+  isLocked  Boolean  @default(false) // lock saat booking fee paid
+  lockedAt  DateTime?
+  lockedBy  String?  // transaction_id
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -381,6 +391,7 @@ model UnitAssignment {
   @@unique([projectId, unitId])
   @@index([projectId])
   @@index([userId])
+  @@index([isLocked])
 }
 
 model PropertyInterest {
@@ -436,6 +447,132 @@ model ProjectMessage {
 
   @@index([projectId])
   @@index([userId])
+  @@index([createdAt])
+}
+
+model PurchaseTransaction {
+  id              String   @id @default(cuid())
+  projectId       String
+  userId          String
+  unitId          Int
+  state           String   // 'DRAFT', 'BOOKED', 'INTERVIEWED', 'CASH_PROCESS', 'KPR_PROCESS', 'UNDER_CONSTRUCTION', 'HANDOVER', 'COMPLETED'
+  paymentType     String?  // 'cash', 'kpr' - set saat booking atau interview
+  bookingFeeAmount Decimal? @db.Decimal(15, 2)
+  bookingDate     DateTime?
+  paymentProofUrl String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id])
+  interviewRecord InterviewRecord?
+  appointments    Appointment[]
+  kprStatus       KprStatus?
+  constructionCheckpoints ConstructionCheckpoint[]
+  activityLogs   ActivityLog[]
+
+  @@unique([projectId, userId, unitId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([state])
+  @@index([paymentType])
+}
+
+model InterviewRecord {
+  id              String   @id @default(cuid())
+  transactionId   String   @unique
+  interviewDate   DateTime
+  interviewerId   String   // admin user_id
+  result          String   // 'PASSED', 'FAILED', 'NEED_FOLLOW_UP'
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  interviewer     User     @relation("Interviewer", fields: [interviewerId], references: [id])
+
+  @@index([transactionId])
+  @@index([result])
+  @@index([interviewDate])
+}
+
+model Appointment {
+  id              String   @id @default(cuid())
+  transactionId  String
+  type            String   // 'interview', 'notaris', 'bank'
+  scheduledDate   DateTime
+  status          String   // 'scheduled', 'completed', 'cancelled', 'rescheduled'
+  location        String?
+  notes           String?  @db.Text
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@index([type])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+model KprStatus {
+  id              String   @id @default(cuid())
+  transactionId   String   @unique
+  status          String   // 'SUBMITTED', 'APPROVED', 'REJECTED'
+  bankName        String?
+  submittedDate   DateTime?
+  approvedDate    DateTime?
+  rejectedDate    DateTime?
+  rejectionReason String?  @db.Text
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@index([status])
+}
+
+model ConstructionCheckpoint {
+  id              String   @id @default(cuid())
+  transactionId   String
+  progress        Int      // 25, 50, 75, 100
+  milestone       String   // 'foundation', 'structure', 'roofing', 'finishing'
+  status          String   // 'pending', 'in_progress', 'completed'
+  startDate       DateTime?
+  completedDate   DateTime?
+  photos          String?  @db.Text // JSON array of photo URLs
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@unique([transactionId, progress])
+  @@index([transactionId])
+  @@index([status])
+}
+
+model ActivityLog {
+  id              String   @id @default(cuid())
+  transactionId   String
+  action          String   // 'state_transition', 'payment', 'appointment_scheduled', etc.
+  actorId         String   // user_id yang melakukan action
+  actorRole       String   // 'admin', 'sales', 'customer'
+  fromState       String?
+  toState         String?
+  details         String?  @db.Text // JSON untuk additional details
+  createdAt       DateTime @default(now())
+
+  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  actor           User     @relation("ActivityActor", fields: [actorId], references: [id])
+
+  @@index([transactionId])
+  @@index([actorId])
+  @@index([action])
   @@index([createdAt])
 }
 

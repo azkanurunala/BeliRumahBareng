@@ -462,6 +462,7 @@ export const mockProject: Project = {
                     userId: 'user-001',
                     unitId: 1,
                     amount: 5000000,
+                    paymentDate: '', // Not paid yet
                     dueDate: '2025-06-01T00:00:00Z',
                     period: '2025-06',
                     status: 'pending',
@@ -600,6 +601,7 @@ export const mockProject: Project = {
                     userId: 'user-004',
                     unitId: 5,
                     amount: 5400000,
+                    paymentDate: '', // Not paid yet
                     dueDate: '2025-06-01T00:00:00Z',
                     period: '2025-06',
                     status: 'pending',

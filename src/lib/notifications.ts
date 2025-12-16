@@ -24,13 +24,28 @@ async function getAdminUserId(): Promise<string | null> {
 }
 
 /**
+ * Notification type enum
+ */
+type NotificationType = 
+  | 'property_match'
+  | 'funding_update'
+  | 'document_added'
+  | 'welcome'
+  | 'property_submission'
+  | 'new_user'
+  | 'payment_verification'
+  | 'project_update'
+  | 'payment_due'
+  | 'payment_received';
+
+/**
  * Create notification untuk admin
  */
 export async function createNotificationForAdmin(
   title: string,
   description: string,
-  type: string,
-  href?: string | null
+  type: NotificationType,
+  href?: string
 ) {
   try {
     const adminId = await getAdminUserId();
@@ -44,7 +59,7 @@ export async function createNotificationForAdmin(
       title,
       description,
       type,
-      href: href || null,
+      href: href || undefined,
     });
   } catch (error) {
     console.error('Error creating notification for admin:', error);
@@ -59,8 +74,8 @@ export async function createNotificationForUser(
   userId: string,
   title: string,
   description: string,
-  type: string,
-  href?: string | null
+  type: NotificationType,
+  href?: string
 ) {
   try {
     return await createNotification({
@@ -68,7 +83,7 @@ export async function createNotificationForUser(
       title,
       description,
       type,
-      href: href || null,
+      href: href || undefined,
     });
   } catch (error) {
     console.error('Error creating notification for user:', error);
@@ -83,8 +98,8 @@ export async function createNotificationForProjectMembers(
   projectId: string,
   title: string,
   description: string,
-  type: string,
-  href?: string | null
+  type: NotificationType,
+  href?: string
 ) {
   try {
     // Get all members dari project
@@ -111,7 +126,7 @@ export async function createNotificationForProjectMembers(
           title,
           description,
           type,
-          href: href || null,
+          href: href || undefined,
         })
       )
     );
@@ -125,6 +140,8 @@ export async function createNotificationForProjectMembers(
     return { success: false };
   }
 }
+
+
 
 
 

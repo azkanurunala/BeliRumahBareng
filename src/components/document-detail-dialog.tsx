@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ export default function DocumentDetailDialog({
 }: DocumentDetailDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isSigning, setIsSigning] = useState(false);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -161,6 +162,7 @@ export default function DocumentDetailDialog({
       return;
     }
 
+    setIsSigning(true);
     try {
       // Call server action to add signature
       const result = await addDocumentSignature({
@@ -176,7 +178,7 @@ export default function DocumentDetailDialog({
 
         // Refresh document data via callback
         if (onDocumentUpdate) {
-          onDocumentUpdate();
+          await onDocumentUpdate();
         }
       } else {
         toast({
@@ -192,6 +194,8 @@ export default function DocumentDetailDialog({
         title: 'Error',
         description: 'Terjadi kesalahan saat menandatangani dokumen',
       });
+    } finally {
+      setIsSigning(false);
     }
   };
 
@@ -264,8 +268,8 @@ export default function DocumentDetailDialog({
           {isPdf && (
             <div className="flex gap-3 p-4 border-t bg-background">
               {document.status === 'Menunggu' && (
-                <Button onClick={handleSign} className="flex-1">
-                  Tanda Tangan
+                <Button onClick={handleSign} className="flex-1" disabled={isSigning}>
+                  {isSigning ? 'Memproses...' : 'Tanda Tangan'}
                 </Button>
               )}
               {document.status === 'Tertanda' && (
@@ -427,8 +431,8 @@ export default function DocumentDetailDialog({
                   </Button>
                 )}
                 {document.status === 'Menunggu' && (
-                  <Button onClick={handleSign} className="flex-1">
-                    Tanda Tangan
+                  <Button onClick={handleSign} className="flex-1" disabled={isSigning}>
+                    {isSigning ? 'Memproses...' : 'Tanda Tangan'}
                   </Button>
                 )}
                 {document.status === 'Tertanda' && (

@@ -46,6 +46,9 @@ export type UnitAssignment = {
   userId: string;
   price: number;
   size?: number;
+  isLocked?: boolean;
+  lockedAt?: string; // ISO date string
+  lockedBy?: string; // transaction_id
 };
 
 export type ProgressChecklistItem = {
@@ -114,6 +117,9 @@ export type InstallmentPlan = {
   startDate: string; // ISO date string - mulai cicilan
   endDate: string; // ISO date string - akhir cicilan
   status: 'active' | 'completed' | 'cancelled';
+  paymentType?: 'cash' | 'kpr'; // untuk membedakan flow
+  bookingFeePaid?: boolean;
+  bookingFeeAmount?: number;
   payments: MonthlyPayment[]; // history pembayaran
 };
 
@@ -145,6 +151,7 @@ export type Project = {
   }[];
   status?: 'active' | 'closed' | 'completed'; // status project
   installmentPlans?: InstallmentPlan[]; // rencana cicilan per unit
+  purchaseTransactions?: PurchaseTransaction[]; // purchase state machine transactions
 };
 
 // Entity baru untuk pernyataan minat (tahap sebelum jadi member project)
@@ -193,6 +200,130 @@ export type PropertySubmission = {
   reviewedBy?: string; // admin userId
   reviewedAt?: string; // ISO date string
   notes?: string; // admin notes
+  createdAt: string; // ISO date string
+};
+
+// Purchase Transaction State Machine
+export type PurchaseTransactionState = 
+  | 'DRAFT' 
+  | 'BOOKED' 
+  | 'INTERVIEWED' 
+  | 'CASH_PROCESS' 
+  | 'KPR_PROCESS' 
+  | 'UNDER_CONSTRUCTION' 
+  | 'HANDOVER' 
+  | 'COMPLETED';
+
+export type PurchaseTransaction = {
+  id: string;
+  projectId: string;
+  userId: string;
+  unitId: number;
+  state: PurchaseTransactionState;
+  paymentType?: 'cash' | 'kpr';
+  bookingFeeAmount?: number;
+  bookingDate?: string; // ISO date string
+  paymentProofUrl?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  interviewRecord?: InterviewRecord;
+  appointments?: Appointment[];
+  kprStatus?: KprStatus;
+  constructionCheckpoints?: ConstructionCheckpoint[];
+  activityLogs?: ActivityLog[];
+};
+
+// Interview Record (KYC Result Only - tidak simpan data sensitif)
+export type InterviewResult = 'PASSED' | 'FAILED' | 'NEED_FOLLOW_UP';
+
+export type InterviewRecord = {
+  id: string;
+  transactionId: string;
+  interviewDate: string; // ISO date string
+  interviewerId: string; // admin user_id
+  result: InterviewResult;
+  notes?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+};
+
+// Appointment (Scheduling Tracker)
+export type AppointmentType = 'interview' | 'notaris' | 'bank';
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+
+export type Appointment = {
+  id: string;
+  transactionId: string;
+  type: AppointmentType;
+  scheduledDate: string; // ISO date string
+  status: AppointmentStatus;
+  location?: string;
+  notes?: string;
+  completedAt?: string; // ISO date string
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+};
+
+// KPR Status Tracking
+export type KprStatusType = 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+
+export type KprStatus = {
+  id: string;
+  transactionId: string;
+  status: KprStatusType;
+  bankName?: string;
+  submittedDate?: string; // ISO date string
+  approvedDate?: string; // ISO date string
+  rejectedDate?: string; // ISO date string
+  rejectionReason?: string;
+  notes?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+};
+
+// Construction Checkpoint (Progress Tracking - bukan payment trigger)
+export type ConstructionCheckpointProgress = 25 | 50 | 75 | 100;
+export type ConstructionCheckpointMilestone = 'foundation' | 'structure' | 'roofing' | 'finishing';
+export type ConstructionCheckpointStatus = 'pending' | 'in_progress' | 'completed';
+
+export type ConstructionCheckpoint = {
+  id: string;
+  transactionId: string;
+  progress: ConstructionCheckpointProgress;
+  milestone: ConstructionCheckpointMilestone;
+  status: ConstructionCheckpointStatus;
+  startDate?: string; // ISO date string
+  completedDate?: string; // ISO date string
+  photos?: string[]; // Array of photo URLs
+  notes?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+};
+
+// Activity Log (Immutable Audit Trail)
+export type ActivityLogAction = 
+  | 'state_transition' 
+  | 'payment' 
+  | 'appointment_scheduled' 
+  | 'appointment_completed' 
+  | 'appointment_cancelled'
+  | 'interview_recorded'
+  | 'kpr_status_updated'
+  | 'construction_checkpoint_updated'
+  | 'unit_locked'
+  | 'unit_unlocked';
+
+export type ActorRole = 'admin' | 'sales' | 'customer';
+
+export type ActivityLog = {
+  id: string;
+  transactionId: string;
+  action: ActivityLogAction;
+  actorId: string; // user_id yang melakukan action
+  actorRole: ActorRole;
+  fromState?: PurchaseTransactionState;
+  toState?: PurchaseTransactionState;
+  details?: string; // JSON string untuk additional details
   createdAt: string; // ISO date string
 };
 

@@ -50,6 +50,101 @@ export async function createProject(data: z.infer<typeof createProjectSchema>) {
       },
     });
 
+    // Auto-initialize ProgressDetail for all categories
+    const progressDetailCategories = [
+      {
+        category: 'kyc',
+        title: 'Verifikasi KYC',
+        description: 'Proses verifikasi identitas dan dokumen KYC untuk semua anggota grup.',
+      },
+      {
+        category: 'funding',
+        title: 'Pendanaan Grup',
+        description: 'Proses pengumpulan dana dari anggota grup.',
+      },
+      {
+        category: 'legal',
+        title: 'Legal & Dokumentasi',
+        description: 'Proses penyelesaian dokumen legal.',
+      },
+      {
+        category: 'closing',
+        title: 'Penutupan',
+        description: 'Proses penutupan transaksi.',
+      },
+    ];
+
+    // Create ProgressDetail for each category if they don't exist
+    for (const category of progressDetailCategories) {
+      const existing = await db.progressDetail.findUnique({
+        where: {
+          projectId_category: {
+            projectId: project.id,
+            category: category.category,
+          },
+        },
+      });
+
+      if (!existing) {
+        await db.progressDetail.create({
+          data: {
+            projectId: project.id,
+            category: category.category,
+            title: category.title,
+            percentage: 0,
+            description: category.description,
+          },
+        });
+      }
+    }
+
+    // Re-fetch project with progressDetails
+    const projectWithProgress = await db.project.findUnique({
+      where: { id: project.id },
+      include: {
+        property: true,
+        members: true,
+        unitAssignments: true,
+        progressDetails: {
+          include: {
+            checklist: {
+              orderBy: { order: 'asc' },
+            },
+            completedMembers: true,
+            milestones: {
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
+      },
+    });
+
+    // Transform progress details
+    const progressDetailsMap: Record<string, any> = {};
+    if (projectWithProgress?.progressDetails) {
+      projectWithProgress.progressDetails.forEach((pd) => {
+        progressDetailsMap[pd.category] = {
+          title: pd.title,
+          percentage: pd.percentage,
+          description: pd.description,
+          notes: pd.notes,
+          checklist: pd.checklist.map((item) => ({
+            id: item.id,
+            label: item.label,
+            completed: item.completed,
+            completedBy: item.completedBy,
+            completedAt: item.completedAt?.toISOString(),
+          })),
+          completedMembers: pd.completedMembers.map((cm) => cm.userId),
+          milestones: pd.milestones.map((m) => ({
+            label: m.label,
+            date: m.date?.toISOString(),
+            status: m.status,
+          })),
+        };
+      });
+    }
+
     // Transform response
     const transformedProject = {
       id: project.id,
@@ -65,10 +160,10 @@ export async function createProject(data: z.infer<typeof createProjectSchema>) {
         closing: project.closingProgress,
       },
       progressDetails: {
-        kyc: { title: 'KYC', percentage: 0, checklist: [], completedMembers: [] },
-        funding: { title: 'Funding', percentage: 0, checklist: [], completedMembers: [] },
-        legal: { title: 'Legal', percentage: 0, checklist: [], completedMembers: [] },
-        closing: { title: 'Closing', percentage: 0, checklist: [], completedMembers: [] },
+        kyc: progressDetailsMap.kyc || { title: 'Verifikasi KYC', percentage: 0, checklist: [], completedMembers: [] },
+        funding: progressDetailsMap.funding || { title: 'Pendanaan Grup', percentage: 0, checklist: [], completedMembers: [] },
+        legal: progressDetailsMap.legal || { title: 'Legal & Dokumentasi', percentage: 0, checklist: [], completedMembers: [] },
+        closing: progressDetailsMap.closing || { title: 'Penutupan', percentage: 0, checklist: [], completedMembers: [] },
       },
       members: [],
       unitAssignments: [],
@@ -222,6 +317,95 @@ export async function updateProject(
       error: {
         message: 'Failed to update project',
         code: 'UPDATE_ERROR',
+      },
+    };
+  }
+}
+
+/**
+ * Helper function to initialize ProgressDetail for a project
+ * Creates ProgressDetail for all categories (kyc, funding, legal, closing) if they don't exist
+ * Useful for projects created before auto-initialization was added
+ */
+export async function initializeProjectProgressDetails(projectId: string) {
+  try {
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return {
+        success: false,
+        error: {
+          message: 'Project not found',
+          code: 'NOT_FOUND',
+        },
+      };
+    }
+
+    const progressDetailCategories = [
+      {
+        category: 'kyc',
+        title: 'Verifikasi KYC',
+        description: 'Proses verifikasi identitas dan dokumen KYC untuk semua anggota grup.',
+      },
+      {
+        category: 'funding',
+        title: 'Pendanaan Grup',
+        description: 'Proses pengumpulan dana dari anggota grup.',
+      },
+      {
+        category: 'legal',
+        title: 'Legal & Dokumentasi',
+        description: 'Proses penyelesaian dokumen legal.',
+      },
+      {
+        category: 'closing',
+        title: 'Penutupan',
+        description: 'Proses penutupan transaksi.',
+      },
+    ];
+
+    const created: string[] = [];
+    for (const category of progressDetailCategories) {
+      const existing = await db.progressDetail.findUnique({
+        where: {
+          projectId_category: {
+            projectId,
+            category: category.category,
+          },
+        },
+      });
+
+      if (!existing) {
+        await db.progressDetail.create({
+          data: {
+            projectId,
+            category: category.category,
+            title: category.title,
+            percentage: 0,
+            description: category.description,
+          },
+        });
+        created.push(category.category);
+      }
+    }
+
+    revalidatePath('/admin/projects');
+    revalidatePath(`/admin/projects/${projectId}`);
+    revalidatePath(`/projects/${projectId}`);
+
+    return {
+      success: true,
+      data: { created, projectId },
+    };
+  } catch (error) {
+    console.error('Error initializing project progress details:', error);
+    return {
+      success: false,
+      error: {
+        message: 'Failed to initialize progress details',
+        code: 'INIT_ERROR',
       },
     };
   }

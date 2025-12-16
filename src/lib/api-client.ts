@@ -136,10 +136,18 @@ class ApiClient {
     } = config;
 
     const url = this.buildUrl(endpoint, params);
+    
+    // Add user ID from localStorage if available (for auth)
+    const userId = typeof window !== 'undefined' ? localStorage.getItem('currentUserId') : null;
     const requestHeaders = {
       ...this.defaultHeaders,
       ...headers,
     };
+    
+    // Add user ID to header if available
+    if (userId) {
+      requestHeaders['x-user-id'] = userId;
+    }
 
     const requestFn = async (): Promise<ApiResponse<T>> => {
       const fetchOptions: RequestInit = {

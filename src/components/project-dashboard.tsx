@@ -42,7 +42,14 @@ import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import type { MonthlyPayment } from '@/lib/types';
+import type { MonthlyPayment, PurchaseTransaction } from '@/lib/types';
+import { apiClient } from '@/lib/api-client';
+import PurchaseFlow from './purchase-flow';
+import BookingFeeDialog from './booking-fee-dialog';
+import ConstructionCheckpointCard from './construction-checkpoint-card';
+import KprStatusTracker from './kpr-status-tracker';
+import AppointmentManager from './admin/appointment-manager';
+import ActivityLogViewer from './admin/activity-log-viewer';
 
 type ProjectDashboardProps = {
   project: Project;
@@ -59,6 +66,40 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
   const [selectedProgress, setSelectedProgress] = useState<'kyc' | 'funding' | 'legal' | 'closing' | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null);
+  
+  // Purchase transaction state
+  const [purchaseTransactions, setPurchaseTransactions] = useState<PurchaseTransaction[]>([]);
+  const [selectedTransaction, setSelectedTransaction] = useState<PurchaseTransaction | null>(null);
+  const [isBookingFeeDialogOpen, setIsBookingFeeDialogOpen] = useState(false);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+  
+  // Load purchase transactions for this project
+  useEffect(() => {
+    if (project.id && user) {
+      loadPurchaseTransactions();
+    }
+  }, [project.id, user]);
+  
+  const loadPurchaseTransactions = async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const response = await apiClient.get<PurchaseTransaction[]>('/purchase-transactions', {
+        params: { projectId: project.id, userId: user?.id },
+      });
+      if (response.success && response.data) {
+        setPurchaseTransactions(response.data);
+        // Set selected transaction if user has one
+        const userTransaction = response.data.find(tx => tx.userId === user?.id);
+        if (userTransaction) {
+          setSelectedTransaction(userTransaction);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading purchase transactions:', error);
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  };
   
   // Fullscreen states for each carousel
   const [mainCarouselFullscreen, setMainCarouselFullscreen] = useState({ isOpen: false, index: 0 });
@@ -689,6 +730,63 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
           <InstallmentOverview plans={project.installmentPlans} />
         )}
 
+        {/* Purchase Flow - Show if user has purchase transaction */}
+        {selectedTransaction && (
+          <PurchaseFlow
+            transaction={selectedTransaction}
+            onStateChange={loadPurchaseTransactions}
+            showActions={false}
+            userRole={user?.role === 2 ? 'admin' : 'customer'}
+          />
+        )}
+
+        {/* Booking Fee Dialog Trigger - Show if transaction is in DRAFT state */}
+        {selectedTransaction && selectedTransaction.state === 'DRAFT' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Booking Fee</CardTitle>
+              <CardDescription>Bayar booking fee untuk memulai proses pembelian</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                className="w-full"
+                onClick={() => setIsBookingFeeDialogOpen(true)}
+              >
+                Bayar Booking Fee
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* KPR Status Tracker - Show if payment type is KPR */}
+        {selectedTransaction && selectedTransaction.paymentType === 'kpr' && (
+          <KprStatusTracker
+            transaction={selectedTransaction}
+            onStatusUpdate={loadPurchaseTransactions}
+            isAdmin={user?.role === 2}
+          />
+        )}
+
+        {/* Construction Checkpoint Card - Show if in construction state */}
+        {selectedTransaction &&
+          (selectedTransaction.state === 'UNDER_CONSTRUCTION' ||
+            selectedTransaction.state === 'CASH_PROCESS' ||
+            selectedTransaction.state === 'KPR_PROCESS') && (
+            <ConstructionCheckpointCard
+              transaction={selectedTransaction}
+              onUpdate={loadPurchaseTransactions}
+              isAdmin={user?.role === 2}
+            />
+          )}
+
+        {/* Activity Log Viewer - Admin only */}
+        {selectedTransaction && user?.role === 2 && (
+          <ActivityLogViewer
+            transactionId={selectedTransaction.id}
+            showFilters={true}
+          />
+        )}
+
         {/* Project Members */}
         <Card>
           <CardHeader>
@@ -852,6 +950,19 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
         />
       )}
       
+      {/* Booking Fee Dialog */}
+      {selectedTransaction && (
+        <BookingFeeDialog
+          open={isBookingFeeDialogOpen}
+          onOpenChange={setIsBookingFeeDialogOpen}
+          transaction={selectedTransaction}
+          onSuccess={() => {
+            loadPurchaseTransactions();
+            onProjectUpdate?.();
+          }}
+        />
+      )}
+
       <FullscreenImageViewer
         images={floorPlanImages.map(img => ({ url: img.url, alt: `Denah Lokasi`, hint: img.hint }))}
         initialIndex={floorPlanFullscreen.index}
