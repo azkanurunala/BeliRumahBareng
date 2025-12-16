@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle, XCircle, User, Mail, Phone, Building, MapPin, Calendar } from 'lucide-react';
 import type { PropertyInterest } from '@/lib/types';
 import type { Property, User as UserType } from '@/lib/types';
+import { normalizeUnitMeasure } from '@/lib/utils';
 
 interface InterestDetailModalProps {
   open: boolean;
@@ -148,10 +149,10 @@ export function InterestDetailModal({
                     </div>
                   </div>
                 )}
-                {isFlexible && interest.unitSize && (
+                {isFlexible && interest.unitSize && property && (
                   <div>
                     <Label className="text-sm text-muted-foreground">Luas yang Diminati</Label>
-                    <p className="font-medium">{interest.unitSize} m²</p>
+                    <p className="font-medium">{interest.unitSize} {normalizeUnitMeasure(property.unitMeasure)}</p>
                   </div>
                 )}
               </div>

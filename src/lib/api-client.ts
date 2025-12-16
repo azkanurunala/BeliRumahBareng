@@ -35,17 +35,28 @@ class ApiClient {
    * Build URL dengan query parameters
    */
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {
-    const url = new URL(endpoint, this.baseUrl);
+    // Normalize baseUrl and endpoint
+    const base = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     
-    if (params) {
+    // Combine baseUrl and endpoint
+    let fullUrl = `${base}${path}`;
+    
+    // Build query string if params exist
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          url.searchParams.append(key, String(value));
+          searchParams.append(key, String(value));
         }
       });
+      const queryString = searchParams.toString();
+      if (queryString) {
+        fullUrl += `?${queryString}`;
+      }
     }
     
-    return url.toString();
+    return fullUrl;
   }
 
   /**

@@ -18,6 +18,7 @@ import { CheckCircle, XCircle, Eye, Mail, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InterestDetailModal } from '@/components/admin/interest-detail-modal';
 import { ApprovalConfirmDialog } from '@/components/admin/approval-confirm-dialog';
+import { normalizeUnitMeasure } from '@/lib/utils';
 import type { PropertyInterest } from '@/lib/types';
 
 // Extended interest type with computed fields for easier searching
@@ -63,8 +64,8 @@ export default function AdminInterestsPage() {
       let unitDisplay = '-';
       if (!isFlexible && interest.unitId && property) {
         unitDisplay = `${property.unitName} ${interest.unitId}`;
-      } else if (isFlexible && interest.unitSize) {
-        unitDisplay = `${interest.unitSize} m²`;
+      } else if (isFlexible && interest.unitSize && property) {
+        unitDisplay = `${interest.unitSize} ${normalizeUnitMeasure(property.unitMeasure)}`;
       }
 
       return {

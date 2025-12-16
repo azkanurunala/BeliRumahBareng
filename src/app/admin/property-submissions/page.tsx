@@ -18,6 +18,7 @@ import { CheckCircle, XCircle, Eye, DollarSign, User, Mail, Phone, Calendar } fr
 import { useToast } from '@/hooks/use-toast';
 import { SubmissionDetailModal } from '@/components/admin/submission-detail-modal';
 import { ApprovalConfirmDialog } from '@/components/admin/approval-confirm-dialog';
+import { normalizeUnitMeasure } from '@/lib/utils';
 import type { PropertySubmission } from '@/lib/types';
 
 // Extended submission type with computed fields for easier searching
@@ -64,7 +65,7 @@ export default function AdminPropertySubmissionsPage() {
       if (submission.totalUnits) {
         unitDisplay = `${submission.totalUnits} unit`;
       } else if (submission.totalArea) {
-        unitDisplay = `${submission.totalArea} ${submission.unitMeasure || 'm²'}`;
+        unitDisplay = `${submission.totalArea} ${normalizeUnitMeasure(submission.unitMeasure)}`;
       }
 
       return {

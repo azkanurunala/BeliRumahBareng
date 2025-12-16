@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/payment-utils';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { normalizeUnitMeasure } from '@/lib/utils';
 
 export default function PropertiesPage() {
   const { properties, deleteProperty } = useAdminData();
@@ -50,7 +51,22 @@ export default function PropertiesPage() {
     {
       key: 'totalUnits',
       header: 'Unit',
-      cell: (row) => row.totalUnits || row.totalArea ? `${row.totalUnits || row.totalArea}${row.unitMeasure || ''}` : '-',
+      cell: (row) => {
+        // Untuk Co-Building: gunakan totalUnits + unitName
+        if (row.type === 'co-building' && row.totalUnits) {
+          return `${row.totalUnits} ${row.unitName}`;
+        }
+        
+        // Untuk Co-Owning: gunakan totalArea/unitSize + unitMeasure
+        if (row.type === 'co-owning') {
+          const value = row.totalArea || row.unitSize;
+          if (value) {
+            return `${value} ${normalizeUnitMeasure(row.unitMeasure)}`;
+          }
+        }
+        
+        return '-';
+      },
     },
   ];
 

@@ -48,6 +48,7 @@ import PurchaseFlow from './purchase-flow';
 import BookingFeeDialog from './booking-fee-dialog';
 import ConstructionCheckpointCard from './construction-checkpoint-card';
 import KprStatusTracker from './kpr-status-tracker';
+import { normalizeUnitMeasure } from '@/lib/utils';
 import AppointmentManager from './admin/appointment-manager';
 import ActivityLogViewer from './admin/activity-log-viewer';
 
@@ -182,7 +183,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
 
   const getPropertyTypeDesc = () => {
     if (!property) return '';
-    if (isFlexible) return `Tanah dengan pembagian ${property.totalArea}${property.unitMeasure} secara merata`;
+    if (isFlexible) return `Tanah dengan pembagian ${property.totalArea} ${normalizeUnitMeasure(property.unitMeasure)} secara merata`;
     if (isCoBuilding) return `Tanah & Proyek Bangunan ${property.totalUnits} Lantai`;
     return `Lahan Siap Bagi ${property.totalUnits} Kavling`;
   };
@@ -286,7 +287,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                       {!isCoBuilding && property.unitSize && (
                         <div className="flex items-center gap-2">
                           <Square className="h-4 w-4 text-primary" />
-                          <p><strong>Luas per Kavling:</strong> ~{property.unitSize}{property.unitMeasure}</p>
+                          <p><strong>Luas per Kavling:</strong> ~{property.unitSize} {normalizeUnitMeasure(property.unitMeasure)}</p>
                         </div>
                       )}
                     </AccordionContent>
@@ -820,7 +821,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                               <div className="flex flex-col">
                                 <span className='font-semibold'>{property?.unitName} {assignment.unitId}</span>
                                 <span className='text-xs text-muted-foreground'>
-                                  {assignment.size ? `~${assignment.size}${property?.unitMeasure}` : formatPrice(assignment.price)}
+                                  {assignment.size ? `~${assignment.size} ${normalizeUnitMeasure(property?.unitMeasure)}` : formatPrice(assignment.price)}
                                 </span>
                               </div>
                             ) : (

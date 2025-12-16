@@ -15,6 +15,7 @@ import { Building, MapPin, DollarSign, User, Mail, Phone, Calendar, Image as Ima
 import Image from 'next/image';
 import type { PropertySubmission } from '@/lib/types';
 import type { User as UserType } from '@/lib/types';
+import { normalizeUnitMeasure } from '@/lib/utils';
 
 interface SubmissionDetailModalProps {
   open: boolean;
@@ -139,7 +140,7 @@ export function SubmissionDetailModal({
                 <div>
                   <Label className="text-sm text-muted-foreground">Total Luas</Label>
                   <div className="font-medium">
-                    {submission.totalArea} {submission.unitMeasure || 'm²'}
+                    {submission.totalArea} {normalizeUnitMeasure(submission.unitMeasure)}
                   </div>
                 </div>
               )}

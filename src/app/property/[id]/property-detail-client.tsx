@@ -38,6 +38,7 @@ import { useUserData } from '@/contexts/user-data-context';
 import { useAdminData } from '@/contexts/admin-data-context';
 import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
 import { Heart } from 'lucide-react';
+import { normalizeUnitMeasure } from '@/lib/utils';
 
 export default function PropertyDetailClient({ property }: { property: Property }) {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
@@ -209,7 +210,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
   };
   
   const getPropertyTypeDesc = () => {
-     if (isFlexible) return `Tanah dengan pembagian ${property.totalArea}${property.unitMeasure} secara merata`;
+     if (isFlexible) return `Tanah dengan pembagian ${property.totalArea} ${normalizeUnitMeasure(property.unitMeasure)} secara merata`;
      if (isCoBuilding) return `Tanah & Proyek Bangunan ${property.totalUnits} Lantai`;
      return `Lahan Siap Bagi ${property.totalUnits} Kavling`;
   }
@@ -360,7 +361,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                         <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p><strong>Kapasitas Grup:</strong> {property.totalUnits} {property.unitName}</p></div>
                       )}
                       {!isCoBuilding && property.unitSize && (
-                         <div className="flex items-center gap-2"><Square className="h-4 w-4 text-primary" /><p><strong>Luas per Kavling:</strong> ~{property.unitSize}{property.unitMeasure}</p></div>
+                         <div className="flex items-center gap-2"><Square className="h-4 w-4 text-primary" /><p><strong>Luas per Kavling:</strong> ~{property.unitSize} {normalizeUnitMeasure(property.unitMeasure)}</p></div>
                       )}
                     </AccordionContent>
                   </AccordionItem>
@@ -476,10 +477,10 @@ export default function PropertyDetailClient({ property }: { property: Property 
               <CardContent className="space-y-4">
                 <div className='border-b border-primary/20 pb-2 text-center'>
                   <p className="text-sm text-muted-foreground">{isFlexible ? 'Total Luas Tanah' : 'Total Nilai Proyek'}</p>
-                  <p className="text-2xl font-bold">{isFlexible ? `${property.totalArea} ${property.unitMeasure}` : formattedTotalPrice}</p>
+                  <p className="text-2xl font-bold">{isFlexible ? `${property.totalArea} ${normalizeUnitMeasure(property.unitMeasure)}` : formattedTotalPrice}</p>
                    {isFlexible && (
                       <>
-                          <p className="text-sm text-muted-foreground mt-2">Harga Tanah per {property.unitMeasure}</p>
+                          <p className="text-sm text-muted-foreground mt-2">Harga Tanah per {normalizeUnitMeasure(property.unitMeasure)}</p>
                           <p className="text-xl font-bold text-primary">{formattedPricePerMeter}</p>
                       </>
                   )}
@@ -508,7 +509,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                                     <span>{`${property.unitName} ${index + 1}`}</span>
                                     {property.unitSize && (
                                       <span className='text-xs text-muted-foreground'>
-                                        ~{getUnitSize(index)}{property.unitMeasure}
+                                        ~{getUnitSize(index)} {normalizeUnitMeasure(property.unitMeasure)}
                                       </span>
                                     )}
                                   </div>
@@ -607,7 +608,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                                       <RadioGroupItem value={(index + 1).toString()} id={`unit-${index + 1}`} />
                                   </TableCell>
                                   <TableCell className="font-medium">{`${property.unitName} ${index + 1}`}</TableCell>
-                                  { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)}{property.unitMeasure}</TableCell>}
+                                  { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)} {normalizeUnitMeasure(property.unitMeasure)}</TableCell>}
                                   <TableCell className="text-right">{formatPrice(price)}</TableCell>
                                   </TableRow>
                               ))}
