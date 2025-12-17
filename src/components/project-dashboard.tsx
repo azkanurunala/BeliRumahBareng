@@ -262,10 +262,10 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
 
   return (
     <div>
-      <div className="grid gap-6 lg:grid-cols-3">
-      <div className="space-y-6 lg:col-span-2">
-        {/* Project Header */}
-        <Card className="overflow-hidden">
+      <div className="grid gap-6 lg:grid-cols-3 mb-6">
+        <div className="space-y-6 lg:col-span-2">
+          {/* Project Header */}
+          <Card className="overflow-hidden">
             <div className="relative">
               {property && property.images && property.images.length > 0 ? (
                 <Carousel className="w-full" setApi={setMainCarouselApi}>
@@ -275,7 +275,9 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                         <div className="relative h-96 w-full group">
                           <Image
                             src={image.url}
-                            alt={`${project.propertyName} - gambar ${index + 1}`}
+                            alt={`${project.propertyName} - gambar ${
+                              index + 1
+                            }`}
                             fill
                             className="object-cover"
                             data-ai-hint={image.hint}
@@ -284,7 +286,12 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                             variant="ghost"
                             size="icon"
                             className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                            onClick={() => setMainCarouselFullscreen({ isOpen: true, index: mainCarouselCurrent })}
+                            onClick={() =>
+                              setMainCarouselFullscreen({
+                                isOpen: true,
+                                index: mainCarouselCurrent,
+                              })
+                            }
                             aria-label="Open fullscreen"
                           >
                             <Maximize2 className="h-5 w-5" />
@@ -309,25 +316,48 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
               )}
             </div>
             <CardHeader>
-              <Badge variant={isFullyCompleted ? 'default' : hasActiveInstallments ? 'default' : isProjectClosed ? 'default' : 'secondary'}>
-                {isFullyCompleted ? 'Selesai' : hasActiveInstallments ? 'Proses Pembayaran' : isProjectClosed ? 'Selesai' : 'Sedang Berjalan'}
+              <Badge
+                variant={
+                  isFullyCompleted
+                    ? "default"
+                    : hasActiveInstallments
+                    ? "default"
+                    : isProjectClosed
+                    ? "default"
+                    : "secondary"
+                }
+              >
+                {isFullyCompleted
+                  ? "Selesai"
+                  : hasActiveInstallments
+                  ? "Proses Pembayaran"
+                  : isProjectClosed
+                  ? "Selesai"
+                  : "Sedang Berjalan"}
               </Badge>
               <CardTitle className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">
                 {project.propertyName}
               </CardTitle>
               <CardDescription className="flex items-center text-lg text-muted-foreground">
                 <MapPin className="mr-2 h-5 w-5" />
-                {property?.location || 'Lokasi'}
+                {property?.location || "Lokasi"}
               </CardDescription>
               {/* Gradient divider */}
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
             </CardHeader>
             <CardContent>
-              <p className="text-base">{property?.description || 'Deskripsi properti'}</p>
-              
+              <p className="text-base">
+                {property?.description || "Deskripsi properti"}
+              </p>
+
               {/* Detail Properti Accordion */}
               {property && (
-                <Accordion type="single" collapsible className="w-full mt-6" defaultValue="item-1">
+                <Accordion
+                  type="single"
+                  collapsible
+                  className="w-full mt-6"
+                  defaultValue="item-1"
+                >
                   <AccordionItem value="item-1">
                     <AccordionTrigger>
                       <h3 className="text-lg font-semibold flex items-center">
@@ -337,22 +367,33 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                     <AccordionContent className="grid grid-cols-2 gap-4 pt-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Home className="h-4 w-4 text-primary" />
-                        <p><strong>Tipe Proyek:</strong> {getPropertyTypeDesc()}</p>
+                        <p>
+                          <strong>Tipe Proyek:</strong> {getPropertyTypeDesc()}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <BadgeCheck className="h-4 w-4 text-primary" />
-                        <p><strong>Sertifikat Induk:</strong> SHM</p>
+                        <p>
+                          <strong>Sertifikat Induk:</strong> SHM
+                        </p>
                       </div>
                       {property.totalUnits && (
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-primary" />
-                          <p><strong>Kapasitas Grup:</strong> {property.totalUnits} {property.unitName}</p>
+                          <p>
+                            <strong>Kapasitas Grup:</strong>{" "}
+                            {property.totalUnits} {property.unitName}
+                          </p>
                         </div>
                       )}
                       {!isCoBuilding && property.unitSize && (
                         <div className="flex items-center gap-2">
                           <Square className="h-4 w-4 text-primary" />
-                          <p><strong>Luas per Kavling:</strong> ~{property.unitSize} {normalizeUnitMeasure(property.unitMeasure)}</p>
+                          <p>
+                            <strong>Luas per Kavling:</strong> ~
+                            {property.unitSize}{" "}
+                            {normalizeUnitMeasure(property.unitMeasure)}
+                          </p>
                         </div>
                       )}
                     </AccordionContent>
@@ -360,522 +401,208 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                 </Accordion>
               )}
             </CardContent>
-        </Card>
-
-        {/* Main Content Tabs - Show tabs if there are installment plans (installment/cash) OR if project has members/units (ready for payments) */}
-        {(project.installmentPlans && project.installmentPlans.length > 0) || 
-         (project.members && project.members.length > 0 && project.unitAssignments && project.unitAssignments.length > 0) ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Informasi Proyek</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="payment" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="payment">Pembayaran</TabsTrigger>
-                  <TabsTrigger value="documents">Dokumen & Perencanaan</TabsTrigger>
-                </TabsList>
-                <TabsContent value="payment" className="space-y-6 mt-6">
-                  {project.installmentPlans && project.installmentPlans.length > 0 ? (
-                    <>
-                  {/* Monthly Payment Cards */}
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-                          Pembayaran per Unit
-                    </h2>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {project.installmentPlans.map((plan) => {
-                        const user = project.members.find(m => m.id === plan.userId);
-                        if (!user) return null;
-                        return (
-                          <MonthlyPaymentCard
-                            key={plan.id}
-                            plan={plan}
-                            user={user}
-                            property={property}
-                            onAddPayment={() => setSelectedPlanForPayment(plan.id)}
-                            onAddDPPayment={() => setSelectedPlanForDPPayment(plan.id)}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Payment History Table */}
-                  <PaymentHistoryTable
-                    payments={project.installmentPlans.flatMap(plan => plan.payments)}
-                    members={project.members}
-                    property={property}
-                    onViewReceipt={(payment) => {
-                      if (payment.receiptUrl) {
-                        window.open(payment.receiptUrl, '_blank');
-                      }
-                    }}
-                  />
-                    </>
-                  ) : (
-                    <div className="text-center py-12">
-                      <p className="text-muted-foreground mb-4">
-                        Belum ada rencana pembayaran untuk project ini.
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Silakan hubungi admin untuk membuat rencana pembayaran (cicilan atau tunai).
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-                <TabsContent value="documents" className="space-y-6 mt-6">
-                  {/* Document Management */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Dokumen</CardTitle>
-                      <CardDescription>
-                        Kelola dan tanda tangani dokumen legal bersama.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nama Dokumen</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Aksi</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {project.documents.map((doc) => (
-                            <TableRow 
-                              key={doc.id}
-                              className="cursor-pointer hover:bg-accent/50 transition-colors"
-                              onClick={() => handleDocumentClick(doc.id)}
-                            >
-                              <TableCell className="font-medium flex items-center gap-2"><FileText size={16} /> {doc.name}</TableCell>
-                              <TableCell>
-                                <Badge variant={doc.status === 'Terverifikasi' ? 'default' : doc.status === 'Tertanda' ? 'secondary' : 'outline'}>
-                                  {doc.status}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {doc.status === 'Menunggu' && <Button size="sm" onClick={(e) => { e.stopPropagation(); handleDocumentClick(doc.id); }}>Tanda Tangan</Button>}
-                                {doc.status !== 'Menunggu' && <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleDocumentClick(doc.id); }}>Lihat</Button>}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-
-                  {/* Perencanaan & Detail Proyek */}
-                  {property?.planningInfo && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-                          Perencanaan & Detail Proyek
-                        </CardTitle>
-                        {/* Gradient divider */}
-                        <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
-                      </CardHeader>
-                      <CardContent>
-                        <Tabs defaultValue="plan">
-                          <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="plan">
-                              <DraftingCompass className="mr-2 h-4 w-4" />Denah Lokasi
-                            </TabsTrigger>
-                            <TabsTrigger value="dev">
-                              <AreaChart className="mr-2 h-4 w-4" />Rencana Pengembangan
-                            </TabsTrigger>
-                            <TabsTrigger value="env">
-                              <Microscope className="mr-2 h-4 w-4" />Analisis Lingkungan
-                            </TabsTrigger>
-                          </TabsList>
-                          <TabsContent value="plan" className="mt-4">
-                            <div className="relative">
-                              <Carousel className="w-full" setApi={setFloorPlanCarouselApi}>
-                                <CarouselContent>
-                                  {floorPlanImages.map((image, index) => (
-                                    <CarouselItem key={index}>
-                                      <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
-                                        <Image
-                                          src={image.url}
-                                          alt={`Denah Lokasi ${index + 1}`}
-                                          fill
-                                          className="object-contain"
-                                          data-ai-hint={image.hint}
-                                        />
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                                          onClick={() => setFloorPlanFullscreen({ isOpen: true, index: floorPlanCarouselCurrent })}
-                                          aria-label="Open fullscreen"
-                                        >
-                                          <Maximize2 className="h-5 w-5" />
-                                        </Button>
-                                      </div>
-                                    </CarouselItem>
-                                  ))}
-                                </CarouselContent>
-                                <CarouselPrevious className="left-4" />
-                                <CarouselNext className="right-4" />
-                              </Carousel>
-                            </div>
-                          </TabsContent>
-                          <TabsContent value="dev" className="mt-4">
-                            <div className="relative">
-                              <Carousel className="w-full" setApi={setDevelopmentPlanCarouselApi}>
-                                <CarouselContent>
-                                  {developmentPlanImages.map((image, index) => (
-                                    <CarouselItem key={index}>
-                                      <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
-                                        <Image
-                                          src={image.url}
-                                          alt={`Rencana Pengembangan ${index + 4}`}
-                                          fill
-                                          className="object-contain"
-                                          data-ai-hint={image.hint}
-                                        />
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                                          onClick={() => setDevelopmentPlanFullscreen({ isOpen: true, index: developmentPlanCarouselCurrent })}
-                                          aria-label="Open fullscreen"
-                                        >
-                                          <Maximize2 className="h-5 w-5" />
-                                        </Button>
-                                      </div>
-                                    </CarouselItem>
-                                  ))}
-                                </CarouselContent>
-                                <CarouselPrevious className="left-4" />
-                                <CarouselNext className="right-4" />
-                              </Carousel>
-                            </div>
-                            {property.planningInfo.developmentPlan && (
-                              <div className="mt-4 text-sm text-muted-foreground">
-                                <p>{property.planningInfo.developmentPlan}</p>
-                              </div>
-                            )}
-                          </TabsContent>
-                          <TabsContent value="env" className="mt-4 text-sm text-muted-foreground">
-                            <p>{property.planningInfo.environmentalAnalysis}</p>
-                          </TabsContent>
-                        </Tabs>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
           </Card>
-        ) : (
-          <>
-            {/* Document Management - Show directly if project is active */}
+        </div>
+        <div className="space-y-6 lg:col-span-1">
+          {/* Project Progress - Moved to sidebar if project is active */}
+          {!isProjectClosed && (
             <Card>
               <CardHeader>
-                <CardTitle>Dokumen</CardTitle>
+                <CardTitle>Kemajuan Proyek</CardTitle>
                 <CardDescription>
-                  Kelola dan tanda tangani dokumen legal bersama.
+                  Status keseluruhan dari proyek co-buy Anda.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div
+                  className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                  onClick={() => handleProgressClick("kyc")}
+                >
+                  <div className="flex justify-between text-sm">
+                    <p className="group-hover:text-primary transition-colors font-medium">
+                      Verifikasi KYC
+                    </p>
+                    <p className="font-medium">{project.progress.kyc}%</p>
+                  </div>
+                  <Progress
+                    value={project.progress.kyc}
+                    aria-label={`${project.progress.kyc}% KYC terverifikasi`}
+                  />
+                </div>
+                <div
+                  className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                  onClick={() => handleProgressClick("funding")}
+                >
+                  <div className="flex justify-between text-sm">
+                    <p className="group-hover:text-primary transition-colors font-medium">
+                      Pendanaan Grup
+                    </p>
+                    <p className="font-medium">{project.progress.funding}%</p>
+                  </div>
+                  <Progress
+                    value={project.progress.funding}
+                    aria-label={`${project.progress.funding}% didanai`}
+                  />
+                </div>
+                <div
+                  className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                  onClick={() => handleProgressClick("legal")}
+                >
+                  <div className="flex justify-between text-sm">
+                    <p className="group-hover:text-primary transition-colors font-medium">
+                      Legal & Dokumentasi
+                    </p>
+                    <p className="font-medium">{project.progress.legal}%</p>
+                  </div>
+                  <Progress
+                    value={project.progress.legal}
+                    aria-label={`${project.progress.legal}% legal selesai`}
+                  />
+                </div>
+                <div
+                  className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
+                  onClick={() => handleProgressClick("closing")}
+                >
+                  <div className="flex justify-between text-sm">
+                    <p className="group-hover:text-primary transition-colors font-medium">
+                      Penutupan
+                    </p>
+                    <p className="font-medium">{project.progress.closing}%</p>
+                  </div>
+                  <Progress
+                    value={project.progress.closing}
+                    aria-label={`${project.progress.closing}% selesai`}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Payment Progress - Moved to sidebar if there are active installments */}
+          {hasActiveInstallments && paymentProgress && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <CardTitle>Progress Pembayaran</CardTitle>
+                </div>
+                <CardDescription>
+                  Ringkasan pembayaran cicilan untuk semua unit
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Total Pembayaran
+                    </span>
+                    <span className="font-bold text-lg text-primary">
+                      {paymentProgress.percentage}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={paymentProgress.percentage}
+                    className="h-3"
+                  />
+                  <div className="flex flex-col gap-1 text-xs pt-2">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Dibayar:</span>
+                      <span>{formatCurrency(paymentProgress.paid)}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Total:</span>
+                      <span>{formatCurrency(paymentProgress.total)}</span>
+                    </div>
+                    <div className="flex justify-between font-medium pt-1 border-t">
+                      <span>Sisa:</span>
+                      <span>
+                        {formatCurrency(
+                          paymentProgress.total - paymentProgress.paid
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Installment Overview - Moved to sidebar if project is closed */}
+          {isProjectClosed &&
+            project.installmentPlans &&
+            project.installmentPlans.length > 0 && (
+              <InstallmentOverview plans={project.installmentPlans} />
+            )}
+
+          {/* Purchase Flow - Show if user has purchase transaction */}
+          {selectedTransaction && (
+            <PurchaseFlow
+              transaction={selectedTransaction}
+              onStateChange={loadPurchaseTransactions}
+              showActions={false}
+              userRole={user?.role === 2 ? "admin" : "customer"}
+            />
+          )}
+
+          {/* Booking Fee Dialog Trigger - Show if transaction is in DRAFT state */}
+          {selectedTransaction && selectedTransaction.state === "DRAFT" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Booking Fee</CardTitle>
+                <CardDescription>
+                  Bayar booking fee untuk memulai proses pembelian
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nama Dokumen</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {project.documents.map((doc) => (
-                      <TableRow 
-                        key={doc.id}
-                        className="cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() => handleDocumentClick(doc.id)}
-                      >
-                        <TableCell className="font-medium flex items-center gap-2"><FileText size={16} /> {doc.name}</TableCell>
-                        <TableCell>
-                          <Badge variant={doc.status === 'Terverifikasi' ? 'default' : doc.status === 'Tertanda' ? 'secondary' : 'outline'}>
-                            {doc.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {doc.status === 'Menunggu' && <Button size="sm" onClick={(e) => { e.stopPropagation(); handleDocumentClick(doc.id); }}>Tanda Tangan</Button>}
-                          {doc.status !== 'Menunggu' && <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleDocumentClick(doc.id); }}>Lihat</Button>}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <Button
+                  className="w-full"
+                  onClick={() => setIsBookingFeeDialogOpen(true)}
+                >
+                  Bayar Booking Fee
+                </Button>
               </CardContent>
             </Card>
+          )}
 
-            {/* Perencanaan & Detail Proyek - Show directly if project is active */}
-            {property?.planningInfo && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-                    Perencanaan & Detail Proyek
-                  </CardTitle>
-                  {/* Gradient divider */}
-                  <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="plan">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="plan">
-                        <DraftingCompass className="mr-2 h-4 w-4" />Denah Lokasi
-                      </TabsTrigger>
-                      <TabsTrigger value="dev">
-                        <AreaChart className="mr-2 h-4 w-4" />Rencana Pengembangan
-                      </TabsTrigger>
-                      <TabsTrigger value="env">
-                        <Microscope className="mr-2 h-4 w-4" />Analisis Lingkungan
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="plan" className="mt-4">
-                      <div className="relative">
-                        <Carousel className="w-full" setApi={setFloorPlanCarouselApi}>
-                          <CarouselContent>
-                            {floorPlanImages.map((image, index) => (
-                              <CarouselItem key={index}>
-                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
-                                  <Image
-                                    src={image.url}
-                                    alt={`Denah Lokasi ${index + 1}`}
-                                    fill
-                                    className="object-contain"
-                                    data-ai-hint={image.hint}
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                                    onClick={() => setFloorPlanFullscreen({ isOpen: true, index: floorPlanCarouselCurrent })}
-                                    aria-label="Open fullscreen"
-                                  >
-                                    <Maximize2 className="h-5 w-5" />
-                                  </Button>
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-4" />
-                          <CarouselNext className="right-4" />
-                        </Carousel>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="dev" className="mt-4">
-                      <div className="relative">
-                        <Carousel className="w-full" setApi={setDevelopmentPlanCarouselApi}>
-                          <CarouselContent>
-                            {developmentPlanImages.map((image, index) => (
-                              <CarouselItem key={index}>
-                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
-                                  <Image
-                                    src={image.url}
-                                    alt={`Rencana Pengembangan ${index + 4}`}
-                                    fill
-                                    className="object-contain"
-                                    data-ai-hint={image.hint}
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                                    onClick={() => setDevelopmentPlanFullscreen({ isOpen: true, index: developmentPlanCarouselCurrent })}
-                                    aria-label="Open fullscreen"
-                                  >
-                                    <Maximize2 className="h-5 w-5" />
-                                  </Button>
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-4" />
-                          <CarouselNext className="right-4" />
-                        </Carousel>
-                      </div>
-                      {property.planningInfo.developmentPlan && (
-                        <div className="mt-4 text-sm text-muted-foreground">
-                          <p>{property.planningInfo.developmentPlan}</p>
-                        </div>
-                      )}
-                    </TabsContent>
-                    <TabsContent value="env" className="mt-4 text-sm text-muted-foreground">
-                      <p>{property.planningInfo.environmentalAnalysis}</p>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
-
-      </div>
-      <div className="space-y-6 lg:col-span-1">
-        {/* Project Progress - Moved to sidebar if project is active */}
-        {!isProjectClosed && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Kemajuan Proyek</CardTitle>
-              <CardDescription>Status keseluruhan dari proyek co-buy Anda.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div 
-                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-                onClick={() => handleProgressClick('kyc')}
-              >
-                <div className='flex justify-between text-sm'>
-                  <p className="group-hover:text-primary transition-colors font-medium">Verifikasi KYC</p>
-                  <p className='font-medium'>{project.progress.kyc}%</p>
-                </div>
-                <Progress value={project.progress.kyc} aria-label={`${project.progress.kyc}% KYC terverifikasi`} />
-              </div>
-              <div 
-                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-                onClick={() => handleProgressClick('funding')}
-              >
-                <div className='flex justify-between text-sm'>
-                  <p className="group-hover:text-primary transition-colors font-medium">Pendanaan Grup</p>
-                  <p className='font-medium'>{project.progress.funding}%</p>
-                </div>
-                <Progress value={project.progress.funding} aria-label={`${project.progress.funding}% didanai`} />
-              </div>
-              <div 
-                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-                onClick={() => handleProgressClick('legal')}
-              >
-                <div className='flex justify-between text-sm'>
-                  <p className="group-hover:text-primary transition-colors font-medium">Legal & Dokumentasi</p>
-                  <p className='font-medium'>{project.progress.legal}%</p>
-                </div>
-                <Progress value={project.progress.legal} aria-label={`${project.progress.legal}% legal selesai`} />
-              </div>
-               <div 
-                className="space-y-2 cursor-pointer p-3 rounded-lg hover:bg-accent/50 transition-colors group"
-                onClick={() => handleProgressClick('closing')}
-              >
-                <div className='flex justify-between text-sm'>
-                  <p className="group-hover:text-primary transition-colors font-medium">Penutupan</p>
-                  <p className='font-medium'>{project.progress.closing}%</p>
-                </div>
-                <Progress value={project.progress.closing} aria-label={`${project.progress.closing}% selesai`} />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Payment Progress - Moved to sidebar if there are active installments */}
-        {hasActiveInstallments && paymentProgress && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-primary" />
-                <CardTitle>Progress Pembayaran</CardTitle>
-              </div>
-              <CardDescription>
-                Ringkasan pembayaran cicilan untuk semua unit
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Total Pembayaran</span>
-                  <span className="font-bold text-lg text-primary">{paymentProgress.percentage}%</span>
-                </div>
-                <Progress value={paymentProgress.percentage} className="h-3" />
-                <div className="flex flex-col gap-1 text-xs pt-2">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Dibayar:</span>
-                    <span>{formatCurrency(paymentProgress.paid)}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Total:</span>
-                    <span>{formatCurrency(paymentProgress.total)}</span>
-                  </div>
-                  <div className="flex justify-between font-medium pt-1 border-t">
-                    <span>Sisa:</span>
-                    <span>{formatCurrency(paymentProgress.total - paymentProgress.paid)}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Installment Overview - Moved to sidebar if project is closed */}
-        {isProjectClosed && project.installmentPlans && project.installmentPlans.length > 0 && (
-          <InstallmentOverview plans={project.installmentPlans} />
-        )}
-
-        {/* Purchase Flow - Show if user has purchase transaction */}
-        {selectedTransaction && (
-          <PurchaseFlow
-            transaction={selectedTransaction}
-            onStateChange={loadPurchaseTransactions}
-            showActions={false}
-            userRole={user?.role === 2 ? 'admin' : 'customer'}
-          />
-        )}
-
-        {/* Booking Fee Dialog Trigger - Show if transaction is in DRAFT state */}
-        {selectedTransaction && selectedTransaction.state === 'DRAFT' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Booking Fee</CardTitle>
-              <CardDescription>Bayar booking fee untuk memulai proses pembelian</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full"
-                onClick={() => setIsBookingFeeDialogOpen(true)}
-              >
-                Bayar Booking Fee
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* KPR Status Tracker - Show if payment type is KPR */}
-        {selectedTransaction && selectedTransaction.paymentType === 'kpr' && (
-          <KprStatusTracker
-            transaction={selectedTransaction}
-            onStatusUpdate={loadPurchaseTransactions}
-            isAdmin={user?.role === 2}
-          />
-        )}
-
-        {/* Construction Checkpoint Card - Show if in construction state */}
-        {selectedTransaction &&
-          (selectedTransaction.state === 'UNDER_CONSTRUCTION' ||
-            selectedTransaction.state === 'CASH_PROCESS' ||
-            selectedTransaction.state === 'KPR_PROCESS') && (
-            <ConstructionCheckpointCard
+          {/* KPR Status Tracker - Show if payment type is KPR */}
+          {selectedTransaction && selectedTransaction.paymentType === "kpr" && (
+            <KprStatusTracker
               transaction={selectedTransaction}
-              onUpdate={loadPurchaseTransactions}
+              onStatusUpdate={loadPurchaseTransactions}
               isAdmin={user?.role === 2}
             />
           )}
 
-        {/* Activity Log Viewer - Admin only */}
-        {selectedTransaction && user?.role === 2 && (
-          <ActivityLogViewer
-            transactionId={selectedTransaction.id}
-            showFilters={true}
-          />
-        )}
+          {/* Construction Checkpoint Card - Show if in construction state */}
+          {selectedTransaction &&
+            (selectedTransaction.state === "UNDER_CONSTRUCTION" ||
+              selectedTransaction.state === "CASH_PROCESS" ||
+              selectedTransaction.state === "KPR_PROCESS") && (
+              <ConstructionCheckpointCard
+                transaction={selectedTransaction}
+                onUpdate={loadPurchaseTransactions}
+                isAdmin={user?.role === 2}
+              />
+            )}
 
-        {/* Project Members */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Alokasi Unit Anggota</CardTitle>
-            <CardDescription>{project.members.length} orang di grup ini</CardDescription>
-          </CardHeader>
-          <CardContent>
-             <Table>
+          {/* Activity Log Viewer - Admin only */}
+          {selectedTransaction && user?.role === 2 && (
+            <ActivityLogViewer
+              transactionId={selectedTransaction.id}
+              showFilters={true}
+            />
+          )}
+
+          {/* Project Members */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Alokasi Unit Anggota</CardTitle>
+              <CardDescription>
+                {project.members.length} orang di grup ini
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Anggota</TableHead>
@@ -883,40 +610,537 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                   {project.members.map((member) => {
-                    const assignment = project.unitAssignments.find(a => a.userId === member.id);
-                    return (
-                       <TableRow key={member.id}>
-                         <TableCell>
-                            <Link href={`/profile/${member.id}`} className="flex items-center gap-2 rounded-lg transition-colors hover:bg-muted/50">
-                                <Avatar className="h-8 w-8">
-                                <AvatarImage src={member.avatarUrl} alt={member.name} data-ai-hint={member.avatarHint} className="object-cover" />
-                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm font-medium">{member.name}</span>
-                            </Link>
-                         </TableCell>
-                          <TableCell className="text-sm">
-                            {assignment ? (
-                              <div className="flex flex-col">
-                                <span className='font-semibold'>{property?.unitName} {assignment.unitId}</span>
-                                <span className='text-xs text-muted-foreground'>
-                                  {assignment.size ? `~${assignment.size} ${normalizeUnitMeasure(property?.unitMeasure)}` : formatPrice(assignment.price)}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className='text-muted-foreground italic'>Belum memilih</span>
-                            )}
-                          </TableCell>
-                       </TableRow>
+                  {project.members.map((member) => {
+                    const assignment = project.unitAssignments.find(
+                      (a) => a.userId === member.id
                     );
-                   })}
+                    return (
+                      <TableRow key={member.id}>
+                        <TableCell>
+                          <Link
+                            href={`/profile/${member.id}`}
+                            className="flex items-center gap-2 rounded-lg transition-colors hover:bg-muted/50"
+                          >
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={member.avatarUrl}
+                                alt={member.name}
+                                data-ai-hint={member.avatarHint}
+                                className="object-cover"
+                              />
+                              <AvatarFallback>
+                                {member.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm font-medium">
+                              {member.name}
+                            </span>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {assignment ? (
+                            <div className="flex flex-col">
+                              <span className="font-semibold">
+                                {property?.unitName} {assignment.unitId}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {assignment.size
+                                  ? `~${assignment.size} ${normalizeUnitMeasure(
+                                      property?.unitMeasure
+                                    )}`
+                                  : formatPrice(assignment.price)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground italic">
+                              Belum memilih
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
-             </Table>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      {/* Main Content Tabs - Show tabs if there are installment plans (installment/cash) OR if project has members/units (ready for payments) */}
+      {(project.installmentPlans && project.installmentPlans.length > 0) ||
+      (project.members &&
+        project.members.length > 0 &&
+        project.unitAssignments &&
+        project.unitAssignments.length > 0) ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Informasi Proyek</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="payment" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="payment">Pembayaran</TabsTrigger>
+                <TabsTrigger value="documents">
+                  Dokumen & Perencanaan
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="payment" className="space-y-6 mt-6">
+                {project.installmentPlans &&
+                project.installmentPlans.length > 0 ? (
+                  <>
+                    {/* Monthly Payment Cards */}
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-semibold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                        Pembayaran per Unit
+                      </h2>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {project.installmentPlans.map((plan) => {
+                          const user = project.members.find(
+                            (m) => m.id === plan.userId
+                          );
+                          if (!user) return null;
+                          return (
+                            <MonthlyPaymentCard
+                              key={plan.id}
+                              plan={plan}
+                              user={user}
+                              property={property}
+                              onAddPayment={() =>
+                                setSelectedPlanForPayment(plan.id)
+                              }
+                              onAddDPPayment={() =>
+                                setSelectedPlanForDPPayment(plan.id)
+                              }
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Payment History Table */}
+                    <PaymentHistoryTable
+                      payments={project.installmentPlans.flatMap(
+                        (plan) => plan.payments
+                      )}
+                      members={project.members}
+                      property={property}
+                      onViewReceipt={(payment) => {
+                        if (payment.receiptUrl) {
+                          window.open(payment.receiptUrl, "_blank");
+                        }
+                      }}
+                    />
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground mb-4">
+                      Belum ada rencana pembayaran untuk project ini.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Silakan hubungi admin untuk membuat rencana pembayaran
+                      (cicilan atau tunai).
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="documents" className="space-y-6 mt-6">
+                {/* Document Management */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Dokumen</CardTitle>
+                    <CardDescription>
+                      Kelola dan tanda tangani dokumen legal bersama.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nama Dokumen</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Aksi</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {project.documents.map((doc) => (
+                          <TableRow
+                            key={doc.id}
+                            className="cursor-pointer hover:bg-accent/50 transition-colors"
+                            onClick={() => handleDocumentClick(doc.id)}
+                          >
+                            <TableCell className="font-medium flex items-center gap-2">
+                              <FileText size={16} /> {doc.name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  doc.status === "Terverifikasi"
+                                    ? "default"
+                                    : doc.status === "Tertanda"
+                                    ? "secondary"
+                                    : "outline"
+                                }
+                              >
+                                {doc.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {doc.status === "Menunggu" && (
+                                <Button
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDocumentClick(doc.id);
+                                  }}
+                                >
+                                  Tanda Tangan
+                                </Button>
+                              )}
+                              {doc.status !== "Menunggu" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDocumentClick(doc.id);
+                                  }}
+                                >
+                                  Lihat
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                {/* Perencanaan & Detail Proyek */}
+                {property?.planningInfo && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                        Perencanaan & Detail Proyek
+                      </CardTitle>
+                      {/* Gradient divider */}
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+                    </CardHeader>
+                    <CardContent>
+                      <Tabs defaultValue="plan">
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="plan">
+                            <DraftingCompass className="mr-2 h-4 w-4" />
+                            Denah Lokasi
+                          </TabsTrigger>
+                          <TabsTrigger value="dev">
+                            <AreaChart className="mr-2 h-4 w-4" />
+                            Rencana Pengembangan
+                          </TabsTrigger>
+                          <TabsTrigger value="env">
+                            <Microscope className="mr-2 h-4 w-4" />
+                            Analisis Lingkungan
+                          </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="plan" className="mt-4">
+                          <div className="relative">
+                            <Carousel
+                              className="w-full"
+                              setApi={setFloorPlanCarouselApi}
+                            >
+                              <CarouselContent>
+                                {floorPlanImages.map((image, index) => (
+                                  <CarouselItem key={index}>
+                                    <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                      <Image
+                                        src={image.url}
+                                        alt={`Denah Lokasi ${index + 1}`}
+                                        fill
+                                        className="object-contain"
+                                        data-ai-hint={image.hint}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                        onClick={() =>
+                                          setFloorPlanFullscreen({
+                                            isOpen: true,
+                                            index: floorPlanCarouselCurrent,
+                                          })
+                                        }
+                                        aria-label="Open fullscreen"
+                                      >
+                                        <Maximize2 className="h-5 w-5" />
+                                      </Button>
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              <CarouselPrevious className="left-4" />
+                              <CarouselNext className="right-4" />
+                            </Carousel>
+                          </div>
+                        </TabsContent>
+                        <TabsContent value="dev" className="mt-4">
+                          <div className="relative">
+                            <Carousel
+                              className="w-full"
+                              setApi={setDevelopmentPlanCarouselApi}
+                            >
+                              <CarouselContent>
+                                {developmentPlanImages.map((image, index) => (
+                                  <CarouselItem key={index}>
+                                    <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                      <Image
+                                        src={image.url}
+                                        alt={`Rencana Pengembangan ${
+                                          index + 4
+                                        }`}
+                                        fill
+                                        className="object-contain"
+                                        data-ai-hint={image.hint}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                        onClick={() =>
+                                          setDevelopmentPlanFullscreen({
+                                            isOpen: true,
+                                            index:
+                                              developmentPlanCarouselCurrent,
+                                          })
+                                        }
+                                        aria-label="Open fullscreen"
+                                      >
+                                        <Maximize2 className="h-5 w-5" />
+                                      </Button>
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              <CarouselPrevious className="left-4" />
+                              <CarouselNext className="right-4" />
+                            </Carousel>
+                          </div>
+                          {property.planningInfo.developmentPlan && (
+                            <div className="mt-4 text-sm text-muted-foreground">
+                              <p>{property.planningInfo.developmentPlan}</p>
+                            </div>
+                          )}
+                        </TabsContent>
+                        <TabsContent
+                          value="env"
+                          className="mt-4 text-sm text-muted-foreground"
+                        >
+                          <p>{property.planningInfo.environmentalAnalysis}</p>
+                        </TabsContent>
+                      </Tabs>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      ) : (
+        <>
+          {/* Document Management - Show directly if project is active */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dokumen</CardTitle>
+              <CardDescription>
+                Kelola dan tanda tangani dokumen legal bersama.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nama Dokumen</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {project.documents.map((doc) => (
+                    <TableRow
+                      key={doc.id}
+                      className="cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => handleDocumentClick(doc.id)}
+                    >
+                      <TableCell className="font-medium flex items-center gap-2">
+                        <FileText size={16} /> {doc.name}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            doc.status === "Terverifikasi"
+                              ? "default"
+                              : doc.status === "Tertanda"
+                              ? "secondary"
+                              : "outline"
+                          }
+                        >
+                          {doc.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {doc.status === "Menunggu" && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDocumentClick(doc.id);
+                            }}
+                          >
+                            Tanda Tangan
+                          </Button>
+                        )}
+                        {doc.status !== "Menunggu" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDocumentClick(doc.id);
+                            }}
+                          >
+                            Lihat
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Perencanaan & Detail Proyek - Show directly if project is active */}
+          {property?.planningInfo && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                  Perencanaan & Detail Proyek
+                </CardTitle>
+                {/* Gradient divider */}
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="plan">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="plan">
+                      <DraftingCompass className="mr-2 h-4 w-4" />
+                      Denah Lokasi
+                    </TabsTrigger>
+                    <TabsTrigger value="dev">
+                      <AreaChart className="mr-2 h-4 w-4" />
+                      Rencana Pengembangan
+                    </TabsTrigger>
+                    <TabsTrigger value="env">
+                      <Microscope className="mr-2 h-4 w-4" />
+                      Analisis Lingkungan
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="plan" className="mt-4">
+                    <div className="relative">
+                      <Carousel
+                        className="w-full"
+                        setApi={setFloorPlanCarouselApi}
+                      >
+                        <CarouselContent>
+                          {floorPlanImages.map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                <Image
+                                  src={image.url}
+                                  alt={`Denah Lokasi ${index + 1}`}
+                                  fill
+                                  className="object-contain"
+                                  data-ai-hint={image.hint}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                  onClick={() =>
+                                    setFloorPlanFullscreen({
+                                      isOpen: true,
+                                      index: floorPlanCarouselCurrent,
+                                    })
+                                  }
+                                  aria-label="Open fullscreen"
+                                >
+                                  <Maximize2 className="h-5 w-5" />
+                                </Button>
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-4" />
+                        <CarouselNext className="right-4" />
+                      </Carousel>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="dev" className="mt-4">
+                    <div className="relative">
+                      <Carousel
+                        className="w-full"
+                        setApi={setDevelopmentPlanCarouselApi}
+                      >
+                        <CarouselContent>
+                          {developmentPlanImages.map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                <Image
+                                  src={image.url}
+                                  alt={`Rencana Pengembangan ${index + 4}`}
+                                  fill
+                                  className="object-contain"
+                                  data-ai-hint={image.hint}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                  onClick={() =>
+                                    setDevelopmentPlanFullscreen({
+                                      isOpen: true,
+                                      index: developmentPlanCarouselCurrent,
+                                    })
+                                  }
+                                  aria-label="Open fullscreen"
+                                >
+                                  <Maximize2 className="h-5 w-5" />
+                                </Button>
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="left-4" />
+                        <CarouselNext className="right-4" />
+                      </Carousel>
+                    </div>
+                    {property.planningInfo.developmentPlan && (
+                      <div className="mt-4 text-sm text-muted-foreground">
+                        <p>{property.planningInfo.developmentPlan}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent
+                    value="env"
+                    className="mt-4 text-sm text-muted-foreground"
+                  >
+                    <p>{property.planningInfo.environmentalAnalysis}</p>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
 
       {/* Progress Detail Dialogs */}
       {selectedProgress && project.progressDetails[selectedProgress] && (
@@ -926,7 +1150,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
             if (!open) {
               setSelectedProgress(null);
               // Clear progress detail data when dialog closes
-              setProgressDetailData(prev => {
+              setProgressDetailData((prev) => {
                 const newData = { ...prev };
                 delete newData[selectedProgress];
                 return newData;
@@ -935,7 +1159,8 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
           }}
           progressDetail={
             // Use fetched data if available (for legal/funding), otherwise use project data
-            progressDetailData[selectedProgress] || project.progressDetails[selectedProgress]
+            progressDetailData[selectedProgress] ||
+            project.progressDetails[selectedProgress]
           }
           members={project.members}
           isLoading={isLoadingProgressDetail}
@@ -947,7 +1172,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
         <DocumentDetailDialog
           open={selectedDocument !== null}
           onOpenChange={(open) => !open && setSelectedDocument(null)}
-          document={project.documents.find(d => d.id === selectedDocument)!}
+          document={project.documents.find((d) => d.id === selectedDocument)!}
           members={project.members}
           onDocumentUpdate={onProjectUpdate}
         />
@@ -958,35 +1183,45 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
         <AddPaymentDialog
           open={selectedPlanForPayment !== null}
           onOpenChange={(open) => !open && setSelectedPlanForPayment(null)}
-          plan={project.installmentPlans.find(p => p.id === selectedPlanForPayment)!}
+          plan={
+            project.installmentPlans.find(
+              (p) => p.id === selectedPlanForPayment
+            )!
+          }
           onSubmit={async (paymentData) => {
             if (!user) {
               toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Anda harus login untuk menambahkan pembayaran',
+                variant: "destructive",
+                title: "Error",
+                description: "Anda harus login untuk menambahkan pembayaran",
               });
               return;
             }
 
-            const plan = project.installmentPlans?.find(p => p.id === selectedPlanForPayment);
+            const plan = project.installmentPlans?.find(
+              (p) => p.id === selectedPlanForPayment
+            );
             if (!plan) return;
 
             // Calculate dueDate based on period
             // Parse period (YYYY-MM) and set to first day of that month
-            const [year, month] = paymentData.period.split('-');
-            const dueDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
+            const [year, month] = paymentData.period.split("-");
+            const dueDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              1
+            ).toISOString();
 
             // Upload receipt file if provided
             let finalReceiptUrl: string | undefined = undefined;
             if (paymentData.receiptFile) {
               try {
                 const formData = new FormData();
-                formData.append('file', paymentData.receiptFile);
-                formData.append('type', 'payment-receipt');
+                formData.append("file", paymentData.receiptFile);
+                formData.append("type", "payment-receipt");
 
-                const uploadResponse = await fetch('/api/upload', {
-                  method: 'POST',
+                const uploadResponse = await fetch("/api/upload", {
+                  method: "POST",
                   body: formData,
                 });
 
@@ -994,19 +1229,21 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                 if (uploadResult.success && uploadResult.data) {
                   finalReceiptUrl = uploadResult.data.url;
                 } else {
-                toast({
-                  variant: 'destructive',
-                  title: 'Error',
-                    description: uploadResult.error?.message || 'Gagal mengupload bukti pembayaran',
+                  toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description:
+                      uploadResult.error?.message ||
+                      "Gagal mengupload bukti pembayaran",
                   });
                   return;
                 }
               } catch (uploadError) {
-                console.error('Error uploading receipt:', uploadError);
+                console.error("Error uploading receipt:", uploadError);
                 toast({
-                  variant: 'destructive',
-                  title: 'Error',
-                  description: 'Gagal mengupload bukti pembayaran',
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Gagal mengupload bukti pembayaran",
                 });
                 return;
               }
@@ -1015,17 +1252,17 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
             // Create payment via API
             try {
               const paymentPayload: any = {
-              projectId: project.id,
-              userId: user.id,
-              unitId: plan.unitId,
-              amount: paymentData.amount,
-              paymentDate: paymentData.paymentDate,
-              dueDate: dueDate,
-              period: paymentData.period,
-              status: 'pending',
-              paymentMethod: paymentData.paymentMethod,
-              notes: paymentData.notes,
-            };
+                projectId: project.id,
+                userId: user.id,
+                unitId: plan.unitId,
+                amount: paymentData.amount,
+                paymentDate: paymentData.paymentDate,
+                dueDate: dueDate,
+                period: paymentData.period,
+                status: "pending",
+                paymentMethod: paymentData.paymentMethod,
+                notes: paymentData.notes,
+              };
 
               // Add paymentPlanId if available
               if (selectedPlanForPayment) {
@@ -1039,37 +1276,46 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
 
               // Add paymentReference if available
               if (paymentData.paymentReference?.trim()) {
-                paymentPayload.paymentReference = paymentData.paymentReference.trim();
+                paymentPayload.paymentReference =
+                  paymentData.paymentReference.trim();
               }
 
-              const response = await apiClient.post('/payments', paymentPayload);
+              const response = await apiClient.post(
+                "/payments",
+                paymentPayload
+              );
 
               if (response.success) {
-            toast({
-              title: 'Berhasil',
-              description: 'Pembayaran berhasil ditambahkan dan menunggu verifikasi admin',
-            });
-                
+                toast({
+                  title: "Berhasil",
+                  description:
+                    "Pembayaran berhasil ditambahkan dan menunggu verifikasi admin",
+                });
+
                 // Close dialog
                 setSelectedPlanForPayment(null);
-                
+
                 // Refresh project data
                 if (onProjectUpdate) {
                   onProjectUpdate();
                 }
               } else {
-                const errorMessage = response.error?.message || 'Failed to create payment';
-                const errorDetails = response.error?.errors 
-                  ? Object.values(response.error.errors).flat().join(', ')
-                  : '';
+                const errorMessage =
+                  response.error?.message || "Failed to create payment";
+                const errorDetails = response.error?.errors
+                  ? Object.values(response.error.errors).flat().join(", ")
+                  : "";
                 throw new Error(errorDetails || errorMessage);
               }
             } catch (error) {
-              console.error('Error creating payment:', error);
+              console.error("Error creating payment:", error);
               toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'Gagal menambahkan pembayaran. Silakan coba lagi.',
+                variant: "destructive",
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Gagal menambahkan pembayaran. Silakan coba lagi.",
               });
             }
           }}
@@ -1081,18 +1327,24 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
         <AddDPPaymentDialog
           open={selectedPlanForDPPayment !== null}
           onOpenChange={(open) => !open && setSelectedPlanForDPPayment(null)}
-          plan={project.installmentPlans.find(p => p.id === selectedPlanForDPPayment)!}
+          plan={
+            project.installmentPlans.find(
+              (p) => p.id === selectedPlanForDPPayment
+            )!
+          }
           onSubmit={async (paymentData) => {
             if (!user) {
               toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: 'Anda harus login untuk menambahkan pembayaran',
+                variant: "destructive",
+                title: "Error",
+                description: "Anda harus login untuk menambahkan pembayaran",
               });
               return;
             }
 
-            const plan = project.installmentPlans?.find(p => p.id === selectedPlanForDPPayment);
+            const plan = project.installmentPlans?.find(
+              (p) => p.id === selectedPlanForDPPayment
+            );
             if (!plan) return;
 
             // Upload receipt file if provided
@@ -1100,11 +1352,11 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
             if (paymentData.receiptFile) {
               try {
                 const formData = new FormData();
-                formData.append('file', paymentData.receiptFile);
-                formData.append('type', 'payment-receipt');
+                formData.append("file", paymentData.receiptFile);
+                formData.append("type", "payment-receipt");
 
-                const uploadResponse = await fetch('/api/upload', {
-                  method: 'POST',
+                const uploadResponse = await fetch("/api/upload", {
+                  method: "POST",
                   body: formData,
                 });
 
@@ -1113,18 +1365,20 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                   finalReceiptUrl = uploadResult.data.url;
                 } else {
                   toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: uploadResult.error?.message || 'Gagal mengupload bukti pembayaran',
+                    variant: "destructive",
+                    title: "Error",
+                    description:
+                      uploadResult.error?.message ||
+                      "Gagal mengupload bukti pembayaran",
                   });
                   return;
                 }
               } catch (uploadError) {
-                console.error('Error uploading receipt:', uploadError);
+                console.error("Error uploading receipt:", uploadError);
                 toast({
-                  variant: 'destructive',
-                  title: 'Error',
-                  description: 'Gagal mengupload bukti pembayaran',
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Gagal mengupload bukti pembayaran",
                 });
                 return;
               }
@@ -1140,7 +1394,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                 paymentDate: paymentData.paymentDate,
                 dueDate: paymentData.paymentDate, // For DP, dueDate same as paymentDate
                 period: null, // DP payment has no period
-                status: 'pending',
+                status: "pending",
                 paymentMethod: paymentData.paymentMethod,
                 notes: paymentData.notes,
               };
@@ -1157,37 +1411,46 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
 
               // Add paymentReference if available
               if (paymentData.paymentReference?.trim()) {
-                paymentPayload.paymentReference = paymentData.paymentReference.trim();
+                paymentPayload.paymentReference =
+                  paymentData.paymentReference.trim();
               }
 
-              const response = await apiClient.post('/payments', paymentPayload);
+              const response = await apiClient.post(
+                "/payments",
+                paymentPayload
+              );
 
               if (response.success) {
                 toast({
-                  title: 'Berhasil',
-                  description: 'Pembayaran DP berhasil ditambahkan dan menunggu verifikasi admin',
+                  title: "Berhasil",
+                  description:
+                    "Pembayaran DP berhasil ditambahkan dan menunggu verifikasi admin",
                 });
-                
+
                 // Close dialog
                 setSelectedPlanForDPPayment(null);
-                
+
                 // Refresh project data
                 if (onProjectUpdate) {
                   onProjectUpdate();
                 }
               } else {
-                const errorMessage = response.error?.message || 'Failed to create payment';
-                const errorDetails = response.error?.errors 
-                  ? Object.values(response.error.errors).flat().join(', ')
-                  : '';
+                const errorMessage =
+                  response.error?.message || "Failed to create payment";
+                const errorDetails = response.error?.errors
+                  ? Object.values(response.error.errors).flat().join(", ")
+                  : "";
                 throw new Error(errorDetails || errorMessage);
               }
             } catch (error) {
-              console.error('Error creating DP payment:', error);
+              console.error("Error creating DP payment:", error);
               toast({
-                variant: 'destructive',
-                title: 'Error',
-                description: error instanceof Error ? error.message : 'Gagal menambahkan pembayaran DP. Silakan coba lagi.',
+                variant: "destructive",
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Gagal menambahkan pembayaran DP. Silakan coba lagi.",
               });
             }
           }}
@@ -1197,13 +1460,17 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
       {/* Fullscreen Image Viewers */}
       {property && property.images && property.images.length > 0 && (
         <FullscreenImageViewer
-          images={property.images.map(img => ({ url: img.url, alt: `${project.propertyName} - gambar`, hint: img.hint }))}
+          images={property.images.map((img) => ({
+            url: img.url,
+            alt: `${project.propertyName} - gambar`,
+            hint: img.hint,
+          }))}
           initialIndex={mainCarouselFullscreen.index}
           isOpen={mainCarouselFullscreen.isOpen}
           onClose={() => setMainCarouselFullscreen({ isOpen: false, index: 0 })}
         />
       )}
-      
+
       {/* Booking Fee Dialog */}
       {selectedTransaction && (
         <BookingFeeDialog
@@ -1218,17 +1485,27 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
       )}
 
       <FullscreenImageViewer
-        images={floorPlanImages.map(img => ({ url: img.url, alt: `Denah Lokasi`, hint: img.hint }))}
+        images={floorPlanImages.map((img) => ({
+          url: img.url,
+          alt: `Denah Lokasi`,
+          hint: img.hint,
+        }))}
         initialIndex={floorPlanFullscreen.index}
         isOpen={floorPlanFullscreen.isOpen}
         onClose={() => setFloorPlanFullscreen({ isOpen: false, index: 0 })}
       />
-      
+
       <FullscreenImageViewer
-        images={developmentPlanImages.map(img => ({ url: img.url, alt: `Rencana Pengembangan`, hint: img.hint }))}
+        images={developmentPlanImages.map((img) => ({
+          url: img.url,
+          alt: `Rencana Pengembangan`,
+          hint: img.hint,
+        }))}
         initialIndex={developmentPlanFullscreen.index}
         isOpen={developmentPlanFullscreen.isOpen}
-        onClose={() => setDevelopmentPlanFullscreen({ isOpen: false, index: 0 })}
+        onClose={() =>
+          setDevelopmentPlanFullscreen({ isOpen: false, index: 0 })
+        }
       />
     </div>
   );
