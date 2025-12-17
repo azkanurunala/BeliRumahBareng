@@ -11,7 +11,7 @@ export const createProjectDocumentSchema = z.object({
   uploadDate: z.string().datetime('Format tanggal tidak valid').optional(),
   size: z.number().int().positive('Ukuran harus positif').optional(),
   description: z.string().optional(),
-  uploadedBy: z.string().cuid('ID uploader tidak valid').optional(),
+  uploadedBy: z.string().min(1, 'ID uploader tidak valid').optional(), // Optional, akan diisi otomatis dari current user
 });
 
 // Project Document Update Schema

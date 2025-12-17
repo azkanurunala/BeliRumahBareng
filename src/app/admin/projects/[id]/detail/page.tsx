@@ -24,6 +24,7 @@ import { ProgressDetailEditDialog } from '@/components/admin/progress/progress-d
 import { ProgressChecklistItemDialog } from '@/components/admin/progress/progress-checklist-item-dialog';
 import { ProgressMilestoneDialog } from '@/components/admin/progress/progress-milestone-dialog';
 import { CompletedMemberDialog } from '@/components/admin/progress/completed-member-dialog';
+import { ChecklistCompleteMemberDialog } from '@/components/admin/progress/checklist-complete-member-dialog';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import { UnitAssignmentDialog } from '@/components/admin/unit-assignment-dialog';
 import { DocumentForm } from '@/components/admin/document-form';
@@ -69,6 +70,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     open: boolean;
     category: string;
   }>({ open: false, category: '' });
+  const [checklistCompleteDialog, setChecklistCompleteDialog] = useState<{
+    open: boolean;
+    category: string;
+    itemId: string;
+    progressDetailId: string;
+  }>({ open: false, category: '', itemId: '', progressDetailId: '' });
   const [deleteChecklistDialog, setDeleteChecklistDialog] = useState<{
     open: boolean;
     category: string;
@@ -112,7 +119,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           params: { projectId: id },
         });
         
-        if (response.success && response.data) {
+        if (response.success && response.data && Array.isArray(response.data)) {
           const ids: Record<string, string> = {};
           const details: Record<string, ProgressDetail> = {};
           
@@ -126,9 +133,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               checklist: pd.checklist?.map((item: any) => ({
                 id: item.id,
                 label: item.label,
-                completed: item.completed,
-                completedBy: item.completedBy,
-                completedAt: item.completedAt,
+                completedMembers: item.completedMembers || [],
                 order: item.order,
               })) || [],
               completedMembers: pd.completedMembers || [],
@@ -165,7 +170,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const statusVariant = status === 'completed' ? 'default' : status === 'closed' ? 'secondary' : 'outline';
   
   const overallProgress = Math.round(
-    (project.progress.kyc + project.progress.funding + project.progress.legal + project.progress.closing) / 4
+    ((project.progress?.kyc || 0) + (project.progress?.funding || 0) + (project.progress?.legal || 0) + (project.progress?.closing || 0)) / 4
   );
   
   // Refresh data after update
@@ -178,7 +183,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         params: { projectId: id },
       });
       
-      if (response.success && response.data) {
+      if (response.success && response.data && Array.isArray(response.data)) {
         const ids: Record<string, string> = {};
         const details: Record<string, ProgressDetail> = {};
         
@@ -192,9 +197,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             checklist: pd.checklist?.map((item: any) => ({
               id: item.id,
               label: item.label,
-              completed: item.completed,
-              completedBy: item.completedBy,
-              completedAt: item.completedAt,
+              completedMembers: item.completedMembers || [],
               order: item.order,
             })) || [],
             completedMembers: pd.completedMembers || [],
@@ -245,7 +248,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     if (category === 'legal') {
       return {
         title: 'Legal & Dokumentasi',
-        percentage: project.progress.legal || 0,
+        percentage: project.progress?.legal || 0,
         description: 'Progress penandatanganan dokumen legal',
         checklist: [],
         completedMembers: [],
@@ -258,7 +261,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     if (category === 'funding') {
       return {
         title: 'Pendanaan Grup',
-        percentage: project.progress.funding || 0,
+        percentage: project.progress?.funding || 0,
         description: 'Progress pembayaran terverifikasi',
         checklist: [],
         completedMembers: [],
@@ -266,10 +269,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       };
     }
     
-    // Fallback to project progress details
-    return project.progressDetails[category as keyof typeof project.progressDetails] || {
+    // Fallback to project progress details with optional chaining
+    return project.progressDetails?.[category as keyof typeof project.progressDetails] || {
       title: category,
-      percentage: 0,
+      percentage: project.progress?.[category as keyof typeof project.progress] || 0,
       description: '',
       checklist: [],
       completedMembers: [],
@@ -343,52 +346,38 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   
   // Handler functions
   const handleCompleteChecklistItem = async (category: string, itemId: string) => {
+    // Validate inputs
+    if (!itemId || itemId.trim() === '') {
+      toast({
+        title: 'Error',
+        description: 'ID checklist item tidak valid',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     let progressDetailId = progressDetailIds[category];
     
     // Ensure progress detail exists
     if (!progressDetailId) {
       progressDetailId = await ensureProgressDetail(category);
       if (!progressDetailId) {
-        return;
-      }
-    }
-    
-    if (!currentUser?.id) {
       toast({
         title: 'Error',
-        description: 'User tidak ditemukan. Silakan login ulang.',
+          description: 'Progress detail tidak ditemukan',
         variant: 'destructive',
       });
       return;
     }
-    
-    try {
-      const response = await apiClient.post(
-        `/progress-details/${progressDetailId}/checklist/${itemId}/complete`,
-        { completedBy: currentUser.id }
-      );
-      
-      if (response.success) {
-        toast({
-          title: 'Berhasil',
-          description: 'Checklist item berhasil ditandai sebagai selesai',
-        });
-        refreshData();
-      } else {
-        toast({
-          title: 'Gagal',
-          description: response.error?.message || 'Gagal menandai checklist item',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error completing checklist item:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Terjadi kesalahan',
-        variant: 'destructive',
-      });
     }
+    
+    // Open dialog to select member
+    setChecklistCompleteDialog({
+      open: true,
+      category,
+      itemId,
+      progressDetailId,
+      });
   };
   
   const handleDeleteChecklistItem = async () => {
@@ -544,10 +533,20 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   // Document handlers
   const handleCreateDocument = async (data: any) => {
     try {
+      if (!currentUser?.id) {
+        toast({
+          title: 'Error',
+          description: 'User tidak ditemukan. Silakan login ulang.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const result = await createProjectDocument({
         ...data,
         projectId: id,
         uploadDate: data.uploadDate || new Date().toISOString(),
+        uploadedBy: currentUser.id, // Otomatis dari current user
       });
       if (result.success) {
         toast({
@@ -711,30 +710,30 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">KYC</span>
-                    <span className="font-medium">{project.progress.kyc}%</span>
+                    <span className="font-medium">{project.progress?.kyc || 0}%</span>
                   </div>
-                  <Progress value={project.progress.kyc} className="h-2" />
+                  <Progress value={project.progress?.kyc || 0} className="h-2" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Pendanaan</span>
-                    <span className="font-medium">{project.progress.funding}%</span>
+                    <span className="font-medium">{project.progress?.funding || 0}%</span>
                   </div>
-                  <Progress value={project.progress.funding} className="h-2" />
+                  <Progress value={project.progress?.funding || 0} className="h-2" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Legal</span>
-                    <span className="font-medium">{project.progress.legal}%</span>
+                    <span className="font-medium">{project.progress?.legal || 0}%</span>
                   </div>
-                  <Progress value={project.progress.legal} className="h-2" />
+                  <Progress value={project.progress?.legal || 0} className="h-2" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Penutupan</span>
-                    <span className="font-medium">{project.progress.closing}%</span>
+                    <span className="font-medium">{project.progress?.closing || 0}%</span>
                   </div>
-                  <Progress value={project.progress.closing} className="h-2" />
+                  <Progress value={project.progress?.closing || 0} className="h-2" />
                 </div>
               </div>
 
@@ -831,32 +830,36 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                         className="flex items-start gap-3 p-3 rounded-lg border bg-card group"
                                       >
                                         <div className="mt-0.5">
-                                          {item.completed ? (
+                                          {(item.completedMembers?.length || 0) > 0 ? (
                                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                                           ) : (
                                             <Clock className="h-5 w-5 text-muted-foreground" />
                                           )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <p className={`text-sm ${item.completed ? 'line-through text-muted-foreground' : ''}`}>
+                                          <p className={`text-sm ${(item.completedMembers?.length || 0) > 0 ? 'line-through text-muted-foreground' : ''}`}>
                                             {item.label}
                                           </p>
-                                          {item.completed && item.completedBy && (
-                                            <div className="flex items-center gap-2 mt-2">
+                                          {(item.completedMembers?.length || 0) > 0 && (
+                                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                              {(item.completedMembers || []).map((userId) => (
+                                                <div key={userId} className="flex items-center gap-1.5">
                                               <Avatar className="h-5 w-5">
-                                                <AvatarImage src={getMemberAvatar(item.completedBy)} />
+                                                    <AvatarImage src={getMemberAvatar(userId)} />
                                                 <AvatarFallback className="text-xs">
-                                                  {getMemberName(item.completedBy).charAt(0)}
+                                                      {getMemberName(userId).charAt(0)}
                                                 </AvatarFallback>
                                               </Avatar>
                                               <span className="text-xs text-muted-foreground">
-                                                {getMemberName(item.completedBy)} • {formatDate(item.completedAt)}
+                                                    {getMemberName(userId)}
                                               </span>
+                                                </div>
+                                              ))}
                                             </div>
                                           )}
                                         </div>
                                         <div className="flex items-center gap-1">
-                                          {!item.completed && (
+                                          {(item.completedMembers?.length || 0) === 0 || !(item.completedMembers || []).includes(currentUser?.id || '') ? (
                                             <Button
                                               variant="ghost"
                                               size="icon"
@@ -865,6 +868,34 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                               title="Tandai Selesai"
                                             >
                                               <Check className="h-4 w-4" />
+                                            </Button>
+                                          ) : (
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={async () => {
+                                                const progressDetailId = progressDetailIds[stage.key];
+                                                if (!progressDetailId || !currentUser?.id) return;
+                                                try {
+                                                  const response = await apiClient.post(
+                                                    `/progress-details/${progressDetailId}/checklist/${item.id}/uncomplete`,
+                                                    { userId: currentUser.id }
+                                                  );
+                                                  if (response.success) {
+                                                    toast({
+                                                      title: 'Berhasil',
+                                                      description: 'Checklist item berhasil dibatalkan',
+                                                    });
+                                                    refreshData();
+                                                  }
+                                                } catch (error) {
+                                                  console.error('Error uncompleting checklist item:', error);
+                                                }
+                                              }}
+                                              title="Batalkan"
+                                            >
+                                              <X className="h-4 w-4" />
                                             </Button>
                                           )}
                                           <Button
@@ -895,60 +926,6 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                                 ) : (
                                   <p className="text-sm text-muted-foreground text-center py-4">
                                     Belum ada checklist item
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Completed Members */}
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                                    Anggota yang Sudah Menyelesaikan
-                                  </h3>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={async () => {
-                                      await ensureProgressDetail(stage.key);
-                                      setCompletedMemberDialog({ open: true, category: stage.key });
-                                    }}
-                                  >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Tandai Selesai
-                                  </Button>
-                                </div>
-                                {detail.completedMembers && detail.completedMembers.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {detail.completedMembers.map((userId) => {
-                                      const member = project.members.find(m => m.id === userId);
-                                      if (!member) return null;
-                                      return (
-                                        <div
-                                          key={userId}
-                                          className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card group"
-                                        >
-                                          <Avatar className="h-6 w-6">
-                                            <AvatarImage src={member.avatarUrl} alt={member.name} />
-                                            <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                          </Avatar>
-                                          <span className="text-sm font-medium">{member.name}</span>
-                                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 text-destructive hover:text-destructive"
-                                            onClick={() => handleRemoveCompletedMember(stage.key, userId)}
-                                            title="Hapus"
-                                          >
-                                            <X className="h-3 w-3" />
-                                          </Button>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  <p className="text-sm text-muted-foreground text-center py-4">
-                                    Belum ada anggota yang menyelesaikan
                                   </p>
                                 )}
                               </div>
@@ -1385,6 +1362,32 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               completedMemberIds={detail.completedMembers || []}
               onSuccess={refreshData}
             />
+
+            {/* Checklist Complete Member Dialog */}
+            {checklistCompleteDialog.open && checklistCompleteDialog.category === stage.key && (
+              <ChecklistCompleteMemberDialog
+                open={checklistCompleteDialog.open}
+                onOpenChange={(open) => setChecklistCompleteDialog({ 
+                  open, 
+                  category: '', 
+                  itemId: '', 
+                  progressDetailId: '' 
+                })}
+                members={project.members.map(m => ({
+                  id: m.id,
+                  userId: m.id, // User.id is the userId
+                  name: m.name,
+                  avatarUrl: m.avatarUrl,
+                  email: m.email,
+                }))}
+                itemId={checklistCompleteDialog.itemId}
+                progressDetailId={checklistCompleteDialog.progressDetailId}
+                completedMembers={
+                  detail.checklist?.find(item => item.id === checklistCompleteDialog.itemId)?.completedMembers || []
+                }
+                onSuccess={refreshData}
+              />
+            )}
           </div>
         );
       })}

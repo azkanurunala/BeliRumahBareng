@@ -54,9 +54,8 @@ export type UnitAssignment = {
 export type ProgressChecklistItem = {
   id: string;
   label: string;
-  completed: boolean;
-  completedBy?: string; // userId
-  completedAt?: string; // ISO date string
+  completedMembers: string[]; // Array of userIds who completed this item
+  order?: number;
 };
 
 export type ProgressDetail = {

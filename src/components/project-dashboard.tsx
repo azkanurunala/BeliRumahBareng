@@ -202,31 +202,29 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
     if (progressType === 'legal' || progressType === 'funding') {
       setIsLoadingProgressDetail(true);
       try {
-        // First, get progress detail ID by fetching from API with projectId and category
-        const listResponse = await apiClient.get<Array<{ id: string; category: string }>>('/progress-details', {
+        // Fetch all progress details for this project (without category filter)
+        // This ensures we get virtual data for legal/funding if they don't exist in DB
+        const listResponse = await apiClient.get<Array<ProgressDetail & { id: string; projectId: string; category: string }>>('/progress-details', {
           params: { 
             projectId: project.id, 
-            category: progressType,
-            limit: '1'
+            // Don't use category filter - we need virtual data generation
           },
         });
         
-        if (listResponse.success && listResponse.data && listResponse.data.length > 0) {
-          const progressDetailId = listResponse.data[0].id;
+        if (listResponse.success && listResponse.data) {
+          // Find the progress detail for the selected category
+          const progressDetailData = listResponse.data.find(pd => pd.category === progressType);
           
-          // Fetch full progress detail data from API
-          const detailResponse = await apiClient.get<ProgressDetail & { id: string; projectId: string; category: string }>(`/progress-details/${progressDetailId}`);
-          
-          if (detailResponse.success && detailResponse.data) {
+          if (progressDetailData) {
             // Map API response to ProgressDetail type (exclude id, projectId, category)
             const progressDetail: ProgressDetail = {
-              title: detailResponse.data.title,
-              percentage: detailResponse.data.percentage,
-              description: detailResponse.data.description,
-              checklist: detailResponse.data.checklist,
-              completedMembers: detailResponse.data.completedMembers,
-              milestones: detailResponse.data.milestones,
-              notes: detailResponse.data.notes,
+              title: progressDetailData.title,
+              percentage: progressDetailData.percentage,
+              description: progressDetailData.description,
+              checklist: progressDetailData.checklist || [],
+              completedMembers: progressDetailData.completedMembers || [],
+              milestones: progressDetailData.milestones || [],
+              notes: progressDetailData.notes,
             };
             
             // Store the full data
@@ -235,12 +233,13 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
               [progressType]: progressDetail,
             }));
           } else {
-            // Fallback to project data if API fails
-            console.warn('Failed to fetch progress detail, using project data');
+            // If not found, try to fetch by ID if we have one
+            // For virtual IDs, we can't fetch by ID, so use fallback
+            console.warn('Progress detail not found in list, using fallback');
           }
         } else {
-          // If progress detail doesn't exist, use project data as fallback
-          console.warn('Progress detail not found, using project data');
+          // Fallback to project data if API fails
+          console.warn('Failed to fetch progress details, using project data');
         }
       } catch (error) {
         console.error('Error fetching progress detail:', error);
@@ -258,6 +257,40 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
 
   const handleDocumentClick = (documentId: string) => {
     setSelectedDocument(documentId);
+  };
+
+  // Helper function to get progress detail with proper fallback
+  const getProgressDetailWithFallback = (progressType: 'kyc' | 'funding' | 'legal' | 'closing'): ProgressDetail | null => {
+    // First, use fetched data if available (for legal/funding that are fetched from API)
+    if (progressDetailData[progressType]) {
+      return progressDetailData[progressType];
+    }
+
+    // For legal and funding, create fallback with percentage from project.progress
+    if (progressType === 'legal') {
+      return {
+        title: 'Legal & Dokumentasi',
+        percentage: project.progress.legal || 0,
+        description: 'Progress penandatanganan dokumen legal',
+        checklist: [],
+        completedMembers: [],
+        milestones: [],
+      };
+    }
+
+    if (progressType === 'funding') {
+      return {
+        title: 'Pendanaan Grup',
+        percentage: project.progress.funding || 0,
+        description: 'Progress pembayaran terverifikasi',
+        checklist: [],
+        completedMembers: [],
+        milestones: [],
+      };
+    }
+
+    // For other categories, use project progressDetails
+    return project.progressDetails[progressType] || null;
   };
 
   return (
@@ -1143,8 +1176,17 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
       )}
 
       {/* Progress Detail Dialogs */}
-      {selectedProgress && project.progressDetails[selectedProgress] && (
+      {selectedProgress && (() => {
+        const progressDetail = getProgressDetailWithFallback(selectedProgress);
+        if (!progressDetail) return null;
+        
+        // Create a key that includes both selectedProgress and whether data is loaded
+        // This ensures dialog re-renders when data is fetched
+        const dialogKey = `${selectedProgress}-${progressDetailData[selectedProgress] ? 'loaded' : 'fallback'}`;
+        
+        return (
         <ProgressDetailDialog
+            key={dialogKey}
           open={selectedProgress !== null}
           onOpenChange={(open) => {
             if (!open) {
@@ -1157,15 +1199,12 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
               });
             }
           }}
-          progressDetail={
-            // Use fetched data if available (for legal/funding), otherwise use project data
-            progressDetailData[selectedProgress] ||
-            project.progressDetails[selectedProgress]
-          }
+            progressDetail={progressDetail}
           members={project.members}
           isLoading={isLoadingProgressDetail}
         />
-      )}
+        );
+      })()}
 
       {/* Document Detail Dialogs */}
       {selectedDocument && (

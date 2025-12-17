@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
               phoneNumber: true,
               avatarUrl: true,
               avatarHint: true,
+              locationPreference: true,
             },
           },
         },
@@ -68,6 +69,17 @@ export async function GET(request: NextRequest) {
       notes: interest.notes,
       reviewedAt: interest.reviewedAt?.toISOString(),
       createdAt: interest.createdAt.toISOString(),
+      user: interest.user ? {
+        id: interest.user.id,
+        name: interest.user.name,
+        email: interest.user.email,
+        phoneNumber: interest.user.phoneNumber,
+        avatarUrl: interest.user.avatarUrl,
+        avatarHint: interest.user.avatarHint,
+        profile: {
+          locationPreference: interest.user.locationPreference || 'Tidak disebutkan',
+        },
+      } : undefined,
     }));
 
     return NextResponse.json({

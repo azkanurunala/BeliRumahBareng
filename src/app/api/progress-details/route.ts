@@ -5,6 +5,7 @@ import { ValidationError, NotFoundError, ConflictError } from '@/lib/errors';
 import { z } from 'zod';
 import { generateLegalProgressData } from '@/lib/legal-progress-helpers';
 import { generateFundingProgressData } from '@/lib/funding-progress-helpers';
+import { generateDefaultChecklistItems } from '@/lib/progress-calculator';
 
 // GET /api/progress-details - Get all progress details dengan pagination dan filtering
 export async function GET(request: NextRequest) {
@@ -39,12 +40,7 @@ export async function GET(request: NextRequest) {
           checklist: {
             orderBy: { order: 'asc' },
             include: {
-              completer: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
+              completions: true,
             },
           },
           completedMembers: {
@@ -118,9 +114,7 @@ export async function GET(request: NextRequest) {
           checklist: pd.checklist.map((item) => ({
             id: item.id,
             label: item.label,
-            completed: item.completed,
-            completedBy: item.completedBy,
-            completedAt: item.completedAt?.toISOString(),
+            completedMembers: item.completions.map(c => c.userId),
             order: item.order,
           })),
           completedMembers: pd.completedMembers.map((cm) => cm.userId),
@@ -149,39 +143,67 @@ export async function GET(request: NextRequest) {
       });
 
       if (!hasLegal) {
+        // Generate will create progress detail if it doesn't exist
         const legalData = await generateLegalProgressData(projectId);
-        transformedProgressDetails.push({
-          id: `virtual-legal-${projectId}`, // Virtual ID since it doesn't exist in DB
-          projectId: projectId,
-          category: 'legal',
-          title: 'Legal & Dokumentasi',
-          percentage: legalData.percentage,
-          description: 'Progress penandatanganan dokumen legal',
-          notes: null,
-          checklist: legalData.checklist,
-          completedMembers: legalData.completedMembers,
-          milestones: legalData.milestones,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+        
+        // Get the created progress detail
+        const legalProgressDetail = await db.progressDetail.findUnique({
+          where: {
+            projectId_category: {
+              projectId,
+              category: 'legal',
+            },
+          },
         });
+
+        if (legalProgressDetail) {
+          transformedProgressDetails.push({
+            id: legalProgressDetail.id,
+            projectId: projectId,
+            category: 'legal',
+            title: legalProgressDetail.title,
+            percentage: legalData.percentage,
+            description: legalProgressDetail.description || 'Progress penandatanganan dokumen legal',
+            notes: legalProgressDetail.notes,
+            checklist: legalData.checklist,
+            completedMembers: legalData.completedMembers,
+            milestones: legalData.milestones,
+            createdAt: legalProgressDetail.createdAt.toISOString(),
+            updatedAt: legalProgressDetail.updatedAt.toISOString(),
+          });
+        }
       }
 
       if (!hasFunding) {
+        // Generate will create progress detail if it doesn't exist
         const fundingData = await generateFundingProgressData(projectId);
-        transformedProgressDetails.push({
-          id: `virtual-funding-${projectId}`, // Virtual ID since it doesn't exist in DB
-          projectId: projectId,
-          category: 'funding',
-          title: 'Pendanaan Grup',
-          percentage: fundingData.percentage,
-          description: 'Progress pembayaran terverifikasi',
-          notes: null,
-          checklist: fundingData.checklist,
-          completedMembers: fundingData.completedMembers,
-          milestones: fundingData.milestones,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+        
+        // Get the created progress detail
+        const fundingProgressDetail = await db.progressDetail.findUnique({
+          where: {
+            projectId_category: {
+              projectId,
+              category: 'funding',
+            },
+          },
         });
+
+        if (fundingProgressDetail) {
+          transformedProgressDetails.push({
+            id: fundingProgressDetail.id,
+            projectId: projectId,
+            category: 'funding',
+            title: fundingProgressDetail.title,
+            percentage: fundingData.percentage,
+            description: fundingProgressDetail.description || 'Progress pembayaran terverifikasi',
+            notes: fundingProgressDetail.notes,
+            checklist: fundingData.checklist,
+            completedMembers: fundingData.completedMembers,
+            milestones: fundingData.milestones,
+            createdAt: fundingProgressDetail.createdAt.toISOString(),
+            updatedAt: fundingProgressDetail.updatedAt.toISOString(),
+          });
+        }
       }
     }
 
@@ -251,6 +273,14 @@ export async function POST(request: NextRequest) {
         description: validatedData.description || null,
         notes: validatedData.notes || null,
       },
+    });
+
+    // Auto-generate default checklist items for KYC and Closing
+    await generateDefaultChecklistItems(progressDetail.id, progressDetail.category);
+
+    // Re-fetch progress detail with checklist items
+    const progressDetailWithChecklist = await db.progressDetail.findUnique({
+      where: { id: progressDetail.id },
       include: {
         project: {
           select: {
@@ -258,9 +288,13 @@ export async function POST(request: NextRequest) {
             propertyName: true,
           },
         },
-        checklist: true,
+        checklist: {
+          orderBy: { order: 'asc' },
+        },
         completedMembers: true,
-        milestones: true,
+        milestones: {
+          orderBy: { order: 'asc' },
+        },
       },
     });
 
@@ -273,9 +307,20 @@ export async function POST(request: NextRequest) {
       percentage: progressDetail.percentage,
       description: progressDetail.description,
       notes: progressDetail.notes,
-      checklist: [],
-      completedMembers: [],
-      milestones: [],
+      checklist: progressDetailWithChecklist?.checklist.map((item) => ({
+        id: item.id,
+        label: item.label,
+        completedMembers: item.completions.map(c => c.userId),
+        order: item.order,
+      })) || [],
+      completedMembers: progressDetailWithChecklist?.completedMembers.map((cm) => cm.userId) || [],
+      milestones: progressDetailWithChecklist?.milestones.map((m) => ({
+        id: m.id,
+        label: m.label,
+        date: m.date?.toISOString(),
+        status: m.status,
+        order: m.order,
+      })) || [],
       createdAt: progressDetail.createdAt.toISOString(),
       updatedAt: progressDetail.updatedAt.toISOString(),
     };

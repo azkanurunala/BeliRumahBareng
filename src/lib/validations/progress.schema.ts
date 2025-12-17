@@ -36,8 +36,8 @@ export const updateProgressChecklistItemSchema = z.object({
 
 // Progress Checklist Item Complete Schema
 export const completeProgressChecklistItemSchema = z.object({
-  id: z.string().cuid('ID checklist item tidak valid'),
-  completedBy: z.string().cuid('ID user tidak valid'),
+  id: z.string().min(1, 'ID checklist item wajib diisi'),
+  completedBy: z.string().min(1, 'ID user wajib diisi'),
 });
 
 // Progress Milestone Create Schema

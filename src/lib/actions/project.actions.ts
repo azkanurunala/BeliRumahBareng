@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { createProjectSchema, updateProjectSchema, projectMemberSchema, unitAssignmentSchema } from '@/lib/validations';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { generateDefaultChecklistItems } from '@/lib/progress-calculator';
 
 /**
  * Server Actions untuk Project Operations
@@ -86,7 +87,7 @@ export async function createProject(data: z.infer<typeof createProjectSchema>) {
       });
 
       if (!existing) {
-        await db.progressDetail.create({
+        const newProgressDetail = await db.progressDetail.create({
           data: {
             projectId: project.id,
             category: category.category,
@@ -95,6 +96,9 @@ export async function createProject(data: z.infer<typeof createProjectSchema>) {
             description: category.description,
           },
         });
+
+        // Auto-generate default checklist items for KYC and Closing
+        await generateDefaultChecklistItems(newProgressDetail.id, category.category);
       }
     }
 
@@ -378,7 +382,7 @@ export async function initializeProjectProgressDetails(projectId: string) {
       });
 
       if (!existing) {
-        await db.progressDetail.create({
+        const newProgressDetail = await db.progressDetail.create({
           data: {
             projectId,
             category: category.category,
@@ -387,6 +391,10 @@ export async function initializeProjectProgressDetails(projectId: string) {
             description: category.description,
           },
         });
+
+        // Auto-generate default checklist items for KYC and Closing
+        await generateDefaultChecklistItems(newProgressDetail.id, category.category);
+        
         created.push(category.category);
       }
     }

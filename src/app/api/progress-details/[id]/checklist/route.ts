@@ -26,13 +26,7 @@ export async function GET(
       where: { progressDetailId: id },
       orderBy: { order: 'asc' },
       include: {
-        completer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        completions: true,
       },
     });
 
@@ -41,9 +35,7 @@ export async function GET(
       id: item.id,
       progressDetailId: item.progressDetailId,
       label: item.label,
-      completed: item.completed,
-      completedBy: item.completedBy,
-      completedAt: item.completedAt?.toISOString(),
+      completedMembers: item.completions.map(c => c.userId),
       order: item.order,
     }));
 
@@ -108,6 +100,9 @@ export async function POST(
         label: validatedData.label,
         order: validatedData.order,
       },
+      include: {
+        completions: true,
+      },
     });
 
     // Transform response
@@ -115,9 +110,7 @@ export async function POST(
       id: checklistItem.id,
       progressDetailId: checklistItem.progressDetailId,
       label: checklistItem.label,
-      completed: checklistItem.completed,
-      completedBy: checklistItem.completedBy,
-      completedAt: checklistItem.completedAt?.toISOString(),
+      completedMembers: checklistItem.completions.map(c => c.userId),
       order: checklistItem.order,
     };
 

@@ -88,55 +88,31 @@ export default function ProgressDetailDialog({
                     key={item.id}
                     className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                   >
-                    <Checkbox checked={item.completed} disabled className="mt-0.5" />
+                    <Checkbox checked={item.completedMembers.length > 0} disabled className="mt-0.5" />
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${item.completed ? 'line-through text-muted-foreground' : ''}`}>
+                      <p className={`text-sm ${item.completedMembers.length > 0 ? 'line-through text-muted-foreground' : ''}`}>
                         {item.label}
                       </p>
-                      {item.completed && item.completedBy && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={getMemberAvatar(item.completedBy)} />
-                            <AvatarFallback className="text-xs">
-                              {getMemberName(item.completedBy).charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">
-                            {getMemberName(item.completedBy)} • {formatDate(item.completedAt)}
-                          </span>
+                      {item.completedMembers.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          {item.completedMembers.map((userId) => (
+                            <div key={userId} className="flex items-center gap-1.5">
+                              <Avatar className="h-5 w-5">
+                                <AvatarImage src={getMemberAvatar(userId)} />
+                                <AvatarFallback className="text-xs">
+                                  {getMemberName(userId).charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs text-muted-foreground">
+                                {getMemberName(userId)}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {/* Completed Members */}
-          {progressDetail.completedMembers.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                Anggota yang Sudah Menyelesaikan
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {progressDetail.completedMembers.map((userId) => {
-                  const member = members.find(m => m.id === userId);
-                  if (!member) return null;
-                  return (
-                    <div
-                      key={userId}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card"
-                    >
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={member.avatarUrl} alt={member.name} />
-                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">{member.name}</span>
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}

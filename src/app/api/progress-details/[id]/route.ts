@@ -26,12 +26,7 @@ export async function GET(
         checklist: {
           orderBy: { order: 'asc' },
           include: {
-            completer: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+            completions: true,
           },
         },
         completedMembers: {
@@ -79,9 +74,7 @@ export async function GET(
       checklist = progressDetail.checklist.map((item) => ({
         id: item.id,
         label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
+        completedMembers: item.completions.map(c => c.userId),
         order: item.order,
       }));
       completedMembers = progressDetail.completedMembers.map((cm) => cm.userId);
@@ -185,6 +178,9 @@ export async function PUT(
         },
         checklist: {
           orderBy: { order: 'asc' },
+          include: {
+            completions: true,
+          },
         },
         completedMembers: true,
         milestones: {
@@ -239,9 +235,7 @@ export async function PUT(
       checklist: progressDetail.checklist.map((item) => ({
         id: item.id,
         label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
+        completedMembers: item.completions.map(c => c.userId),
         order: item.order,
       })),
       completedMembers: progressDetail.completedMembers.map((cm) => cm.userId),

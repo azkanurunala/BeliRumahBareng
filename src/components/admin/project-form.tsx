@@ -32,9 +32,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 const progressChecklistItemSchema = z.object({
   id: z.string(),
   label: z.string().min(1, 'Label wajib diisi'),
-  completed: z.boolean(),
-  completedBy: z.string().optional(),
-  completedAt: z.string().optional(),
+  completedMembers: z.array(z.string()),
+  order: z.number().optional(),
 });
 
 const milestoneSchema = z.object({

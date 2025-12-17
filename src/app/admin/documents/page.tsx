@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DocumentForm } from '@/components/admin/document-form';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
+import { useAuth } from '@/contexts/auth-context';
 
 type DocumentWithProject = ProjectDocument & {
   projectId: string;
@@ -24,6 +25,7 @@ type DocumentWithProject = ProjectDocument & {
 export default function AllDocumentsPage() {
   const { projects, loadProjects } = useAdminData();
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DocumentWithProject | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -132,13 +134,22 @@ export default function AllDocumentsPage() {
           return;
         }
 
+        if (!currentUser?.id) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'User tidak ditemukan. Silakan login ulang.',
+          });
+          return;
+        }
+
         const createData: any = {
           projectId: data.projectId,
           name: data.name,
           status: data.status,
           url: data.url || undefined,
           description: data.description || undefined,
-          uploadedBy: data.uploadedBy || undefined,
+          uploadedBy: currentUser.id, // Otomatis dari current user
           uploadDate: new Date().toISOString(),
         };
 

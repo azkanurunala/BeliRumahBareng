@@ -37,8 +37,9 @@ import { useAuth } from '@/contexts/auth-context';
 import { useUserData } from '@/contexts/user-data-context';
 import { useAdminData } from '@/contexts/admin-data-context';
 import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
-import { Heart } from 'lucide-react';
+import { Heart, Loader2 } from 'lucide-react';
 import { normalizeUnitMeasure } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
 
 export default function PropertyDetailClient({ property }: { property: Property }) {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
@@ -184,8 +185,59 @@ export default function PropertyDetailClient({ property }: { property: Property 
     minimumFractionDigits: 0,
   }).format(price);
   
-  // Get interested users from property interests (first 3 users who showed interest)
-  const interestedUsers = users.slice(0, 3).filter(u => u.id !== user?.id);
+  // State for interested users
+  const [interestedUsers, setInterestedUsers] = useState<any[]>([]);
+  const [isLoadingInterestedUsers, setIsLoadingInterestedUsers] = useState(true);
+
+  // Fetch interested users from property interests
+  useEffect(() => {
+    const fetchInterestedUsers = async () => {
+      try {
+        setIsLoadingInterestedUsers(true);
+        const response = await apiClient.get('/property-interests', {
+          params: {
+            propertyId: property.id,
+            status: 'approved',
+            limit: 10, // Get more to have options after filtering
+          },
+        });
+
+        if (response.success && response.data) {
+          // Extract unique users from interests
+          const userMap = new Map();
+          response.data.forEach((interest: any) => {
+            if (interest.user && !userMap.has(interest.userId)) {
+              userMap.set(interest.userId, {
+                id: interest.userId,
+                name: interest.user.name,
+                avatarUrl: interest.user.avatarUrl,
+                avatarHint: interest.user.avatarHint,
+                profile: {
+                  locationPreference: interest.user.profile?.locationPreference || 'Tidak disebutkan',
+                },
+              });
+            }
+          });
+
+          // Filter out current user and limit to 3
+          const users = Array.from(userMap.values())
+            .filter((u: any) => u.id !== user?.id)
+            .slice(0, 3);
+
+          setInterestedUsers(users);
+        } else {
+          setInterestedUsers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching interested users:', error);
+        setInterestedUsers([]);
+      } finally {
+        setIsLoadingInterestedUsers(false);
+      }
+    };
+
+    fetchInterestedUsers();
+  }, [property.id, user?.id]);
 
   const getBadgeText = () => {
     if (isFlexible) return 'Patungan Fleksibel';
@@ -232,7 +284,8 @@ export default function PropertyDetailClient({ property }: { property: Property 
       return;
     }
 
-    if (!isFlexible && !selectedUnit) {
+    // Validasi: jika property memiliki totalUnits (bukan flexible), maka selectedUnit wajib dipilih
+    if (!isFlexible && property.totalUnits && property.totalUnits > 0 && !selectedUnit) {
       toast({
         variant: "destructive",
         title: "Pilihan Dibutuhkan",
@@ -579,7 +632,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       {getButtonText()}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[480px] max-h-[70vh] flex flex-col">
+                  <DialogContent className="w-[90vw] h-[90vh] max-w-none flex flex-col">
                     <DialogHeader className="flex-shrink-0">
                       <DialogTitle>Gabung Proyek: {property.name}</DialogTitle>
                       <DialogDescription>
@@ -590,31 +643,34 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4 overflow-y-auto flex-1 min-h-0">
-                      {!isFlexible && (
-                          <RadioGroup onValueChange={setSelectedUnit} className="max-h-60 overflow-y-auto pr-4">
-                          <Table>
-                              <TableHeader>
-                              <TableRow>
-                                  <TableHead className="w-10"></TableHead>
-                                  <TableHead>{property.unitName}</TableHead>
-                                  { !isCoBuilding && <TableHead>Luas</TableHead> }
-                                  <TableHead className="text-right">Estimasi Harga</TableHead>
-                              </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                              {unitPrices.map((price, index) => (
-                                  <TableRow key={index} className="cursor-pointer" onClick={() => setSelectedUnit((index + 1).toString())}>
-                                  <TableCell>
-                                      <RadioGroupItem value={(index + 1).toString()} id={`unit-${index + 1}`} />
-                                  </TableCell>
-                                  <TableCell className="font-medium">{`${property.unitName} ${index + 1}`}</TableCell>
-                                  { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)} {normalizeUnitMeasure(property.unitMeasure)}</TableCell>}
-                                  <TableCell className="text-right">{formatPrice(price)}</TableCell>
-                                  </TableRow>
-                              ))}
-                              </TableBody>
-                          </Table>
-                          </RadioGroup>
+                      {!isFlexible && property.totalUnits && property.totalUnits > 0 && (
+                          <div className="space-y-3">
+                            <Label className="text-base font-semibold">Pilih {property.unitName} yang Anda minati</Label>
+                            <RadioGroup onValueChange={setSelectedUnit} value={selectedUnit || undefined} className="max-h-60 overflow-y-auto pr-4">
+                            <Table>
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-10"></TableHead>
+                                    <TableHead>{property.unitName}</TableHead>
+                                    { !isCoBuilding && <TableHead>Luas</TableHead> }
+                                    <TableHead className="text-right">Estimasi Harga</TableHead>
+                                </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {unitPrices.map((price, index) => (
+                                    <TableRow key={index} className="cursor-pointer" onClick={() => setSelectedUnit((index + 1).toString())}>
+                                    <TableCell>
+                                        <RadioGroupItem value={(index + 1).toString()} id={`unit-${index + 1}`} />
+                                    </TableCell>
+                                    <TableCell className="font-medium">{`${property.unitName} ${index + 1}`}</TableCell>
+                                    { !isCoBuilding && <TableCell className='text-muted-foreground'>~{getUnitSize(index)} {normalizeUnitMeasure(property.unitMeasure)}</TableCell>}
+                                    <TableCell className="text-right">{formatPrice(price)}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                            </RadioGroup>
+                          </div>
                       )}
                       
                       <div className='mt-4 space-y-4 rounded-lg border p-4'>
@@ -710,7 +766,11 @@ export default function PropertyDetailClient({ property }: { property: Property 
                  <CardDescription>Pengguna lain yang tertarik dengan properti ini.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {interestedUsers.length > 0 ? (
+                {isLoadingInterestedUsers ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : interestedUsers.length > 0 ? (
                   interestedUsers.map(user => (
                     <Link href={`/profile/${user.id}`} key={user.id} className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-muted/50">
                       <Avatar>
@@ -719,7 +779,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       </Avatar>
                       <div>
                         <p className="font-semibold">{user.name}</p>
-                        <p className="text-xs text-muted-foreground">Ingin tinggal di {user.profile.locationPreference}</p>
+                        <p className="text-xs text-muted-foreground">Ingin tinggal di {user.profile?.locationPreference || 'Tidak disebutkan'}</p>
                       </div>
                     </Link>
                   ))

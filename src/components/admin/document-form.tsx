@@ -36,10 +36,9 @@ const createDocumentSchema = z.object({
   }),
   url: z.string().min(1, 'Dokumen wajib diupload').optional().or(z.literal('')),
   description: z.string().optional(),
-  uploadedBy: z.string().optional(),
-  signedBy: z.array(z.string()).optional(),
   verifiedAt: z.string().optional(),
   projectId: z.string().min(1, 'Project wajib dipilih'), // Required when creating
+  // uploadedBy dan signedBy dihapus - akan diisi otomatis
 });
 
 const editDocumentSchema = z.object({
@@ -49,10 +48,9 @@ const editDocumentSchema = z.object({
   }),
   url: z.string().min(1, 'Dokumen wajib diupload').optional().or(z.literal('')),
   description: z.string().optional(),
-  uploadedBy: z.string().optional(),
-  signedBy: z.array(z.string()).optional(),
   verifiedAt: z.string().optional(),
   projectId: z.string().optional(), // Not needed when editing
+  // uploadedBy dan signedBy dihapus - akan diisi otomatis
 });
 
 type CreateDocumentFormValues = z.infer<typeof createDocumentSchema>;
@@ -90,8 +88,6 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
           status: document.status,
           url: document.url || '',
           description: document.description || '',
-          uploadedBy: document.uploadedBy || '',
-          signedBy: document.signedBy || [],
           verifiedAt: document.verifiedAt || '',
           projectId: undefined, // Not needed when editing existing doc
         }
@@ -100,8 +96,6 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
           status: 'Menunggu',
           url: '',
           description: '',
-          uploadedBy: '',
-          signedBy: [],
           verifiedAt: '',
           projectId: selectedProjectId || '',
         },
@@ -115,7 +109,6 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
   }, [uploadedDocument, form]);
 
   const watchStatus = form.watch('status');
-  const watchSignedBy = form.watch('signedBy') || [];
   const watchProjectId = form.watch('projectId');
   
   // Get members from selected project if projects are provided
@@ -336,72 +329,6 @@ export function DocumentForm({ document, projectMembers, projects, selectedProje
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="uploadedBy"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Diupload Oleh (Opsional)</FormLabel>
-              <Select 
-                onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} 
-                value={field.value || "none"}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih user" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">Tidak ada</SelectItem>
-                  {availableMembers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-2">
-          <FormLabel>Ditandatangani Oleh (Opsional)</FormLabel>
-          <div className="space-y-2">
-            {availableMembers.map((user) => (
-              <FormField
-                key={user.id}
-                control={form.control}
-                name="signedBy"
-                render={({ field }) => {
-                  return (
-                    <FormItem
-                      className="flex flex-row items-start space-x-3 space-y-0"
-                    >
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value?.includes(user.id)}
-                          onCheckedChange={(checked) => {
-                            return checked
-                              ? field.onChange([...watchSignedBy, user.id])
-                              : field.onChange(
-                                  watchSignedBy.filter(
-                                    (value) => value !== user.id
-                                  )
-                                )
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        {user.name}
-                      </FormLabel>
-                    </FormItem>
-                  )
-                }}
-              />
-            ))}
-          </div>
-        </div>
 
         {watchStatus === 'Terverifikasi' && (
           <FormField

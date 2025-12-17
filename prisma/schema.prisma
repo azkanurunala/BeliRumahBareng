@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,134 +7,124 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  name              String
-  email             String   @unique
-  phoneNumber        String
-  avatarUrl          String
-  avatarHint         String
-  passwordHash       String?
-  oauthProvider      String?
-  oauthId            String?
-  role               Int      @default(1) // 1 = user biasa, 2 = admin
-  locationPreference String
-  priceRange         String
-  investmentGoals    String
-  financialCapacity  String
-  timeHorizon        String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  // Relations
-  projectsAsMember      ProjectMember[]
-  interests             PropertyInterest[]
-  submissions           PropertySubmission[]
-  submissionReviews     PropertySubmission[] @relation("SubmissionReviewer")
-  watchlists            Watchlist[]
-  payments              Payment[]
-  paymentPlans          PaymentPlan[]
-  uploadedDocs          ProjectDocument[] @relation("DocumentUploader")
-  verifiedPayments      Payment[] @relation("PaymentVerifier")
-  notifications         Notification[]
-  unitAssignments       UnitAssignment[] @relation("UnitOwner")
-  checklistCompletions  ProgressChecklistItem[] @relation("ChecklistCompleter")
-  progressCompletions   ProgressCompletedMember[] @relation("ProgressCompleter")
-  documentSignatures    DocumentSignature[] @relation("DocumentSigner")
-  messages              ProjectMessage[] @relation("MessageSender")
-  purchaseTransactions  PurchaseTransaction[]
-  interviewRecords     InterviewRecord[] @relation("Interviewer")
-  activityLogs         ActivityLog[] @relation("ActivityActor")
+  id                       String                    @id @default(cuid())
+  name                     String
+  email                    String                    @unique
+  phoneNumber              String
+  avatarUrl                String
+  avatarHint               String
+  passwordHash             String?
+  oauthProvider            String?
+  oauthId                  String?
+  locationPreference       String
+  priceRange               String
+  investmentGoals          String
+  financialCapacity        String
+  timeHorizon              String
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  role                     Int                       @default(1)
+  activityLogs             ActivityLog[]             @relation("ActivityActor")
+  checklistItemCompletions ChecklistItemCompletion[] @relation("ChecklistItemCompleter")
+  documentSignatures       DocumentSignature[]       @relation("DocumentSigner")
+  interviewRecords         InterviewRecord[]         @relation("Interviewer")
+  notifications            Notification[]
+  payments                 Payment[]
+  verifiedPayments         Payment[]                 @relation("PaymentVerifier")
+  paymentPlans             PaymentPlan[]
+  progressCompletions      ProgressCompletedMember[] @relation("ProgressCompleter")
+  uploadedDocs             ProjectDocument[]         @relation("DocumentUploader")
+  projectsAsMember         ProjectMember[]
+  messages                 ProjectMessage[]          @relation("MessageSender")
+  interests                PropertyInterest[]
+  submissionReviews        PropertySubmission[]      @relation("SubmissionReviewer")
+  submissions              PropertySubmission[]
+  purchaseTransactions     PurchaseTransaction[]
+  unitAssignments          UnitAssignment[]          @relation("UnitOwner")
+  watchlists               Watchlist[]
 }
 
 model Property {
-  id                  String   @id @default(cuid())
-  name                String
-  description         String   @db.Text
-  price               Decimal  @db.Decimal(15, 2)
-  totalArea           Decimal?  @db.Decimal(10, 2)
-  location            String
-  type                String
-  totalUnits          Int?
-  unitName            String
-  unitSize            Decimal? @db.Decimal(10, 2)
-  unitMeasure         String?
-  sitePlanUrl         String?
-  sitePlanHint        String?
-  developmentPlan     String?  @db.Text
-  environmentalAnalysis String? @db.Text
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  // Relations
-  images      PropertyImage[]
-  projects    Project[]
-  interests   PropertyInterest[]
-  watchlists  Watchlist[]
+  id                    String             @id @default(cuid())
+  name                  String
+  description           String
+  price                 Decimal            @db.Decimal(15, 2)
+  totalArea             Decimal?           @db.Decimal(10, 2)
+  location              String
+  type                  String
+  totalUnits            Int?
+  unitName              String
+  unitSize              Decimal?           @db.Decimal(10, 2)
+  unitMeasure           String?
+  sitePlanUrl           String?
+  sitePlanHint          String?
+  developmentPlan       String?
+  environmentalAnalysis String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  projects              Project[]
+  images                PropertyImage[]
+  interests             PropertyInterest[]
+  watchlists            Watchlist[]
 }
 
 model PropertyImage {
-  id          String   @id @default(cuid())
-  propertyId  String
-  url         String
-  hint        String
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-
-  // Relations
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  hint       String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
 }
 
 model Project {
-  id              String   @id @default(cuid())
-  propertyId      String
-  propertyName    String
-  propertyImageUrl String
-  propertyImageHint String
-  status          String?
-  kycProgress     Int      @default(0)
-  fundingProgress Int      @default(0)
-  legalProgress   Int      @default(0)
-  closingProgress Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  property        Property @relation(fields: [propertyId], references: [id])
-  members         ProjectMember[]
-  unitAssignments UnitAssignment[]
-  documents       ProjectDocument[]
-  paymentPlans    PaymentPlan[]
-  progressDetails ProgressDetail[]
-  messages        ProjectMessage[]
-  payments        Payment[]
+  id                   String                @id @default(cuid())
+  propertyId           String
+  propertyName         String
+  propertyImageUrl     String
+  propertyImageHint    String
+  status               String?
+  kycProgress          Int                   @default(0)
+  fundingProgress      Int                   @default(0)
+  legalProgress        Int                   @default(0)
+  closingProgress      Int                   @default(0)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  payments             Payment[]
+  paymentPlans         PaymentPlan[]
+  progressDetails      ProgressDetail[]
+  property             Property              @relation(fields: [propertyId], references: [id])
+  documents            ProjectDocument[]
+  members              ProjectMember[]
+  messages             ProjectMessage[]
   purchaseTransactions PurchaseTransaction[]
+  unitAssignments      UnitAssignment[]
 }
 
 model PaymentPlan {
-  id              String   @id @default(cuid())
-  projectId       String
-  userId          String
-  unitId          Int
-  type            String
-  totalAmount     Decimal  @db.Decimal(15, 2)
-  downPayment     Decimal? @db.Decimal(15, 2)
-  installmentAmount Decimal? @db.Decimal(15, 2)
+  id                String    @id @default(cuid())
+  projectId         String
+  userId            String
+  unitId            Int
+  type              String
+  totalAmount       Decimal   @db.Decimal(15, 2)
+  downPayment       Decimal?  @db.Decimal(15, 2)
+  installmentAmount Decimal?  @db.Decimal(15, 2)
   totalInstallments Int?
-  startDate       DateTime?
-  endDate         DateTime?
-  status          String
-  paymentType     String?  // 'cash', 'kpr' - untuk membedakan flow
-  bookingFeePaid  Boolean  @default(false)
-  bookingFeeAmount Decimal? @db.Decimal(15, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  project         Project  @relation(fields: [projectId], references: [id])
-  user            User     @relation(fields: [userId], references: [id])
-  payments        Payment[]
+  startDate         DateTime?
+  endDate           DateTime?
+  status            String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  bookingFeeAmount  Decimal?  @db.Decimal(15, 2)
+  bookingFeePaid    Boolean   @default(false)
+  paymentType       String?
+  payments          Payment[]
+  project           Project   @relation(fields: [projectId], references: [id])
+  user              User      @relation(fields: [userId], references: [id])
 
   @@index([projectId])
   @@index([userId])
@@ -145,30 +132,28 @@ model PaymentPlan {
 }
 
 model Payment {
-  id              String   @id @default(cuid())
-  paymentPlanId   String?
-  projectId       String
-  userId          String
-  unitId          Int
-  amount          Decimal  @db.Decimal(15, 2)
-  paymentDate     DateTime?
-  dueDate         DateTime?
-  period          String?
-  status          String
-  paymentMethod   String?
-  receiptUrl      String?  @db.Text
+  id               String       @id @default(cuid())
+  paymentPlanId    String?
+  projectId        String
+  userId           String
+  unitId           Int
+  amount           Decimal      @db.Decimal(15, 2)
+  paymentDate      DateTime?
+  dueDate          DateTime?
+  period           String?
+  status           String
+  paymentMethod    String?
+  receiptUrl       String?
   paymentReference String?
-  notes           String?  @db.Text
-  verifiedBy      String?
-  verifiedAt      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  paymentPlan     PaymentPlan? @relation(fields: [paymentPlanId], references: [id])
-  project         Project      @relation(fields: [projectId], references: [id])
-  user            User         @relation(fields: [userId], references: [id])
-  verifier        User?        @relation("PaymentVerifier", fields: [verifiedBy], references: [id])
+  notes            String?
+  verifiedBy       String?
+  verifiedAt       DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  paymentPlan      PaymentPlan? @relation(fields: [paymentPlanId], references: [id])
+  project          Project      @relation(fields: [projectId], references: [id])
+  user             User         @relation(fields: [userId], references: [id])
+  verifier         User?        @relation("PaymentVerifier", fields: [verifiedBy], references: [id])
 
   @@index([projectId])
   @@index([userId])
@@ -178,18 +163,16 @@ model Payment {
 }
 
 model Notification {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   title       String
-  description String   @db.Text
+  description String
   href        String?
   type        String
-  read        Boolean  @default(false)
+  read        Boolean   @default(false)
   readAt      DateTime?
-  createdAt   DateTime @default(now())
-
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([read])
@@ -198,30 +181,28 @@ model Notification {
 }
 
 model PropertySubmission {
-  id            String   @id @default(cuid())
+  id            String                    @id @default(cuid())
   submittedBy   String
   type          String
   name          String
-  description   String   @db.Text
+  description   String
   location      String
-  totalArea     Decimal? @db.Decimal(10, 2)
+  totalArea     Decimal?                  @db.Decimal(10, 2)
   totalUnits    Int?
-  unitSize      Decimal? @db.Decimal(10, 2)
+  unitSize      Decimal?                  @db.Decimal(10, 2)
   unitMeasure   String?
-  askingPrice   Decimal  @db.Decimal(15, 2)
+  askingPrice   Decimal                   @db.Decimal(15, 2)
   contactPerson String
   contactPhone  String
   contactEmail  String
   status        String
   reviewedBy    String?
   reviewedAt    DateTime?
-  notes         String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  submitter     User     @relation(fields: [submittedBy], references: [id])
-  reviewer      User?    @relation("SubmissionReviewer", fields: [reviewedBy], references: [id])
+  notes         String?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  reviewer      User?                     @relation("SubmissionReviewer", fields: [reviewedBy], references: [id])
+  submitter     User                      @relation(fields: [submittedBy], references: [id])
   images        PropertySubmissionImage[]
 
   @@index([submittedBy])
@@ -230,35 +211,31 @@ model PropertySubmission {
 }
 
 model PropertySubmissionImage {
-  id                  String   @id @default(cuid())
+  id                   String             @id @default(cuid())
   propertySubmissionId String
-  url                 String
-  hint                String
-  order               Int      @default(0)
-  createdAt           DateTime @default(now())
-
-  // Relations
-  propertySubmission  PropertySubmission @relation(fields: [propertySubmissionId], references: [id], onDelete: Cascade)
+  url                  String
+  hint                 String
+  order                Int                @default(0)
+  createdAt            DateTime           @default(now())
+  propertySubmission   PropertySubmission @relation(fields: [propertySubmissionId], references: [id], onDelete: Cascade)
 
   @@index([propertySubmissionId])
 }
 
 model ProgressDetail {
-  id          String   @id @default(cuid())
-  projectId   String
-  category    String
-  title       String
-  percentage  Int      @default(0)
-  description String?  @db.Text
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  checklist   ProgressChecklistItem[]
+  id               String                    @id @default(cuid())
+  projectId        String
+  category         String
+  title            String
+  percentage       Int                       @default(0)
+  description      String?
+  notes            String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  checklist        ProgressChecklistItem[]
   completedMembers ProgressCompletedMember[]
-  milestones  ProgressMilestone[]
+  project          Project                   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestones       ProgressMilestone[]
 
   @@unique([projectId, category])
   @@index([projectId])
@@ -266,33 +243,38 @@ model ProgressDetail {
 }
 
 model ProgressChecklistItem {
-  id              String   @id @default(cuid())
+  id               String                    @id @default(cuid())
   progressDetailId String
-  label           String
-  completed       Boolean  @default(false)
-  completedBy     String?
-  completedAt     DateTime?
-  order           Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  progressDetail  ProgressDetail @relation(fields: [progressDetailId], references: [id], onDelete: Cascade)
-  completer       User?         @relation("ChecklistCompleter", fields: [completedBy], references: [id])
+  label            String
+  order            Int                       @default(0)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  completions      ChecklistItemCompletion[]
+  progressDetail   ProgressDetail            @relation(fields: [progressDetailId], references: [id], onDelete: Cascade)
 
   @@index([progressDetailId])
-  @@index([completed])
+}
+
+model ChecklistItemCompletion {
+  id              String                @id @default(cuid())
+  checklistItemId String
+  userId          String
+  completedAt     DateTime              @default(now())
+  checklistItem   ProgressChecklistItem @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
+  user            User                  @relation("ChecklistItemCompleter", fields: [userId], references: [id])
+
+  @@unique([checklistItemId, userId])
+  @@index([checklistItemId])
+  @@index([userId])
 }
 
 model ProgressCompletedMember {
-  id              String   @id @default(cuid())
+  id               String         @id @default(cuid())
   progressDetailId String
-  userId          String
-  completedAt     DateTime @default(now())
-
-  // Relations
-  progressDetail  ProgressDetail @relation(fields: [progressDetailId], references: [id], onDelete: Cascade)
-  user            User           @relation("ProgressCompleter", fields: [userId], references: [id])
+  userId           String
+  completedAt      DateTime       @default(now())
+  progressDetail   ProgressDetail @relation(fields: [progressDetailId], references: [id], onDelete: Cascade)
+  user             User           @relation("ProgressCompleter", fields: [userId], references: [id])
 
   @@unique([progressDetailId, userId])
   @@index([progressDetailId])
@@ -300,40 +282,36 @@ model ProgressCompletedMember {
 }
 
 model ProgressMilestone {
-  id              String   @id @default(cuid())
+  id               String         @id @default(cuid())
   progressDetailId String
-  label           String
-  date            DateTime?
-  status          String
-  order           Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  progressDetail  ProgressDetail @relation(fields: [progressDetailId], references: [id], onDelete: Cascade)
+  label            String
+  date             DateTime?
+  status           String
+  order            Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  progressDetail   ProgressDetail @relation(fields: [progressDetailId], references: [id], onDelete: Cascade)
 
   @@index([progressDetailId])
   @@index([status])
 }
 
 model ProjectDocument {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   projectId   String
   name        String
   status      String
-  url         String?  @db.Text
+  url         String?
   uploadDate  DateTime?
   size        Int?
-  description String?  @db.Text
+  description String?
   uploadedBy  String?
   verifiedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  uploader    User?    @relation("DocumentUploader", fields: [uploadedBy], references: [id])
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
   signatures  DocumentSignature[]
+  project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploader    User?               @relation("DocumentUploader", fields: [uploadedBy], references: [id])
 
   @@index([projectId])
   @@index([status])
@@ -341,14 +319,12 @@ model ProjectDocument {
 }
 
 model DocumentSignature {
-  id          String   @id @default(cuid())
-  documentId  String
-  userId      String
-  signedAt    DateTime @default(now())
-
-  // Relations
-  document    ProjectDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user        User           @relation("DocumentSigner", fields: [userId], references: [id])
+  id         String          @id @default(cuid())
+  documentId String
+  userId     String
+  signedAt   DateTime        @default(now())
+  document   ProjectDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User            @relation("DocumentSigner", fields: [userId], references: [id])
 
   @@unique([documentId, userId])
   @@index([documentId])
@@ -361,8 +337,6 @@ model ProjectMember {
   userId    String
   role      String?
   joinedAt  DateTime @default(now())
-
-  // Relations
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -372,21 +346,19 @@ model ProjectMember {
 }
 
 model UnitAssignment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   projectId String
   unitId    Int
   userId    String
-  price     Decimal  @db.Decimal(15, 2)
-  size      Decimal? @db.Decimal(10, 2)
-  isLocked  Boolean  @default(false) // lock saat booking fee paid
+  price     Decimal   @db.Decimal(15, 2)
+  size      Decimal?  @db.Decimal(10, 2)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isLocked  Boolean   @default(false)
   lockedAt  DateTime?
-  lockedBy  String?  // transaction_id
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation("UnitOwner", fields: [userId], references: [id])
+  lockedBy  String?
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User      @relation("UnitOwner", fields: [userId], references: [id])
 
   @@unique([projectId, unitId])
   @@index([projectId])
@@ -395,24 +367,22 @@ model UnitAssignment {
 }
 
 model PropertyInterest {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   propertyId  String
   userId      String
   unitId      Int?
-  unitSize    Decimal? @db.Decimal(10, 2)
-  isFirstHome Boolean  @default(false)
-  willOccupy  Boolean  @default(false)
+  unitSize    Decimal?  @db.Decimal(10, 2)
+  isFirstHome Boolean   @default(false)
+  willOccupy  Boolean   @default(false)
   email       String?
   phoneNumber String?
   status      String?
-  notes       String?  @db.Text
+  notes       String?
   reviewedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
   @@index([userId])
@@ -424,8 +394,6 @@ model Watchlist {
   propertyId String
   userId     String
   createdAt  DateTime @default(now())
-
-  // Relations
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -438,10 +406,8 @@ model ProjectMessage {
   id        String   @id @default(cuid())
   projectId String
   userId    String
-  message   String   @db.Text
+  message   String
   createdAt DateTime @default(now())
-
-  // Relations
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user      User     @relation("MessageSender", fields: [userId], references: [id])
 
@@ -451,26 +417,24 @@ model ProjectMessage {
 }
 
 model PurchaseTransaction {
-  id              String   @id @default(cuid())
-  projectId       String
-  userId          String
-  unitId          Int
-  state           String   // 'DRAFT', 'BOOKED', 'INTERVIEWED', 'CASH_PROCESS', 'KPR_PROCESS', 'UNDER_CONSTRUCTION', 'HANDOVER', 'COMPLETED'
-  paymentType     String?  // 'cash', 'kpr' - set saat booking atau interview
-  bookingFeeAmount Decimal? @db.Decimal(15, 2)
-  bookingDate     DateTime?
-  paymentProofUrl String?  @db.Text
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [userId], references: [id])
-  interviewRecord InterviewRecord?
-  appointments    Appointment[]
-  kprStatus       KprStatus?
+  id                      String                   @id @default(cuid())
+  projectId               String
+  userId                  String
+  unitId                  Int
+  state                   String
+  paymentType             String?
+  bookingFeeAmount        Decimal?                 @db.Decimal(15, 2)
+  bookingDate             DateTime?
+  paymentProofUrl         String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  activityLogs            ActivityLog[]
+  appointments            Appointment[]
   constructionCheckpoints ConstructionCheckpoint[]
-  activityLogs   ActivityLog[]
+  interviewRecord         InterviewRecord?
+  kprStatus               KprStatus?
+  project                 Project                  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user                    User                     @relation(fields: [userId], references: [id])
 
   @@unique([projectId, userId, unitId])
   @@index([projectId])
@@ -480,17 +444,16 @@ model PurchaseTransaction {
 }
 
 model InterviewRecord {
-  id              String   @id @default(cuid())
-  transactionId   String   @unique
-  interviewDate   DateTime
-  interviewerId   String   // admin user_id
-  result          String   // 'PASSED', 'FAILED', 'NEED_FOLLOW_UP'
-  notes           String?  @db.Text
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  interviewer     User     @relation("Interviewer", fields: [interviewerId], references: [id])
+  id            String              @id @default(cuid())
+  transactionId String              @unique
+  interviewDate DateTime
+  interviewerId String
+  result        String
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  interviewer   User                @relation("Interviewer", fields: [interviewerId], references: [id])
+  transaction   PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@index([transactionId])
   @@index([result])
@@ -498,18 +461,17 @@ model InterviewRecord {
 }
 
 model Appointment {
-  id              String   @id @default(cuid())
-  transactionId  String
-  type            String   // 'interview', 'notaris', 'bank'
-  scheduledDate   DateTime
-  status          String   // 'scheduled', 'completed', 'cancelled', 'rescheduled'
-  location        String?
-  notes           String?  @db.Text
-  completedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  id            String              @id @default(cuid())
+  transactionId String
+  type          String
+  scheduledDate DateTime
+  status        String
+  location      String?
+  notes         String?
+  completedAt   DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  transaction   PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@index([transactionId])
   @@index([type])
@@ -518,18 +480,17 @@ model Appointment {
 }
 
 model KprStatus {
-  id              String   @id @default(cuid())
-  transactionId   String   @unique
-  status          String   // 'SUBMITTED', 'APPROVED', 'REJECTED'
+  id              String              @id @default(cuid())
+  transactionId   String              @unique
+  status          String
   bankName        String?
   submittedDate   DateTime?
   approvedDate    DateTime?
   rejectedDate    DateTime?
-  rejectionReason String?  @db.Text
-  notes           String?  @db.Text
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
+  rejectionReason String?
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
   transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@index([transactionId])
@@ -537,19 +498,18 @@ model KprStatus {
 }
 
 model ConstructionCheckpoint {
-  id              String   @id @default(cuid())
-  transactionId   String
-  progress        Int      // 25, 50, 75, 100
-  milestone       String   // 'foundation', 'structure', 'roofing', 'finishing'
-  status          String   // 'pending', 'in_progress', 'completed'
-  startDate       DateTime?
-  completedDate   DateTime?
-  photos          String?  @db.Text // JSON array of photo URLs
-  notes           String?  @db.Text
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  id            String              @id @default(cuid())
+  transactionId String
+  progress      Int
+  milestone     String
+  status        String
+  startDate     DateTime?
+  completedDate DateTime?
+  photos        String?
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  transaction   PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@unique([transactionId, progress])
   @@index([transactionId])
@@ -557,22 +517,20 @@ model ConstructionCheckpoint {
 }
 
 model ActivityLog {
-  id              String   @id @default(cuid())
-  transactionId   String
-  action          String   // 'state_transition', 'payment', 'appointment_scheduled', etc.
-  actorId         String   // user_id yang melakukan action
-  actorRole       String   // 'admin', 'sales', 'customer'
-  fromState       String?
-  toState         String?
-  details         String?  @db.Text // JSON untuk additional details
-  createdAt       DateTime @default(now())
-
-  transaction     PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  actor           User     @relation("ActivityActor", fields: [actorId], references: [id])
+  id            String              @id @default(cuid())
+  transactionId String
+  action        String
+  actorId       String
+  actorRole     String
+  fromState     String?
+  toState       String?
+  details       String?
+  createdAt     DateTime            @default(now())
+  actor         User                @relation("ActivityActor", fields: [actorId], references: [id])
+  transaction   PurchaseTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@index([transactionId])
   @@index([actorId])
   @@index([action])
   @@index([createdAt])
 }
-

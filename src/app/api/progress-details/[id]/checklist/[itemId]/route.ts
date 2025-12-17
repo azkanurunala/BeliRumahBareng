@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { updateProgressChecklistItemSchema, completeProgressChecklistItemSchema } from '@/lib/validations';
 import { NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
+import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress, autoGenerateMilestoneFromChecklist } from '@/lib/progress-calculator';
+import { updateProjectProgress } from '@/lib/actions/project.actions';
 
 // PUT /api/progress-details/[id]/checklist/[itemId] - Update checklist item
 export async function PUT(
@@ -25,36 +27,16 @@ export async function PUT(
     // Validate input dengan ID
     const validatedData = updateProgressChecklistItemSchema.parse({ ...body, id: itemId });
 
-    // Update checklist item
+    // Update checklist item (only label and order, not completion status)
     const updateData: any = {};
     if (validatedData.label !== undefined) updateData.label = validatedData.label;
-    if (validatedData.completed !== undefined) {
-      updateData.completed = validatedData.completed;
-      if (validatedData.completed && !existingItem.completed) {
-        updateData.completedAt = validatedData.completedAt ? new Date(validatedData.completedAt) : new Date();
-        if (validatedData.completedBy) {
-          updateData.completedBy = validatedData.completedBy;
-        }
-      } else if (!validatedData.completed) {
-        updateData.completedAt = null;
-        updateData.completedBy = null;
-      }
-    }
-    if (validatedData.completedBy !== undefined) updateData.completedBy = validatedData.completedBy || null;
-    if (validatedData.completedAt !== undefined) updateData.completedAt = validatedData.completedAt ? new Date(validatedData.completedAt) : null;
     if (validatedData.order !== undefined) updateData.order = validatedData.order;
 
     const checklistItem = await db.progressChecklistItem.update({
       where: { id: itemId },
       data: updateData,
       include: {
-        completer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        completions: true,
       },
     });
 
@@ -63,9 +45,7 @@ export async function PUT(
       id: checklistItem.id,
       progressDetailId: checklistItem.progressDetailId,
       label: checklistItem.label,
-      completed: checklistItem.completed,
-      completedBy: checklistItem.completedBy,
-      completedAt: checklistItem.completedAt?.toISOString(),
+      completedMembers: checklistItem.completions.map(c => c.userId),
       order: checklistItem.order,
     };
 

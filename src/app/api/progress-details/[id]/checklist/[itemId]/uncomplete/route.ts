@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { completeProgressChecklistItemSchema } from '@/lib/validations';
 import { NotFoundError } from '@/lib/errors';
-import { z } from 'zod';
-import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress, autoGenerateMilestoneFromChecklist } from '@/lib/progress-calculator';
+import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress } from '@/lib/progress-calculator';
 import { updateProjectProgress } from '@/lib/actions/project.actions';
 
-// POST /api/progress-details/[id]/checklist/[itemId]/complete - Mark checklist item as complete
+// POST /api/progress-details/[id]/checklist/[itemId]/uncomplete - Remove completion for a user from checklist item
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> }
@@ -14,9 +12,20 @@ export async function POST(
   try {
     const { itemId } = await params;
     const body = await request.json();
+    const { userId } = body;
 
-    // Validate input
-    const validatedData = completeProgressChecklistItemSchema.parse({ ...body, id: itemId });
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            message: 'userId is required',
+            code: 'VALIDATION_ERROR',
+          },
+        },
+        { status: 400 }
+      );
+    }
 
     // Check if checklist item exists
     const checklistItem = await db.progressChecklistItem.findUnique({
@@ -30,19 +39,10 @@ export async function POST(
       throw new NotFoundError('Checklist item not found');
     }
 
-    // Check if completer exists
-    const completer = await db.user.findUnique({
-      where: { id: validatedData.completedBy },
-    });
-
-    if (!completer) {
-      throw new NotFoundError('Completer not found');
-    }
-
-    // Check if completion already exists
-    const existingCompletion = checklistItem.completions.find(c => c.userId === validatedData.completedBy);
-    if (existingCompletion) {
-      // Already completed by this user, return existing data
+    // Check if completion exists
+    const existingCompletion = checklistItem.completions.find(c => c.userId === userId);
+    if (!existingCompletion) {
+      // Not completed by this user, return existing data
       const transformedItem = {
         id: checklistItem.id,
         progressDetailId: checklistItem.progressDetailId,
@@ -56,12 +56,11 @@ export async function POST(
       });
     }
 
-    // Create new completion entry
-    await db.checklistItemCompletion.create({
-      data: {
+    // Delete completion entry
+    await db.checklistItemCompletion.deleteMany({
+      where: {
         checklistItemId: itemId,
-        userId: validatedData.completedBy,
-        completedAt: new Date(),
+        userId: userId,
       },
     });
 
@@ -70,15 +69,6 @@ export async function POST(
       where: { id: itemId },
       include: {
         completions: true,
-        progressDetail: {
-          include: {
-            project: {
-              include: {
-                members: true,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -87,10 +77,12 @@ export async function POST(
     }
 
     // Get progress detail to check category and update progress
-    const progressDetail = updatedItem.progressDetail;
+    const progressDetail = await db.progressDetail.findUnique({
+      where: { id: updatedItem.progressDetailId },
+    });
 
     if (progressDetail) {
-      // Calculate and update progress based on category
+      // Recalculate progress
       if (progressDetail.category === 'kyc') {
         const progressValue = await calculateKYCProgress(progressDetail.projectId);
         await updateProjectProgress(progressDetail.projectId, { kyc: progressValue });
@@ -100,17 +92,6 @@ export async function POST(
       } else if (progressDetail.category === 'closing') {
         const progressValue = await calculateClosingProgress(progressDetail.projectId);
         await updateProjectProgress(progressDetail.projectId, { closing: progressValue });
-      }
-
-      // Auto-generate milestone when all members complete this checklist item
-      if (progressDetail.category === 'kyc' || progressDetail.category === 'closing') {
-        const totalMembers = progressDetail.project.members.length;
-        const completedMembersCount = updatedItem.completions.length;
-        
-        // If all members have completed this item, generate milestone
-        if (totalMembers > 0 && completedMembersCount >= totalMembers) {
-          await autoGenerateMilestoneFromChecklist(updatedItem.progressDetailId, updatedItem.id);
-        }
       }
     }
 
@@ -128,21 +109,7 @@ export async function POST(
       data: transformedItem,
     });
   } catch (error) {
-    console.error('Error completing checklist item:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            message: 'Validation error',
-            code: 'VALIDATION_ERROR',
-            errors: error.flatten().fieldErrors,
-          },
-        },
-        { status: 400 }
-      );
-    }
+    console.error('Error uncompleting checklist item:', error);
 
     if (error instanceof NotFoundError) {
       return NextResponse.json(
@@ -161,7 +128,7 @@ export async function POST(
       {
         success: false,
         error: {
-          message: 'Failed to complete checklist item',
+          message: 'Failed to uncomplete checklist item',
           code: 'UPDATE_ERROR',
         },
       },
@@ -169,11 +136,4 @@ export async function POST(
     );
   }
 }
-
-
-
-
-
-
-
 

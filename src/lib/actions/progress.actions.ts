@@ -13,7 +13,7 @@ import {
 } from '@/lib/validations';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress } from '@/lib/progress-calculator';
+import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress, autoGenerateMilestoneFromChecklist, generateDefaultChecklistItems } from '@/lib/progress-calculator';
 import { updateProjectProgress } from './project.actions';
 import { generateLegalProgressData } from '@/lib/legal-progress-helpers';
 import { generateFundingProgressData } from '@/lib/funding-progress-helpers';
@@ -49,6 +49,23 @@ export async function createProgressDetail(data: z.infer<typeof createProgressDe
       },
     });
 
+    // Auto-generate default checklist items for KYC and Closing
+    await generateDefaultChecklistItems(progressDetail.id, progressDetail.category);
+
+    // Re-fetch progress detail with checklist items
+    const progressDetailWithChecklist = await db.progressDetail.findUnique({
+      where: { id: progressDetail.id },
+      include: {
+        checklist: {
+          orderBy: { order: 'asc' },
+        },
+        completedMembers: true,
+        milestones: {
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
     const transformed = {
       id: progressDetail.id,
       projectId: progressDetail.projectId,
@@ -57,9 +74,22 @@ export async function createProgressDetail(data: z.infer<typeof createProgressDe
       percentage: progressDetail.percentage,
       description: progressDetail.description,
       notes: progressDetail.notes,
-      checklist: [],
-      completedMembers: [],
-      milestones: [],
+      checklist: progressDetailWithChecklist?.checklist.map((item) => ({
+        id: item.id,
+        label: item.label,
+        completed: item.completed,
+        completedBy: item.completedBy,
+        completedAt: item.completedAt?.toISOString(),
+        order: item.order,
+      })) || [],
+      completedMembers: progressDetailWithChecklist?.completedMembers.map((cm) => cm.userId) || [],
+      milestones: progressDetailWithChecklist?.milestones.map((m) => ({
+        id: m.id,
+        label: m.label,
+        date: m.date?.toISOString(),
+        status: m.status,
+        order: m.order,
+      })) || [],
       createdAt: progressDetail.createdAt.toISOString(),
       updatedAt: progressDetail.updatedAt.toISOString(),
     };
@@ -387,15 +417,16 @@ export async function createProgressChecklistItem(data: z.infer<typeof createPro
 
     const item = await db.progressChecklistItem.create({
       data: { progressDetailId: validatedData.progressDetailId, label: validatedData.label, order: validatedData.order },
+      include: {
+        completions: true,
+      },
     });
 
     const transformed = {
       id: item.id,
       progressDetailId: item.progressDetailId,
       label: item.label,
-      completed: item.completed,
-      completedBy: item.completedBy,
-      completedAt: item.completedAt?.toISOString(),
+      completedMembers: item.completions.map(c => c.userId),
       order: item.order,
     };
 
@@ -422,28 +453,21 @@ export async function updateProgressChecklistItem(id: string, data: Partial<z.in
     const validatedData = updateProgressChecklistItemSchema.parse({ ...data, id });
     const updateData: any = {};
     if (validatedData.label !== undefined) updateData.label = validatedData.label;
-    if (validatedData.completed !== undefined) {
-      updateData.completed = validatedData.completed;
-      if (validatedData.completed && !existing.completed) {
-        updateData.completedAt = validatedData.completedAt ? new Date(validatedData.completedAt) : new Date();
-        if (validatedData.completedBy) updateData.completedBy = validatedData.completedBy;
-      } else if (!validatedData.completed) {
-        updateData.completedAt = null;
-        updateData.completedBy = null;
-      }
-    }
-    if (validatedData.completedBy !== undefined) updateData.completedBy = validatedData.completedBy || null;
-    if (validatedData.completedAt !== undefined) updateData.completedAt = validatedData.completedAt ? new Date(validatedData.completedAt) : null;
     if (validatedData.order !== undefined) updateData.order = validatedData.order;
 
-    const item = await db.progressChecklistItem.update({ where: { id }, data: updateData });
+    const item = await db.progressChecklistItem.update({ 
+      where: { id }, 
+      data: updateData,
+      include: {
+        completions: true,
+      },
+    });
+
     const transformed = {
       id: item.id,
       progressDetailId: item.progressDetailId,
       label: item.label,
-      completed: item.completed,
-      completedBy: item.completedBy,
-      completedAt: item.completedAt?.toISOString(),
+      completedMembers: item.completions.map(c => c.userId),
       order: item.order,
     };
 
@@ -486,7 +510,12 @@ export async function deleteProgressChecklistItem(id: string) {
 export async function completeProgressChecklistItem(data: z.infer<typeof completeProgressChecklistItemSchema>) {
   try {
     const validatedData = completeProgressChecklistItemSchema.parse(data);
-    const item = await db.progressChecklistItem.findUnique({ where: { id: validatedData.id } });
+    const item = await db.progressChecklistItem.findUnique({ 
+      where: { id: validatedData.id },
+      include: {
+        completions: true,
+      },
+    });
     if (!item) {
       return { success: false, error: { message: 'Checklist item not found', code: 'NOT_FOUND' } };
     }
@@ -495,24 +524,144 @@ export async function completeProgressChecklistItem(data: z.infer<typeof complet
       return { success: false, error: { message: 'Completer not found', code: 'NOT_FOUND' } };
     }
 
-    const updated = await db.progressChecklistItem.update({
-      where: { id: validatedData.id },
-      data: { completed: true, completedBy: validatedData.completedBy, completedAt: new Date() },
+    // Check if completion already exists
+    const existingCompletion = item.completions.find(c => c.userId === validatedData.completedBy);
+    if (existingCompletion) {
+      // Already completed by this user, return existing data
+      const transformed = {
+        id: item.id,
+        progressDetailId: item.progressDetailId,
+        label: item.label,
+        completedMembers: item.completions.map(c => c.userId),
+        order: item.order,
+      };
+      return { success: true, data: transformed };
+    }
+
+    // Create new completion entry
+    await db.checklistItemCompletion.create({
+      data: {
+        checklistItemId: validatedData.id,
+        userId: validatedData.completedBy,
+        completedAt: new Date(),
+      },
     });
+
+    // Re-fetch item with updated completions
+    const updated = await db.progressChecklistItem.findUnique({
+      where: { id: validatedData.id },
+      include: {
+        completions: true,
+      },
+    });
+
+    if (!updated) {
+      return { success: false, error: { message: 'Failed to fetch updated item', code: 'FETCH_ERROR' } };
+    }
 
     const transformed = {
       id: updated.id,
       progressDetailId: updated.progressDetailId,
       label: updated.label,
-      completed: updated.completed,
-      completedBy: updated.completedBy,
-      completedAt: updated.completedAt?.toISOString(),
+      completedMembers: updated.completions.map(c => c.userId),
+      order: updated.order,
+    };
+
+    const progressDetail = await db.progressDetail.findUnique({ 
+      where: { id: updated.progressDetailId },
+      include: {
+        project: {
+          include: {
+            members: true,
+          },
+        },
+      },
+    });
+
+    if (progressDetail) {
+      // Calculate and update progress based on category
+      if (progressDetail.category === 'kyc') {
+        const progressValue = await calculateKYCProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { kyc: progressValue });
+      } else if (progressDetail.category === 'legal') {
+        const progressValue = await calculateLegalProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { legal: progressValue });
+      } else if (progressDetail.category === 'closing') {
+        const progressValue = await calculateClosingProgress(progressDetail.projectId);
+        await updateProjectProgress(progressDetail.projectId, { closing: progressValue });
+      }
+
+      // Auto-generate milestone when all members complete this checklist item
+      if (progressDetail.category === 'kyc' || progressDetail.category === 'closing') {
+        const totalMembers = progressDetail.project.members.length;
+        const completedMembersCount = updated.completions.length;
+        
+        // If all members have completed this item, generate milestone
+        if (totalMembers > 0 && completedMembersCount >= totalMembers) {
+          await autoGenerateMilestoneFromChecklist(updated.progressDetailId, updated.id);
+        }
+      }
+
+      revalidatePath('/admin/projects');
+      revalidatePath(`/admin/projects/${progressDetail.projectId}`);
+    }
+    revalidatePath('/api/progress-details');
+    return { success: true, data: transformed };
+  } catch (error) {
+    console.error('Error completing checklist item:', error);
+    if (error instanceof z.ZodError) {
+      return { success: false, error: { message: 'Validation error', code: 'VALIDATION_ERROR', errors: error.flatten().fieldErrors } };
+    }
+    return { success: false, error: { message: 'Failed to complete checklist item', code: 'UPDATE_ERROR' } };
+  }
+}
+
+/**
+ * Remove completion for a user from a checklist item
+ */
+export async function uncompleteProgressChecklistItem(checklistItemId: string, userId: string) {
+  try {
+    const item = await db.progressChecklistItem.findUnique({ 
+      where: { id: checklistItemId },
+      include: {
+        completions: true,
+      },
+    });
+    if (!item) {
+      return { success: false, error: { message: 'Checklist item not found', code: 'NOT_FOUND' } };
+    }
+
+    // Delete completion entry
+    await db.checklistItemCompletion.deleteMany({
+      where: {
+        checklistItemId,
+        userId,
+      },
+    });
+
+    // Re-fetch item with updated completions
+    const updated = await db.progressChecklistItem.findUnique({
+      where: { id: checklistItemId },
+      include: {
+        completions: true,
+      },
+    });
+
+    if (!updated) {
+      return { success: false, error: { message: 'Failed to fetch updated item', code: 'FETCH_ERROR' } };
+    }
+
+    const transformed = {
+      id: updated.id,
+      progressDetailId: updated.progressDetailId,
+      label: updated.label,
+      completedMembers: updated.completions.map(c => c.userId),
       order: updated.order,
     };
 
     const progressDetail = await db.progressDetail.findUnique({ where: { id: updated.progressDetailId } });
     if (progressDetail) {
-      // Calculate and update progress based on category
+      // Recalculate progress
       if (progressDetail.category === 'kyc') {
         const progressValue = await calculateKYCProgress(progressDetail.projectId);
         await updateProjectProgress(progressDetail.projectId, { kyc: progressValue });
@@ -530,11 +679,8 @@ export async function completeProgressChecklistItem(data: z.infer<typeof complet
     revalidatePath('/api/progress-details');
     return { success: true, data: transformed };
   } catch (error) {
-    console.error('Error completing checklist item:', error);
-    if (error instanceof z.ZodError) {
-      return { success: false, error: { message: 'Validation error', code: 'VALIDATION_ERROR', errors: error.flatten().fieldErrors } };
-    }
-    return { success: false, error: { message: 'Failed to complete checklist item', code: 'UPDATE_ERROR' } };
+    console.error('Error uncompleting checklist item:', error);
+    return { success: false, error: { message: 'Failed to uncomplete checklist item', code: 'UPDATE_ERROR' } };
   }
 }
 

@@ -21,6 +21,7 @@ import { ProgressDetailEditDialog } from '@/components/admin/progress/progress-d
 import { ProgressChecklistItemDialog } from '@/components/admin/progress/progress-checklist-item-dialog';
 import { ProgressMilestoneDialog } from '@/components/admin/progress/progress-milestone-dialog';
 import { CompletedMemberDialog } from '@/components/admin/progress/completed-member-dialog';
+import { ChecklistCompleteMemberDialog } from '@/components/admin/progress/checklist-complete-member-dialog';
 import { apiClient } from '@/lib/api-client';
 import { DeleteConfirmDialog } from '@/components/admin/delete-confirm-dialog';
 import type { ProgressDetail, ProgressChecklistItem } from '@/lib/types';
@@ -90,9 +91,7 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
               checklist: pd.checklist?.map((item: any) => ({
                 id: item.id,
                 label: item.label,
-                completed: item.completed,
-                completedBy: item.completedBy,
-                completedAt: item.completedAt,
+                completedMembers: item.completedMembers || [],
                 order: item.order,
               })) || [],
               completedMembers: pd.completedMembers || [],
@@ -180,6 +179,16 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
   
   // Handler functions
   const handleCompleteChecklistItem = async (category: string, itemId: string) => {
+    // Validate inputs
+    if (!itemId || itemId.trim() === '') {
+      toast({
+        title: 'Error',
+        description: 'ID checklist item tidak valid',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     const progressDetailId = progressDetailIds[category];
     if (!progressDetailId) {
       toast({
@@ -190,42 +199,13 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
       return;
     }
     
-    if (!currentUser?.id) {
-      toast({
-        title: 'Error',
-        description: 'User tidak ditemukan. Silakan login ulang.',
-        variant: 'destructive',
+    // Open dialog to select member
+    setChecklistCompleteDialog({
+      open: true,
+      category,
+      itemId,
+      progressDetailId,
       });
-      return;
-    }
-    
-    try {
-      const response = await apiClient.post(
-        `/progress-details/${progressDetailId}/checklist/${itemId}/complete`,
-        { completedBy: currentUser.id }
-      );
-      
-      if (response.success) {
-        toast({
-          title: 'Berhasil',
-          description: 'Checklist item berhasil ditandai sebagai selesai',
-        });
-        refreshData();
-      } else {
-        toast({
-          title: 'Gagal',
-          description: response.error?.message || 'Gagal menandai checklist item',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error completing checklist item:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Terjadi kesalahan',
-        variant: 'destructive',
-      });
-    }
   };
   
   const handleDeleteChecklistItem = async () => {
@@ -443,33 +423,37 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
                             className="flex items-start gap-3 p-3 rounded-lg border bg-card group"
                           >
                             <div className="mt-0.5">
-                              {item.completed ? (
+                              {(item.completedMembers?.length || 0) > 0 ? (
                                 <CheckCircle2 className="h-5 w-5 text-green-600" />
                               ) : (
                                 <Clock className="h-5 w-5 text-muted-foreground" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${item.completed ? 'line-through text-muted-foreground' : ''}`}>
+                              <p className={`text-sm ${(item.completedMembers?.length || 0) > 0 ? 'line-through text-muted-foreground' : ''}`}>
                                 {item.label}
                               </p>
-                              {item.completed && item.completedBy && (
-                                <div className="flex items-center gap-2 mt-2">
+                              {(item.completedMembers?.length || 0) > 0 && (
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                  {(item.completedMembers || []).map((userId) => (
+                                    <div key={userId} className="flex items-center gap-1.5">
                                   <Avatar className="h-5 w-5">
-                                    <AvatarImage src={getMemberAvatar(item.completedBy)} />
+                                        <AvatarImage src={getMemberAvatar(userId)} />
                                     <AvatarFallback className="text-xs">
-                                      {getMemberName(item.completedBy).charAt(0)}
+                                          {getMemberName(userId).charAt(0)}
                                     </AvatarFallback>
                                   </Avatar>
                                   <span className="text-xs text-muted-foreground">
-                                    {getMemberName(item.completedBy)} • {formatDate(item.completedAt)}
+                                        {getMemberName(userId)}
                                   </span>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                             </div>
                             {progressDetailIds[stage.key] && (
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {!item.completed && (
+                                {(item.completedMembers?.length || 0) === 0 || !(item.completedMembers || []).includes(currentUser?.id || '') ? (
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -478,6 +462,34 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
                                     title="Tandai Selesai"
                                   >
                                     <Check className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={async () => {
+                                      const progressDetailId = progressDetailIds[stage.key];
+                                      if (!progressDetailId || !currentUser?.id) return;
+                                      try {
+                                        const response = await apiClient.post(
+                                          `/progress-details/${progressDetailId}/checklist/${item.id}/uncomplete`,
+                                          { userId: currentUser.id }
+                                        );
+                                        if (response.success) {
+                                          toast({
+                                            title: 'Berhasil',
+                                            description: 'Checklist item berhasil dibatalkan',
+                                          });
+                                          refreshData();
+                                        }
+                                      } catch (error) {
+                                        console.error('Error uncompleting checklist item:', error);
+                                      }
+                                    }}
+                                    title="Batalkan"
+                                  >
+                                    <X className="h-4 w-4" />
                                   </Button>
                                 )}
                                 <Button
@@ -506,61 +518,6 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
                     ) : (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         Belum ada checklist item
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Completed Members */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                        Anggota yang Sudah Menyelesaikan
-                      </h3>
-                      {progressDetailIds[stage.key] && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCompletedMemberDialog({ open: true, category: stage.key })}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Tandai Selesai
-                        </Button>
-                      )}
-                    </div>
-                    {detail.completedMembers && detail.completedMembers.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {detail.completedMembers.map((userId) => {
-                          const member = project.members.find(m => m.id === userId);
-                          if (!member) return null;
-                          return (
-                            <div
-                              key={userId}
-                              className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-card group"
-                            >
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={member.avatarUrl} alt={member.name} />
-                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm font-medium">{member.name}</span>
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
-                              {progressDetailIds[stage.key] && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                                  onClick={() => handleRemoveCompletedMember(stage.key, userId)}
-                                  title="Hapus"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        Belum ada anggota yang menyelesaikan
                       </p>
                     )}
                   </div>
@@ -729,6 +686,32 @@ export default function ProjectProgressPage({ params }: { params: Promise<{ id: 
               completedMemberIds={detail.completedMembers || []}
               onSuccess={refreshData}
             />
+
+            {/* Checklist Complete Member Dialog */}
+            {checklistCompleteDialog.open && checklistCompleteDialog.category === stage.key && (
+              <ChecklistCompleteMemberDialog
+                open={checklistCompleteDialog.open}
+                onOpenChange={(open) => setChecklistCompleteDialog({ 
+                  open, 
+                  category: '', 
+                  itemId: '', 
+                  progressDetailId: '' 
+                })}
+                members={project.members.map(m => ({
+                  id: m.id,
+                  userId: m.userId,
+                  name: m.name,
+                  avatarUrl: m.avatarUrl,
+                  email: m.email,
+                }))}
+                itemId={checklistCompleteDialog.itemId}
+                progressDetailId={checklistCompleteDialog.progressDetailId}
+                completedMembers={
+                  detail.checklist?.find(item => item.id === checklistCompleteDialog.itemId)?.completedMembers || []
+                }
+                onSuccess={refreshData}
+              />
+            )}
           </div>
         );
       })}
