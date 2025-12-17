@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Project } from '@/lib/types';
+import type { Project, ProgressDetail } from '@/lib/types';
 import { FileText, MessageCircle, Paperclip, Send, Building, BadgeCheck, Home, Square, DraftingCompass, AreaChart, Microscope, Maximize2, MapPin, Users } from 'lucide-react';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
@@ -33,6 +33,7 @@ import InstallmentOverview from './installment-overview';
 import MonthlyPaymentCard from './monthly-payment-card';
 import PaymentHistoryTable from './payment-history-table';
 import AddPaymentDialog from './add-payment-dialog';
+import AddDPPaymentDialog from './add-dp-payment-dialog';
 import { calculateTotalPaymentProgress, formatCurrency } from '@/lib/payment-utils';
 import { CreditCard } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
@@ -67,6 +68,11 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
   const [selectedProgress, setSelectedProgress] = useState<'kyc' | 'funding' | 'legal' | 'closing' | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<string | null>(null);
+  const [selectedPlanForDPPayment, setSelectedPlanForDPPayment] = useState<string | null>(null);
+  
+  // State for progress detail data
+  const [progressDetailData, setProgressDetailData] = useState<Record<string, ProgressDetail>>({});
+  const [isLoadingProgressDetail, setIsLoadingProgressDetail] = useState(false);
   
   // Purchase transaction state
   const [purchaseTransactions, setPurchaseTransactions] = useState<PurchaseTransaction[]>([]);
@@ -188,8 +194,66 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
     return `Lahan Siap Bagi ${property.totalUnits} Kavling`;
   };
 
-  const handleProgressClick = (progressType: 'kyc' | 'funding' | 'legal' | 'closing') => {
+  const handleProgressClick = async (progressType: 'kyc' | 'funding' | 'legal' | 'closing') => {
     setSelectedProgress(progressType);
+    
+    // For legal and funding, we need to fetch full data from API
+    // because it's auto-generated from document signatures and payment plans
+    if (progressType === 'legal' || progressType === 'funding') {
+      setIsLoadingProgressDetail(true);
+      try {
+        // First, get progress detail ID by fetching from API with projectId and category
+        const listResponse = await apiClient.get<Array<{ id: string; category: string }>>('/progress-details', {
+          params: { 
+            projectId: project.id, 
+            category: progressType,
+            limit: '1'
+          },
+        });
+        
+        if (listResponse.success && listResponse.data && listResponse.data.length > 0) {
+          const progressDetailId = listResponse.data[0].id;
+          
+          // Fetch full progress detail data from API
+          const detailResponse = await apiClient.get<ProgressDetail & { id: string; projectId: string; category: string }>(`/progress-details/${progressDetailId}`);
+          
+          if (detailResponse.success && detailResponse.data) {
+            // Map API response to ProgressDetail type (exclude id, projectId, category)
+            const progressDetail: ProgressDetail = {
+              title: detailResponse.data.title,
+              percentage: detailResponse.data.percentage,
+              description: detailResponse.data.description,
+              checklist: detailResponse.data.checklist,
+              completedMembers: detailResponse.data.completedMembers,
+              milestones: detailResponse.data.milestones,
+              notes: detailResponse.data.notes,
+            };
+            
+            // Store the full data
+            setProgressDetailData(prev => ({
+              ...prev,
+              [progressType]: progressDetail,
+            }));
+          } else {
+            // Fallback to project data if API fails
+            console.warn('Failed to fetch progress detail, using project data');
+          }
+        } else {
+          // If progress detail doesn't exist, use project data as fallback
+          console.warn('Progress detail not found, using project data');
+        }
+      } catch (error) {
+        console.error('Error fetching progress detail:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Gagal memuat detail progress. Menampilkan data dasar.',
+        });
+        // Fallback to project data on error
+      } finally {
+        setIsLoadingProgressDetail(false);
+      }
+    }
   };
 
   const handleDocumentClick = (documentId: string) => {
@@ -197,7 +261,8 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div>
+      <div className="grid gap-6 lg:grid-cols-3">
       <div className="space-y-6 lg:col-span-2">
         {/* Project Header */}
         <Card className="overflow-hidden">
@@ -297,8 +362,9 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
             </CardContent>
         </Card>
 
-        {/* Main Content Tabs - Only show tabs if project is closed with installments */}
-        {isProjectClosed && project.installmentPlans && project.installmentPlans.length > 0 ? (
+        {/* Main Content Tabs - Show tabs if there are installment plans (installment/cash) OR if project has members/units (ready for payments) */}
+        {(project.installmentPlans && project.installmentPlans.length > 0) || 
+         (project.members && project.members.length > 0 && project.unitAssignments && project.unitAssignments.length > 0) ? (
           <Card>
             <CardHeader>
               <CardTitle>Informasi Proyek</CardTitle>
@@ -310,10 +376,12 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                   <TabsTrigger value="documents">Dokumen & Perencanaan</TabsTrigger>
                 </TabsList>
                 <TabsContent value="payment" className="space-y-6 mt-6">
+                  {project.installmentPlans && project.installmentPlans.length > 0 ? (
+                    <>
                   {/* Monthly Payment Cards */}
                   <div className="space-y-4">
                     <h2 className="text-xl font-semibold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
-                      Cicilan per Unit
+                          Pembayaran per Unit
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2">
                       {project.installmentPlans.map((plan) => {
@@ -326,6 +394,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                             user={user}
                             property={property}
                             onAddPayment={() => setSelectedPlanForPayment(plan.id)}
+                            onAddDPPayment={() => setSelectedPlanForDPPayment(plan.id)}
                           />
                         );
                       })}
@@ -343,6 +412,17 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                       }
                     }}
                   />
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground mb-4">
+                        Belum ada rencana pembayaran untuk project ini.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Silakan hubungi admin untuk membuat rencana pembayaran (cicilan atau tunai).
+                      </p>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="documents" className="space-y-6 mt-6">
                   {/* Document Management */}
@@ -836,14 +916,29 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
           </CardContent>
         </Card>
       </div>
+    </div>
 
       {/* Progress Detail Dialogs */}
       {selectedProgress && project.progressDetails[selectedProgress] && (
         <ProgressDetailDialog
           open={selectedProgress !== null}
-          onOpenChange={(open) => !open && setSelectedProgress(null)}
-          progressDetail={project.progressDetails[selectedProgress]}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedProgress(null);
+              // Clear progress detail data when dialog closes
+              setProgressDetailData(prev => {
+                const newData = { ...prev };
+                delete newData[selectedProgress];
+                return newData;
+              });
+            }
+          }}
+          progressDetail={
+            // Use fetched data if available (for legal/funding), otherwise use project data
+            progressDetailData[selectedProgress] || project.progressDetails[selectedProgress]
+          }
           members={project.members}
+          isLoading={isLoadingProgressDetail}
         />
       )}
 
@@ -877,34 +972,49 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
             const plan = project.installmentPlans?.find(p => p.id === selectedPlanForPayment);
             if (!plan) return;
 
-            // Convert file to base64 data URL if provided
-            let receiptUrl: string | undefined;
-            if (paymentData.receiptFile) {
-              try {
-                receiptUrl = await new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(paymentData.receiptFile!);
-                });
-              } catch (error) {
-                toast({
-                  variant: 'destructive',
-                  title: 'Error',
-                  description: 'Gagal membaca file bukti pembayaran',
-                });
-                return;
-              }
-            }
-
             // Calculate dueDate based on period
             // Parse period (YYYY-MM) and set to first day of that month
             const [year, month] = paymentData.period.split('-');
             const dueDate = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString();
 
-            // Create new payment
-            const newPayment: MonthlyPayment = {
-              id: `pay-${Date.now()}`,
+            // Upload receipt file if provided
+            let finalReceiptUrl: string | undefined = undefined;
+            if (paymentData.receiptFile) {
+              try {
+                const formData = new FormData();
+                formData.append('file', paymentData.receiptFile);
+                formData.append('type', 'payment-receipt');
+
+                const uploadResponse = await fetch('/api/upload', {
+                  method: 'POST',
+                  body: formData,
+                });
+
+                const uploadResult = await uploadResponse.json();
+                if (uploadResult.success && uploadResult.data) {
+                  finalReceiptUrl = uploadResult.data.url;
+                } else {
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                    description: uploadResult.error?.message || 'Gagal mengupload bukti pembayaran',
+                  });
+                  return;
+                }
+              } catch (uploadError) {
+                console.error('Error uploading receipt:', uploadError);
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: 'Gagal mengupload bukti pembayaran',
+                });
+                return;
+              }
+            }
+
+            // Create payment via API
+            try {
+              const paymentPayload: any = {
               projectId: project.id,
               userId: user.id,
               unitId: plan.unitId,
@@ -914,29 +1024,172 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
               period: paymentData.period,
               status: 'pending',
               paymentMethod: paymentData.paymentMethod,
-              receiptUrl: receiptUrl,
-              paymentReference: paymentData.paymentReference,
               notes: paymentData.notes,
-              createdAt: new Date().toISOString(),
             };
 
-            // Update project with new payment
-            const updatedPlans = project.installmentPlans.map(p => {
-              if (p.id === selectedPlanForPayment) {
-                return {
-                  ...p,
-                  payments: [...p.payments, newPayment],
-                };
+              // Add paymentPlanId if available
+              if (selectedPlanForPayment) {
+                paymentPayload.paymentPlanId = selectedPlanForPayment;
               }
-              return p;
-            });
 
-            updateProject(project.id, { installmentPlans: updatedPlans });
+              // Add receiptUrl if available
+              if (finalReceiptUrl) {
+                paymentPayload.receiptUrl = finalReceiptUrl;
+              }
 
+              // Add paymentReference if available
+              if (paymentData.paymentReference?.trim()) {
+                paymentPayload.paymentReference = paymentData.paymentReference.trim();
+              }
+
+              const response = await apiClient.post('/payments', paymentPayload);
+
+              if (response.success) {
             toast({
               title: 'Berhasil',
               description: 'Pembayaran berhasil ditambahkan dan menunggu verifikasi admin',
             });
+                
+                // Close dialog
+                setSelectedPlanForPayment(null);
+                
+                // Refresh project data
+                if (onProjectUpdate) {
+                  onProjectUpdate();
+                }
+              } else {
+                const errorMessage = response.error?.message || 'Failed to create payment';
+                const errorDetails = response.error?.errors 
+                  ? Object.values(response.error.errors).flat().join(', ')
+                  : '';
+                throw new Error(errorDetails || errorMessage);
+              }
+            } catch (error) {
+              console.error('Error creating payment:', error);
+              toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: error instanceof Error ? error.message : 'Gagal menambahkan pembayaran. Silakan coba lagi.',
+              });
+            }
+          }}
+        />
+      )}
+
+      {/* Add DP Payment Dialog */}
+      {selectedPlanForDPPayment && project.installmentPlans && (
+        <AddDPPaymentDialog
+          open={selectedPlanForDPPayment !== null}
+          onOpenChange={(open) => !open && setSelectedPlanForDPPayment(null)}
+          plan={project.installmentPlans.find(p => p.id === selectedPlanForDPPayment)!}
+          onSubmit={async (paymentData) => {
+            if (!user) {
+              toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Anda harus login untuk menambahkan pembayaran',
+              });
+              return;
+            }
+
+            const plan = project.installmentPlans?.find(p => p.id === selectedPlanForDPPayment);
+            if (!plan) return;
+
+            // Upload receipt file if provided
+            let finalReceiptUrl: string | undefined = undefined;
+            if (paymentData.receiptFile) {
+              try {
+                const formData = new FormData();
+                formData.append('file', paymentData.receiptFile);
+                formData.append('type', 'payment-receipt');
+
+                const uploadResponse = await fetch('/api/upload', {
+                  method: 'POST',
+                  body: formData,
+                });
+
+                const uploadResult = await uploadResponse.json();
+                if (uploadResult.success && uploadResult.data) {
+                  finalReceiptUrl = uploadResult.data.url;
+                } else {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: uploadResult.error?.message || 'Gagal mengupload bukti pembayaran',
+                  });
+                  return;
+                }
+              } catch (uploadError) {
+                console.error('Error uploading receipt:', uploadError);
+                toast({
+                  variant: 'destructive',
+                  title: 'Error',
+                  description: 'Gagal mengupload bukti pembayaran',
+                });
+                return;
+              }
+            }
+
+            // Create payment via API
+            try {
+              const paymentPayload: any = {
+                projectId: project.id,
+                userId: user.id,
+                unitId: plan.unitId,
+                amount: paymentData.amount,
+                paymentDate: paymentData.paymentDate,
+                dueDate: paymentData.paymentDate, // For DP, dueDate same as paymentDate
+                period: null, // DP payment has no period
+                status: 'pending',
+                paymentMethod: paymentData.paymentMethod,
+                notes: paymentData.notes,
+              };
+
+              // Add paymentPlanId if available
+              if (selectedPlanForDPPayment) {
+                paymentPayload.paymentPlanId = selectedPlanForDPPayment;
+              }
+
+              // Add receiptUrl if available
+              if (finalReceiptUrl) {
+                paymentPayload.receiptUrl = finalReceiptUrl;
+              }
+
+              // Add paymentReference if available
+              if (paymentData.paymentReference?.trim()) {
+                paymentPayload.paymentReference = paymentData.paymentReference.trim();
+              }
+
+              const response = await apiClient.post('/payments', paymentPayload);
+
+              if (response.success) {
+                toast({
+                  title: 'Berhasil',
+                  description: 'Pembayaran DP berhasil ditambahkan dan menunggu verifikasi admin',
+                });
+                
+                // Close dialog
+                setSelectedPlanForDPPayment(null);
+                
+                // Refresh project data
+                if (onProjectUpdate) {
+                  onProjectUpdate();
+                }
+              } else {
+                const errorMessage = response.error?.message || 'Failed to create payment';
+                const errorDetails = response.error?.errors 
+                  ? Object.values(response.error.errors).flat().join(', ')
+                  : '';
+                throw new Error(errorDetails || errorMessage);
+              }
+            } catch (error) {
+              console.error('Error creating DP payment:', error);
+              toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: error instanceof Error ? error.message : 'Gagal menambahkan pembayaran DP. Silakan coba lagi.',
+              });
+            }
           }}
         />
       )}

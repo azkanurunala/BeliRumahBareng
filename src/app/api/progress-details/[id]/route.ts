@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { updateProgressDetailSchema } from '@/lib/validations';
 import { NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
+import { generateLegalProgressData } from '@/lib/legal-progress-helpers';
+import { generateFundingProgressData } from '@/lib/funding-progress-helpers';
 
 // GET /api/progress-details/[id] - Get progress detail by ID
 export async function GET(
@@ -52,31 +54,58 @@ export async function GET(
       throw new NotFoundError('Progress detail not found');
     }
 
-    // Transform response
-    const transformedProgressDetail = {
-      id: progressDetail.id,
-      projectId: progressDetail.projectId,
-      category: progressDetail.category,
-      title: progressDetail.title,
-      percentage: progressDetail.percentage,
-      description: progressDetail.description,
-      notes: progressDetail.notes,
-      checklist: progressDetail.checklist.map((item) => ({
+    // For legal and funding categories, auto-generate data
+    let checklist: any[] = [];
+    let completedMembers: string[] = [];
+    let milestones: any[] = [];
+    let percentage = progressDetail.percentage;
+
+    if (progressDetail.category === 'legal') {
+      // Generate data from document signatures (includes progress calculation)
+      const legalData = await generateLegalProgressData(progressDetail.projectId);
+      checklist = legalData.checklist;
+      completedMembers = legalData.completedMembers;
+      milestones = legalData.milestones;
+      percentage = legalData.percentage;
+    } else if (progressDetail.category === 'funding') {
+      // Generate data from payment plans and verified payments (includes progress calculation)
+      const fundingData = await generateFundingProgressData(progressDetail.projectId);
+      checklist = fundingData.checklist;
+      completedMembers = fundingData.completedMembers;
+      milestones = fundingData.milestones;
+      percentage = fundingData.percentage;
+    } else {
+      // Use existing data from database
+      checklist = progressDetail.checklist.map((item) => ({
         id: item.id,
         label: item.label,
         completed: item.completed,
         completedBy: item.completedBy,
         completedAt: item.completedAt?.toISOString(),
         order: item.order,
-      })),
-      completedMembers: progressDetail.completedMembers.map((cm) => cm.userId),
-      milestones: progressDetail.milestones.map((m) => ({
+      }));
+      completedMembers = progressDetail.completedMembers.map((cm) => cm.userId);
+      milestones = progressDetail.milestones.map((m) => ({
         id: m.id,
         label: m.label,
         date: m.date?.toISOString(),
         status: m.status,
         order: m.order,
-      })),
+      }));
+    }
+
+    // Transform response
+    const transformedProgressDetail = {
+      id: progressDetail.id,
+      projectId: progressDetail.projectId,
+      category: progressDetail.category,
+      title: progressDetail.title,
+      percentage,
+      description: progressDetail.description,
+      notes: progressDetail.notes,
+      checklist,
+      completedMembers,
+      milestones,
       createdAt: progressDetail.createdAt.toISOString(),
       updatedAt: progressDetail.updatedAt.toISOString(),
     };
@@ -163,6 +192,40 @@ export async function PUT(
         },
       },
     });
+
+    // Sync percentage dengan project progress fields jika percentage di-update
+    if (validatedData.percentage !== undefined) {
+      try {
+        const category = existingProgressDetail.category;
+        const projectUpdateData: any = {};
+        
+        // Map category ke project progress field
+        if (category === 'kyc') {
+          projectUpdateData.kycProgress = validatedData.percentage;
+        } else if (category === 'funding') {
+          projectUpdateData.fundingProgress = validatedData.percentage;
+        } else if (category === 'legal') {
+          projectUpdateData.legalProgress = validatedData.percentage;
+        } else if (category === 'closing') {
+          projectUpdateData.closingProgress = validatedData.percentage;
+        }
+
+        // Update project progress jika ada mapping
+        if (Object.keys(projectUpdateData).length > 0) {
+          await db.project.update({
+            where: { id: progressDetail.projectId },
+            data: projectUpdateData,
+          });
+          
+          console.log(`[Progress Sync] Updated project ${progressDetail.projectId} ${category} progress to ${validatedData.percentage}%`);
+        }
+      } catch (syncError) {
+        // Log error tapi jangan gagalkan update progress detail
+        console.error('[Progress Sync] Error syncing project progress:', syncError);
+        // Continue dengan response success karena progress detail sudah ter-update
+        // Client-side akan refresh dan mendapatkan data terbaru
+      }
+    }
 
     // Transform response
     const transformedProgressDetail = {

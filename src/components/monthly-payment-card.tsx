@@ -16,7 +16,8 @@ import {
   formatPeriod,
   isPaymentOverdue,
   getDaysUntilDue,
-  getNextDuePayment
+  getNextDuePayment,
+  isDPPaid
 } from '@/lib/payment-utils';
 import type { InstallmentPlan, User, Property } from '@/lib/types';
 import { Calendar, AlertCircle, CheckCircle2, Clock, Home } from 'lucide-react';
@@ -28,6 +29,7 @@ type MonthlyPaymentCardProps = {
   user: User;
   property?: Property;
   onAddPayment?: () => void;
+  onAddDPPayment?: () => void;
 };
 
 export default function MonthlyPaymentCard({
@@ -35,6 +37,7 @@ export default function MonthlyPaymentCard({
   user,
   property,
   onAddPayment,
+  onAddDPPayment,
 }: MonthlyPaymentCardProps) {
   const remaining = calculateRemaining(plan);
   const paidPercentage = calculatePaidPercentage(plan);
@@ -42,6 +45,7 @@ export default function MonthlyPaymentCard({
   const paidCount = getPaidInstallmentsCount(plan);
   const currentPayment = getCurrentMonthPayment(plan);
   const nextDuePayment = getNextDuePayment(plan);
+  const dpPaid = isDPPaid(plan);
 
   const getStatusBadge = () => {
     if (plan.status === 'completed') {
@@ -173,15 +177,30 @@ export default function MonthlyPaymentCard({
           </div>
         )}
 
-        {/* Action Button */}
-        {plan.status === 'active' && onAddPayment && (
-          <Button 
-            onClick={onAddPayment} 
-            className="w-full"
-            variant={currentPayment && isPaymentOverdue(currentPayment) ? "default" : "outline"}
-          >
-            {currentPayment?.status === 'paid' ? 'Lihat Detail' : 'Bayar Cicilan'}
-          </Button>
+        {/* Action Buttons */}
+        {plan.status === 'active' && (
+          <div className="space-y-2">
+            {/* DP Payment Button */}
+            {plan.downPayment && plan.downPayment > 0 && !dpPaid && onAddDPPayment && (
+              <Button 
+                onClick={onAddDPPayment} 
+                className="w-full"
+                variant="default"
+              >
+                Bayar DP ({formatCurrency(plan.downPayment)})
+              </Button>
+            )}
+            {/* Installment Payment Button */}
+            {onAddPayment && (
+              <Button 
+                onClick={onAddPayment} 
+                className="w-full"
+                variant={currentPayment && isPaymentOverdue(currentPayment) ? "default" : "outline"}
+              >
+                {currentPayment?.status === 'paid' ? 'Lihat Detail' : 'Bayar Cicilan'}
+              </Button>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

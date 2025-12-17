@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { createProgressDetailSchema } from '@/lib/validations';
 import { ValidationError, NotFoundError, ConflictError } from '@/lib/errors';
 import { z } from 'zod';
+import { generateLegalProgressData } from '@/lib/legal-progress-helpers';
+import { generateFundingProgressData } from '@/lib/funding-progress-helpers';
 
 // GET /api/progress-details - Get all progress details dengan pagination dan filtering
 export async function GET(request: NextRequest) {
@@ -64,33 +66,124 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Transform ke format yang diharapkan frontend
-    const transformedProgressDetails = progressDetails.map((pd) => ({
-      id: pd.id,
-      projectId: pd.projectId,
-      category: pd.category,
-      title: pd.title,
-      percentage: pd.percentage,
-      description: pd.description,
-      notes: pd.notes,
-      checklist: pd.checklist.map((item) => ({
-        id: item.id,
-        label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
-        order: item.order,
-      })),
-      completedMembers: pd.completedMembers.map((cm) => cm.userId),
-      milestones: pd.milestones.map((m) => ({
-        id: m.id,
-        label: m.label,
-        date: m.date?.toISOString(),
-        status: m.status,
-        order: m.order,
-      })),
-      createdAt: pd.createdAt.toISOString(),
-      updatedAt: pd.updatedAt.toISOString(),
-    }));
+    const transformedProgressDetails = await Promise.all(
+      progressDetails.map(async (pd) => {
+        // For legal category, auto-generate data from document signatures
+        if (pd.category === 'legal') {
+          const legalData = await generateLegalProgressData(pd.projectId);
+          return {
+            id: pd.id,
+            projectId: pd.projectId,
+            category: pd.category,
+            title: pd.title,
+            percentage: legalData.percentage,
+            description: pd.description,
+            notes: pd.notes,
+            checklist: legalData.checklist,
+            completedMembers: legalData.completedMembers,
+            milestones: legalData.milestones,
+            createdAt: pd.createdAt.toISOString(),
+            updatedAt: pd.updatedAt.toISOString(),
+          };
+        }
+
+        // For funding category, auto-generate data from payment plans and verified payments
+        if (pd.category === 'funding') {
+          const fundingData = await generateFundingProgressData(pd.projectId);
+          return {
+            id: pd.id,
+            projectId: pd.projectId,
+            category: pd.category,
+            title: pd.title,
+            percentage: fundingData.percentage,
+            description: pd.description,
+            notes: pd.notes,
+            checklist: fundingData.checklist,
+            completedMembers: fundingData.completedMembers,
+            milestones: fundingData.milestones,
+            createdAt: pd.createdAt.toISOString(),
+            updatedAt: pd.updatedAt.toISOString(),
+          };
+        }
+
+        // Use existing data from database for other categories
+        return {
+          id: pd.id,
+          projectId: pd.projectId,
+          category: pd.category,
+          title: pd.title,
+          percentage: pd.percentage,
+          description: pd.description,
+          notes: pd.notes,
+          checklist: pd.checklist.map((item) => ({
+            id: item.id,
+            label: item.label,
+            completed: item.completed,
+            completedBy: item.completedBy,
+            completedAt: item.completedAt?.toISOString(),
+            order: item.order,
+          })),
+          completedMembers: pd.completedMembers.map((cm) => cm.userId),
+          milestones: pd.milestones.map((m) => ({
+            id: m.id,
+            label: m.label,
+            date: m.date?.toISOString(),
+            status: m.status,
+            order: m.order,
+          })),
+          createdAt: pd.createdAt.toISOString(),
+          updatedAt: pd.updatedAt.toISOString(),
+        };
+      })
+    );
+
+    // If projectId is provided and legal/funding progress detail doesn't exist, generate it
+    if (projectId && !category) {
+      const hasLegal = transformedProgressDetails.some(pd => pd.category === 'legal');
+      const hasFunding = transformedProgressDetails.some(pd => pd.category === 'funding');
+      
+      // Check if project exists to get default title
+      const project = await db.project.findUnique({
+        where: { id: projectId },
+        select: { propertyName: true },
+      });
+
+      if (!hasLegal) {
+        const legalData = await generateLegalProgressData(projectId);
+        transformedProgressDetails.push({
+          id: `virtual-legal-${projectId}`, // Virtual ID since it doesn't exist in DB
+          projectId: projectId,
+          category: 'legal',
+          title: 'Legal & Dokumentasi',
+          percentage: legalData.percentage,
+          description: 'Progress penandatanganan dokumen legal',
+          notes: null,
+          checklist: legalData.checklist,
+          completedMembers: legalData.completedMembers,
+          milestones: legalData.milestones,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      if (!hasFunding) {
+        const fundingData = await generateFundingProgressData(projectId);
+        transformedProgressDetails.push({
+          id: `virtual-funding-${projectId}`, // Virtual ID since it doesn't exist in DB
+          projectId: projectId,
+          category: 'funding',
+          title: 'Pendanaan Grup',
+          percentage: fundingData.percentage,
+          description: 'Progress pembayaran terverifikasi',
+          notes: null,
+          checklist: fundingData.checklist,
+          completedMembers: fundingData.completedMembers,
+          milestones: fundingData.milestones,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

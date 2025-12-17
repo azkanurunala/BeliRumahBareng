@@ -15,6 +15,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { calculateKYCProgress, calculateLegalProgress, calculateClosingProgress } from '@/lib/progress-calculator';
 import { updateProjectProgress } from './project.actions';
+import { generateLegalProgressData } from '@/lib/legal-progress-helpers';
+import { generateFundingProgressData } from '@/lib/funding-progress-helpers';
 
 /**
  * Server Actions untuk Progress Operations
@@ -97,6 +99,28 @@ export async function updateProgressDetail(id: string, data: Partial<z.infer<typ
       include: { checklist: { orderBy: { order: 'asc' } }, completedMembers: true, milestones: { orderBy: { order: 'asc' } } },
     });
 
+    // Sync percentage dengan project progress fields jika percentage di-update
+    if (validatedData.percentage !== undefined) {
+      const category = existing.category;
+      const progressUpdate: { kyc?: number; funding?: number; legal?: number; closing?: number } = {};
+      
+      // Map category ke project progress field
+      if (category === 'kyc') {
+        progressUpdate.kyc = validatedData.percentage;
+      } else if (category === 'funding') {
+        progressUpdate.funding = validatedData.percentage;
+      } else if (category === 'legal') {
+        progressUpdate.legal = validatedData.percentage;
+      } else if (category === 'closing') {
+        progressUpdate.closing = validatedData.percentage;
+      }
+
+      // Update project progress jika ada mapping
+      if (Object.keys(progressUpdate).length > 0) {
+        await updateProjectProgress(progressDetail.projectId, progressUpdate);
+      }
+    }
+
     const transformed = {
       id: progressDetail.id,
       projectId: progressDetail.projectId,
@@ -127,7 +151,11 @@ export async function updateProgressDetail(id: string, data: Partial<z.infer<typ
 
     revalidatePath('/admin/projects');
     revalidatePath(`/admin/projects/${progressDetail.projectId}`);
+    revalidatePath(`/admin/projects/${progressDetail.projectId}/detail`);
+    revalidatePath(`/projects/${progressDetail.projectId}`);
     revalidatePath('/api/progress-details');
+    revalidatePath('/api/projects');
+    revalidatePath(`/api/projects/${progressDetail.projectId}`);
     return { success: true, data: transformed };
   } catch (error) {
     console.error('Error updating progress detail:', error);
@@ -169,6 +197,48 @@ export async function getProgressDetail(id: string) {
     if (!progressDetail) {
       return { success: false, error: { message: 'Progress detail not found', code: 'NOT_FOUND' } };
     }
+
+    // For legal category, auto-generate data from document signatures
+    if (progressDetail.category === 'legal') {
+      const legalData = await generateLegalProgressData(progressDetail.projectId);
+      const transformed = {
+        id: progressDetail.id,
+        projectId: progressDetail.projectId,
+        category: progressDetail.category,
+        title: progressDetail.title,
+        percentage: legalData.percentage,
+        description: progressDetail.description,
+        notes: progressDetail.notes,
+        checklist: legalData.checklist,
+        completedMembers: legalData.completedMembers,
+        milestones: legalData.milestones,
+        createdAt: progressDetail.createdAt.toISOString(),
+        updatedAt: progressDetail.updatedAt.toISOString(),
+      };
+      return { success: true, data: transformed };
+    }
+
+    // For funding category, auto-generate data from payment plans and verified payments
+    if (progressDetail.category === 'funding') {
+      const fundingData = await generateFundingProgressData(progressDetail.projectId);
+      const transformed = {
+        id: progressDetail.id,
+        projectId: progressDetail.projectId,
+        category: progressDetail.category,
+        title: progressDetail.title,
+        percentage: fundingData.percentage,
+        description: progressDetail.description,
+        notes: progressDetail.notes,
+        checklist: fundingData.checklist,
+        completedMembers: fundingData.completedMembers,
+        milestones: fundingData.milestones,
+        createdAt: progressDetail.createdAt.toISOString(),
+        updatedAt: progressDetail.updatedAt.toISOString(),
+      };
+      return { success: true, data: transformed };
+    }
+
+    // Use existing data from database for other categories
     const transformed = {
       id: progressDetail.id,
       projectId: progressDetail.projectId,
@@ -228,33 +298,76 @@ export async function getProgressDetails(options?: { page?: number; limit?: numb
       db.progressDetail.count({ where }),
     ]);
 
-    const transformed = progressDetails.map((pd) => ({
-      id: pd.id,
-      projectId: pd.projectId,
-      category: pd.category,
-      title: pd.title,
-      percentage: pd.percentage,
-      description: pd.description,
-      notes: pd.notes,
-      checklist: pd.checklist.map((item) => ({
-        id: item.id,
-        label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
-        order: item.order,
-      })),
-      completedMembers: pd.completedMembers.map((cm) => cm.userId),
-      milestones: pd.milestones.map((m) => ({
-        id: m.id,
-        label: m.label,
-        date: m.date?.toISOString(),
-        status: m.status,
-        order: m.order,
-      })),
-      createdAt: pd.createdAt.toISOString(),
-      updatedAt: pd.updatedAt.toISOString(),
-    }));
+    const transformed = await Promise.all(
+      progressDetails.map(async (pd) => {
+        // For legal category, auto-generate data from document signatures
+        if (pd.category === 'legal') {
+          const legalData = await generateLegalProgressData(pd.projectId);
+          return {
+            id: pd.id,
+            projectId: pd.projectId,
+            category: pd.category,
+            title: pd.title,
+            percentage: legalData.percentage,
+            description: pd.description,
+            notes: pd.notes,
+            checklist: legalData.checklist,
+            completedMembers: legalData.completedMembers,
+            milestones: legalData.milestones,
+            createdAt: pd.createdAt.toISOString(),
+            updatedAt: pd.updatedAt.toISOString(),
+          };
+        }
+
+        // For funding category, auto-generate data from payment plans and verified payments
+        if (pd.category === 'funding') {
+          const fundingData = await generateFundingProgressData(pd.projectId);
+          return {
+            id: pd.id,
+            projectId: pd.projectId,
+            category: pd.category,
+            title: pd.title,
+            percentage: fundingData.percentage,
+            description: pd.description,
+            notes: pd.notes,
+            checklist: fundingData.checklist,
+            completedMembers: fundingData.completedMembers,
+            milestones: fundingData.milestones,
+            createdAt: pd.createdAt.toISOString(),
+            updatedAt: pd.updatedAt.toISOString(),
+          };
+        }
+
+        // Use existing data from database for other categories
+        return {
+          id: pd.id,
+          projectId: pd.projectId,
+          category: pd.category,
+          title: pd.title,
+          percentage: pd.percentage,
+          description: pd.description,
+          notes: pd.notes,
+          checklist: pd.checklist.map((item) => ({
+            id: item.id,
+            label: item.label,
+            completed: item.completed,
+            completedBy: item.completedBy,
+            completedAt: item.completedAt?.toISOString(),
+            order: item.order,
+          })),
+          completedMembers: pd.completedMembers.map((cm) => cm.userId),
+          milestones: pd.milestones.map((m) => ({
+            id: m.id,
+            label: m.label,
+            date: m.date?.toISOString(),
+            status: m.status,
+            order: m.order,
+          })),
+          createdAt: pd.createdAt.toISOString(),
+          updatedAt: pd.updatedAt.toISOString(),
+        };
+      })
+    );
 
     return { success: true, data: transformed, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   } catch (error) {

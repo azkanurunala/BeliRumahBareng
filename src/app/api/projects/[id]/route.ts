@@ -9,6 +9,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Force fresh data from database, no cache
+  const { unstable_noStore } = await import('next/cache');
+  unstable_noStore();
+  
   try {
     const { id } = await params;
 

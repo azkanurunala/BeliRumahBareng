@@ -108,8 +108,8 @@ export async function calculateFundingProgress(projectId: string): Promise<numbe
 }
 
 /**
- * Calculate Legal Progress based on verified documents vs total documents
- * Formula: (verifiedDocuments / totalDocuments) * 100
+ * Calculate Legal Progress based on document signatures vs total target
+ * Formula: (jumlah penandatanganan yang sudah dilakukan) / (total dokumen × total anggota) × 100
  */
 export async function calculateLegalProgress(projectId: string): Promise<number> {
   try {
@@ -118,15 +118,38 @@ export async function calculateLegalProgress(projectId: string): Promise<number>
       where: { projectId },
     });
 
-    if (documents.length === 0) {
+    // Get all project members
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      include: {
+        members: true,
+      },
+    });
+
+    if (!project || documents.length === 0 || project.members.length === 0) {
       return 0;
     }
 
-    // Count verified documents (status='Terverifikasi')
-    const verifiedDocuments = documents.filter(doc => doc.status === 'Terverifikasi').length;
+    // Calculate total target: total documents × total members
+    const totalTarget = documents.length * project.members.length;
 
-    // Calculate progress
-    const progress = (verifiedDocuments / documents.length) * 100;
+    if (totalTarget === 0) {
+      return 0;
+    }
+
+    // Count all signatures for all documents in this project
+    const allSignatures = await db.documentSignature.findMany({
+      where: {
+        document: {
+          projectId: projectId,
+        },
+      },
+    });
+
+    const completedSignatures = allSignatures.length;
+
+    // Calculate progress: (completed signatures / total target) × 100
+    const progress = (completedSignatures / totalTarget) * 100;
     return Math.round(Math.min(100, Math.max(0, progress)));
   } catch (error) {
     console.error('Error calculating legal progress:', error);

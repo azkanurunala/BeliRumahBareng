@@ -43,7 +43,7 @@ const paymentBaseSchema = z.object({
   amount: z.number().positive('Amount harus positif'),
   paymentDate: z.string().datetime('Format tanggal tidak valid').optional(),
   dueDate: z.string().datetime('Format tanggal tidak valid').optional(),
-  period: z.string().regex(/^\d{4}-\d{2}$/, 'Format periode harus YYYY-MM').optional(),
+  period: z.string().regex(/^\d{4}-\d{2}$/, 'Format periode harus YYYY-MM').nullable().optional(),
   status: z.enum(['paid', 'pending', 'overdue', 'partial'], {
     required_error: 'Status wajib dipilih',
   }),

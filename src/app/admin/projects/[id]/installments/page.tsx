@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdminData } from '@/contexts/admin-data-context';
 import type { InstallmentPlan } from '@/lib/types';
 import { Plus, ArrowLeft, CreditCard } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/payment-utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,7 +25,7 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
   const { id } = use(params);
   const router = useRouter();
   const { toast } = useToast();
-  const { getProject, updateProject } = useAdminData();
+  const { getProject, updateProject, loadProjects } = useAdminData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<InstallmentPlan | null>(null);
   
@@ -108,31 +109,69 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
     },
   ];
 
-  const handleSubmit = (data: any) => {
-    const installmentPlans = project.installmentPlans || [];
+  const handleSubmit = async (data: any) => {
+    try {
+      // Convert date strings to ISO datetime format
+      const payload = {
+        projectId: id,
+        userId: data.userId,
+        unitId: data.unitId,
+        type: 'installment' as const, // Default to installment
+        totalAmount: data.totalAmount,
+        downPayment: data.downPayment,
+        installmentAmount: data.installmentAmount,
+        totalInstallments: data.totalInstallments,
+        startDate: data.startDate ? new Date(data.startDate).toISOString() : undefined,
+        endDate: data.endDate ? new Date(data.endDate).toISOString() : undefined,
+        status: data.status,
+      };
     
     if (editingPlan) {
-      // Update
-      const updatedPlans = installmentPlans.map(plan =>
-        plan.id === editingPlan.id ? { ...plan, ...data } : plan
-      );
-      updateProject(id, { installmentPlans: updatedPlans });
+        // Update existing plan via API
+        const response = await apiClient.put(`/payment-plans/${editingPlan.id}`, {
+          id: editingPlan.id,
+          ...payload,
+        });
+        
+        if (response.success) {
+          toast({
+            title: 'Berhasil',
+            description: 'Payment plan berhasil diperbarui',
+          });
+          setIsDialogOpen(false);
+          setEditingPlan(null);
+          // Refresh project data from context
+          await loadProjects();
+          router.refresh();
     } else {
-      // Create
-      const newPlan: InstallmentPlan = {
-        id: `plan-${Date.now()}`,
-        ...data,
-        payments: [],
-      };
-      updateProject(id, { installmentPlans: [...installmentPlans, newPlan] });
-    }
-    
+          throw new Error(response.error?.message || 'Failed to update payment plan');
+        }
+      } else {
+        // Create new plan via API
+        const response = await apiClient.post('/payment-plans', payload);
+        
+        if (response.success) {
     toast({
       title: 'Berhasil',
-      description: editingPlan ? 'Installment plan berhasil diperbarui' : 'Installment plan berhasil ditambahkan',
+            description: 'Payment plan berhasil dibuat',
     });
     setIsDialogOpen(false);
     setEditingPlan(null);
+          // Refresh project data from context
+          await loadProjects();
+          router.refresh();
+        } else {
+          throw new Error(response.error?.message || 'Failed to create payment plan');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving payment plan:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal menyimpan payment plan',
+      });
+    }
   };
 
   const handleEdit = (plan: InstallmentPlan) => {
@@ -176,7 +215,6 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
           </div>
         </div>
         <div>
-          {project.status === 'closed' || project.status === 'completed' ? (
             <Dialog open={isDialogOpen} onOpenChange={(open) => {
               setIsDialogOpen(open);
               if (!open) setEditingPlan(null);
@@ -184,21 +222,23 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
-                  Tambah Installment Plan
+                Tambah Payment Plan
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingPlan ? 'Edit Installment Plan' : 'Tambah Installment Plan Baru'}
+                  {editingPlan ? 'Edit Payment Plan' : 'Tambah Payment Plan Baru'}
                   </DialogTitle>
                   <DialogDescription>
-                    {editingPlan ? 'Edit informasi installment plan' : 'Tambahkan installment plan baru ke project'}
+                  {editingPlan ? 'Edit informasi payment plan' : 'Tambahkan payment plan baru ke project (installment atau cash)'}
                   </DialogDescription>
                 </DialogHeader>
                 <InstallmentPlanForm
                   installmentPlan={editingPlan || undefined}
                   projectMembers={project.members}
+                unitAssignments={project.unitAssignments || []}
+                projectId={id}
                   onSubmit={handleSubmit}
                   onCancel={() => {
                     setIsDialogOpen(false);
@@ -207,11 +247,6 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
                 />
               </DialogContent>
             </Dialog>
-          ) : (
-            <div className="text-sm text-muted-foreground">
-              Installment plans hanya dapat dibuat untuk project dengan status 'closed' atau 'completed'
-            </div>
-          )}
         </div>
       </div>
 
@@ -226,12 +261,10 @@ export default function ProjectInstallmentsPage({ params }: { params: Promise<{ 
           {installmentPlans.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <CreditCard className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Belum ada installment plan</p>
-              {project.status !== 'closed' && project.status !== 'completed' && (
+              <p>Belum ada payment plan</p>
                 <p className="text-xs mt-2">
-                  Installment plans akan tersedia setelah project status menjadi 'closed' atau 'completed'
+                Klik tombol "Tambah Payment Plan" di atas untuk membuat payment plan baru
                 </p>
-              )}
             </div>
           ) : (
             <DataTable

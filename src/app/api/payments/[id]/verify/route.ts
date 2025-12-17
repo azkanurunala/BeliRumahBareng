@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { verifyPaymentSchema } from '@/lib/validations';
 import { NotFoundError } from '@/lib/errors';
 import { z } from 'zod';
+import { calculateFundingProgress } from '@/lib/progress-calculator';
+import { updateProjectProgress } from '@/lib/actions/project.actions';
 
 // POST /api/payments/[id]/verify - Verify payment
 export async function POST(
@@ -67,6 +69,18 @@ export async function POST(
         },
       },
     });
+
+    // Calculate and update funding progress after payment is verified
+    // Only update if payment was not previously verified
+    if (!payment.verifiedAt) {
+      try {
+        const progressValue = await calculateFundingProgress(updatedPayment.projectId);
+        await updateProjectProgress(updatedPayment.projectId, { funding: progressValue });
+      } catch (progressError) {
+        // Log error but don't fail the request
+        console.error('[Funding Progress] Error updating funding progress after payment verification:', progressError);
+      }
+    }
 
     // Transform response
     const transformedPayment = {

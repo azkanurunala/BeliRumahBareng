@@ -79,8 +79,12 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   const totalMembers = project.members.length;
   const totalPrice = project.unitAssignments.reduce((sum, unit) => sum + unit.price, 0);
   
-  // Get completed documents count
-  const completedDocs = project.documents.filter(doc => doc.status === 'Terverifikasi').length;
+  // Get completed documents count - documents that are signed by all members
+  // A document is considered completed if all project members have signed it
+  const completedDocs = project.documents.filter(doc => {
+    const signedByCount = doc.signedBy?.length || 0;
+    return signedByCount >= totalMembers && totalMembers > 0;
+  }).length;
   const totalDocs = project.documents.length;
 
   // Get progress breakdown

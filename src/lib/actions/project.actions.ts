@@ -493,6 +493,10 @@ export async function deleteProject(id: string) {
 }
 
 export async function getProject(id: string) {
+  // Force fresh data from database, no cache
+  const { unstable_noStore } = await import('next/cache');
+  unstable_noStore();
+  
   try {
     const project = await db.project.findUnique({
       where: { id },
@@ -746,6 +750,10 @@ export async function getProjects(options?: {
   search?: string;
   status?: string;
 }) {
+  // Force fresh data from database, no cache
+  const { unstable_noStore } = await import('next/cache');
+  unstable_noStore();
+  
   try {
     const page = options?.page || 1;
     const limit = options?.limit || 10;
@@ -799,6 +807,13 @@ export async function getProjects(options?: {
                     },
                   },
                 },
+              },
+            },
+          },
+          paymentPlans: {
+            include: {
+              payments: {
+                orderBy: { createdAt: 'desc' },
               },
             },
           },
@@ -860,7 +875,37 @@ export async function getProjects(options?: {
         verifiedAt: doc.verifiedAt?.toISOString(),
       })),
       messages: [],
-      installmentPlans: [],
+      installmentPlans: project.paymentPlans.map((plan) => ({
+        id: plan.id,
+        projectId: plan.projectId,
+        userId: plan.userId,
+        unitId: plan.unitId,
+        totalAmount: Number(plan.totalAmount),
+        downPayment: plan.downPayment ? Number(plan.downPayment) : undefined,
+        installmentAmount: plan.installmentAmount ? Number(plan.installmentAmount) : undefined,
+        totalInstallments: plan.totalInstallments,
+        startDate: plan.startDate?.toISOString(),
+        endDate: plan.endDate?.toISOString(),
+        status: plan.status,
+        payments: plan.payments.map((p) => ({
+          id: p.id,
+          projectId: p.projectId,
+          userId: p.userId,
+          unitId: p.unitId,
+          amount: Number(p.amount),
+          paymentDate: p.paymentDate?.toISOString(),
+          dueDate: p.dueDate?.toISOString(),
+          period: p.period,
+          status: p.status,
+          paymentMethod: p.paymentMethod,
+          receiptUrl: p.receiptUrl,
+          paymentReference: p.paymentReference,
+          notes: p.notes,
+          verifiedBy: p.verifiedBy,
+          verifiedAt: p.verifiedAt?.toISOString(),
+          createdAt: p.createdAt.toISOString(),
+        })),
+      })),
     }));
 
     return {

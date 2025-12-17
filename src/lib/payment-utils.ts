@@ -4,14 +4,19 @@ import { id } from 'date-fns/locale/id';
 
 /**
  * Calculate remaining amount to be paid for an installment plan
+ * Note: Sisa Cicilan excludes DP, only calculates remaining installments
  */
 export function calculateRemaining(plan: InstallmentPlan): number {
-  const totalPaid = plan.payments
-    .filter(p => p.status === 'paid')
+  // Calculate total installment amount (excluding DP)
+  const totalInstallmentAmount = plan.totalAmount - (plan.downPayment || 0);
+  
+  // Calculate paid installments only (exclude DP payment which has period = null)
+  const paidInstallments = plan.payments
+    .filter(p => p.status === 'paid' && p.period !== null && p.period !== '')
     .reduce((sum, payment) => sum + payment.amount, 0);
   
-  const totalToPay = plan.totalAmount - plan.downPayment;
-  return Math.max(0, totalToPay - totalPaid);
+  // Remaining = Total Installment Amount - Paid Installments
+  return Math.max(0, totalInstallmentAmount - paidInstallments);
 }
 
 /**
@@ -22,10 +27,10 @@ export function calculatePaidPercentage(plan: InstallmentPlan): number {
     .filter(p => p.status === 'paid')
     .reduce((sum, payment) => sum + payment.amount, 0);
   
-  const totalToPay = plan.totalAmount - plan.downPayment;
-  if (totalToPay === 0) return 100;
+  // Total includes DP + installments
+  if (plan.totalAmount === 0) return 100;
   
-  return Math.min(100, Math.round((totalPaid / totalToPay) * 100));
+  return Math.min(100, Math.round((totalPaid / plan.totalAmount) * 100));
 }
 
 /**
@@ -84,7 +89,27 @@ export function getNextDuePayment(plan: InstallmentPlan): MonthlyPayment | null 
  * Get number of paid installments
  */
 export function getPaidInstallmentsCount(plan: InstallmentPlan): number {
-  return plan.payments.filter(p => p.status === 'paid').length;
+  return plan.payments.filter(p => p.status === 'paid' && p.period && p.period !== 'DP').length;
+}
+
+/**
+ * Check if DP has been paid
+ */
+export function isDPPaid(plan: InstallmentPlan): boolean {
+  if (!plan.downPayment || plan.downPayment === 0) return true; // No DP required
+  
+  // Check if there's a payment with period null or "DP" that is paid
+  const dpPayment = plan.payments.find(p => 
+    (p.period === null || p.period === 'DP' || p.period === '') && 
+    p.status === 'paid'
+  );
+  
+  if (dpPayment) {
+    // Check if the amount is sufficient (with 5% tolerance)
+    return dpPayment.amount >= plan.downPayment * 0.95;
+  }
+  
+  return false;
 }
 
 /**
@@ -187,8 +212,8 @@ export function calculateTotalPaymentProgress(project: Project): {
 
   project.installmentPlans.forEach(plan => {
     totalAmount += plan.totalAmount;
-    totalPaid += plan.downPayment; // DP sudah dibayar
-    totalPaid += getTotalPaid(plan); // Cicilan yang sudah dibayar
+    // getTotalPaid sudah menghitung semua payment dengan status 'paid', termasuk DP payment
+    totalPaid += getTotalPaid(plan);
   });
 
   const percentage = totalAmount === 0 ? 100 : Math.round((totalPaid / totalAmount) * 100);

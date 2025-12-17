@@ -550,6 +550,17 @@ export async function addDocumentSignature(data: z.infer<typeof createDocumentSi
           data: { status: 'Tertanda' },
         });
       }
+
+      // Recalculate legal progress
+      try {
+        const { calculateLegalProgress } = await import('@/lib/progress-calculator');
+        const { updateProjectProgress } = await import('./project.actions');
+        const legalProgress = await calculateLegalProgress(document.projectId);
+        await updateProjectProgress(document.projectId, { legal: legalProgress });
+      } catch (progressError) {
+        // Log error but don't fail the request
+        console.error('[Legal Progress] Error updating legal progress after signature:', progressError);
+      }
     }
 
     // Transform response
@@ -655,6 +666,17 @@ export async function removeDocumentSignature(data: z.infer<typeof deleteDocumen
             where: { id: validatedData.documentId },
             data: { status: 'Menunggu' },
           });
+        }
+
+        // Recalculate legal progress
+        try {
+          const { calculateLegalProgress } = await import('@/lib/progress-calculator');
+          const { updateProjectProgress } = await import('./project.actions');
+          const legalProgress = await calculateLegalProgress(document.projectId);
+          await updateProjectProgress(document.projectId, { legal: legalProgress });
+        } catch (progressError) {
+          // Log error but don't fail the request
+          console.error('[Legal Progress] Error updating legal progress after signature removal:', progressError);
         }
       }
     }

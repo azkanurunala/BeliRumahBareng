@@ -292,13 +292,19 @@ export default function ProjectPaymentsPage({ params }: { params: Promise<{ id: 
           <CardHeader>
             <CardTitle>Daftar Pembayaran</CardTitle>
             <CardDescription>
-              Belum ada installment plan untuk project ini
+              Belum ada payment plan untuk project ini
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Installment plans akan muncul setelah project status menjadi 'closed' atau 'completed'
+              Buat payment plan terlebih dahulu untuk mulai mencatat pembayaran.
             </p>
+            <Button asChild>
+              <Link href={`/admin/projects/${id}/installments`}>
+                <Plus className="h-4 w-4 mr-2" />
+                Buat Payment Plan
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       )}

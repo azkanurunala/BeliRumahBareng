@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { createDocumentSignatureSchema, deleteDocumentSignatureSchema } from '@/lib/validations';
 import { NotFoundError, ConflictError } from '@/lib/errors';
 import { z } from 'zod';
+import { calculateLegalProgress } from '@/lib/progress-calculator';
+import { updateProjectProgress } from '@/lib/actions/project.actions';
 
 // GET /api/project-documents/[id]/signatures - Get all signatures for a document
 export async function GET(
@@ -160,6 +162,15 @@ export async function POST(
           data: { status: 'Tertanda' },
         });
       }
+
+      // Recalculate legal progress
+      try {
+        const legalProgress = await calculateLegalProgress(document.projectId);
+        await updateProjectProgress(document.projectId, { legal: legalProgress });
+      } catch (progressError) {
+        // Log error but don't fail the request
+        console.error('[Legal Progress] Error updating legal progress after signature:', progressError);
+      }
     }
 
     // Transform response
@@ -310,6 +321,15 @@ export async function DELETE(
             where: { id: validatedData.documentId },
             data: { status: 'Menunggu' },
           });
+        }
+
+        // Recalculate legal progress
+        try {
+          const legalProgress = await calculateLegalProgress(document.projectId);
+          await updateProjectProgress(document.projectId, { legal: legalProgress });
+        } catch (progressError) {
+          // Log error but don't fail the request
+          console.error('[Legal Progress] Error updating legal progress after signature removal:', progressError);
         }
       }
     }

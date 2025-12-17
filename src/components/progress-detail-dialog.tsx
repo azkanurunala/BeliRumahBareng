@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CheckCircle2, Clock, Calendar } from 'lucide-react';
+import { CheckCircle2, Clock, Calendar, Loader2 } from 'lucide-react';
 import type { ProgressDetail, User } from '@/lib/types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale/id';
@@ -22,6 +22,7 @@ type ProgressDetailDialogProps = {
   onOpenChange: (open: boolean) => void;
   progressDetail: ProgressDetail;
   members: User[];
+  isLoading?: boolean;
 };
 
 export default function ProgressDetailDialog({
@@ -29,6 +30,7 @@ export default function ProgressDetailDialog({
   onOpenChange,
   progressDetail,
   members,
+  isLoading = false,
 }: ProgressDetailDialogProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
@@ -58,7 +60,13 @@ export default function ProgressDetailDialog({
           <DialogDescription>{progressDetail.description}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 mt-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-sm text-muted-foreground">Memuat detail progress...</span>
+          </div>
+        ) : (
+          <div className="space-y-6 mt-4">
           {/* Progress Percentage */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -204,6 +212,7 @@ export default function ProgressDetailDialog({
             </div>
           )}
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

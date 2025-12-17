@@ -6,6 +6,10 @@ import { z } from 'zod';
 
 // GET /api/projects - Get all projects dengan pagination dan filtering
 export async function GET(request: NextRequest) {
+  // Force fresh data from database, no cache
+  const { unstable_noStore } = await import('next/cache');
+  unstable_noStore();
+  
   try {
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
