@@ -12,6 +12,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { LoadingInline } from '@/components/loading-inline';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
@@ -32,7 +33,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 sm:py-10">
-        <div className="text-center">Memuat...</div>
+        <LoadingInline message="Memuat dashboard..." />
       </div>
     );
   }

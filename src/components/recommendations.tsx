@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MapPin, Sparkles } from 'lucide-react';
+import { LoadingInline } from './loading-inline';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -136,10 +137,7 @@ export default function Recommendations() {
   if (authLoading) {
     return (
       <div className="space-y-6 rounded-lg border p-4">
-        <div className="text-center py-8">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-          <p className="mt-2 text-muted-foreground">Memuat...</p>
-        </div>
+        <LoadingInline message="Memuat..." size="md" />
       </div>
     );
   }
@@ -275,9 +273,8 @@ export default function Recommendations() {
       </Form>
 
       {isLoading && (
-         <div className="mt-6 text-center">
-            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2 text-muted-foreground">AI kami sedang mencari properti sempurna untuk Anda...</p>
+         <div className="mt-6">
+            <LoadingInline message="AI kami sedang mencari properti sempurna untuk Anda..." size="md" />
          </div>
       )}
 

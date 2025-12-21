@@ -12,10 +12,11 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CheckCircle2, Clock, Calendar, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, Calendar } from 'lucide-react';
 import type { ProgressDetail, User } from '@/lib/types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale/id';
+import { LoadingInline } from './loading-inline';
 
 type ProgressDetailDialogProps = {
   open: boolean;
@@ -61,10 +62,7 @@ export default function ProgressDetailDialog({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-sm text-muted-foreground">Memuat detail progress...</span>
-          </div>
+          <LoadingInline message="Memuat detail progress..." size="sm" />
         ) : (
           <div className="space-y-6 mt-4">
           {/* Progress Percentage */}

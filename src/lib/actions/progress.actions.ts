@@ -57,6 +57,9 @@ export async function createProgressDetail(data: z.infer<typeof createProgressDe
       where: { id: progressDetail.id },
       include: {
         checklist: {
+          include: {
+            completions: true,
+          },
           orderBy: { order: 'asc' },
         },
         completedMembers: true,
@@ -77,9 +80,7 @@ export async function createProgressDetail(data: z.infer<typeof createProgressDe
       checklist: progressDetailWithChecklist?.checklist.map((item) => ({
         id: item.id,
         label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
+        completedMembers: item.completions.map(c => c.userId),
         order: item.order,
       })) || [],
       completedMembers: progressDetailWithChecklist?.completedMembers.map((cm) => cm.userId) || [],
@@ -126,7 +127,14 @@ export async function updateProgressDetail(id: string, data: Partial<z.infer<typ
     const progressDetail = await db.progressDetail.update({
       where: { id },
       data: updateData,
-      include: { checklist: { orderBy: { order: 'asc' } }, completedMembers: true, milestones: { orderBy: { order: 'asc' } } },
+      include: { 
+        checklist: { 
+          include: { completions: true },
+          orderBy: { order: 'asc' } 
+        }, 
+        completedMembers: true, 
+        milestones: { orderBy: { order: 'asc' } } 
+      },
     });
 
     // Sync percentage dengan project progress fields jika percentage di-update
@@ -162,9 +170,7 @@ export async function updateProgressDetail(id: string, data: Partial<z.infer<typ
       checklist: progressDetail.checklist.map((item) => ({
         id: item.id,
         label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
+        completedMembers: item.completions.map(c => c.userId),
         order: item.order,
       })),
       completedMembers: progressDetail.completedMembers.map((cm) => cm.userId),
@@ -219,7 +225,10 @@ export async function getProgressDetail(id: string) {
       where: { id },
       include: {
         project: { select: { id: true, propertyName: true } },
-        checklist: { orderBy: { order: 'asc' }, include: { completer: { select: { id: true, name: true } } } },
+        checklist: { 
+          include: { completions: true },
+          orderBy: { order: 'asc' } 
+        },
         completedMembers: { include: { user: { select: { id: true, name: true } } } },
         milestones: { orderBy: { order: 'asc' } },
       },
@@ -280,9 +289,7 @@ export async function getProgressDetail(id: string) {
       checklist: progressDetail.checklist.map((item) => ({
         id: item.id,
         label: item.label,
-        completed: item.completed,
-        completedBy: item.completedBy,
-        completedAt: item.completedAt?.toISOString(),
+        completedMembers: item.completions.map(c => c.userId),
         order: item.order,
       })),
       completedMembers: progressDetail.completedMembers.map((cm) => cm.userId),
@@ -320,7 +327,10 @@ export async function getProgressDetails(options?: { page?: number; limit?: numb
         orderBy: { createdAt: 'desc' },
         include: {
           project: { select: { id: true, propertyName: true } },
-          checklist: { orderBy: { order: 'asc' } },
+          checklist: { 
+            include: { completions: true },
+            orderBy: { order: 'asc' } 
+          },
           completedMembers: true,
           milestones: { orderBy: { order: 'asc' } },
         },
@@ -380,9 +390,7 @@ export async function getProgressDetails(options?: { page?: number; limit?: numb
           checklist: pd.checklist.map((item) => ({
             id: item.id,
             label: item.label,
-            completed: item.completed,
-            completedBy: item.completedBy,
-            completedAt: item.completedAt?.toISOString(),
+            completedMembers: item.completions.map(c => c.userId),
             order: item.order,
           })),
           completedMembers: pd.completedMembers.map((cm) => cm.userId),

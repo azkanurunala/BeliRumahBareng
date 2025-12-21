@@ -1,7 +1,6 @@
 'use client';
 
 import { CoBuyLogo } from './icons';
-import { Loader2 } from 'lucide-react';
 
 interface LoadingScreenProps {
   message?: string;
@@ -16,18 +15,31 @@ export function LoadingScreen({ message = 'Memuat...', fullScreen = false }: Loa
       } bg-muted/20`}
     >
       <div className="flex flex-col items-center gap-6">
-        {/* Animated Logo with Ripple Effect */}
+        {/* Animated Logo with Enhanced Effects */}
         <div className="relative">
-          {/* Ripple circles */}
+          {/* Outer Ripple circles */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-primary/20 animate-ping" />
+            <div className="w-24 h-24 rounded-full bg-primary/20 animate-ping" />
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-primary/10 animate-ping [animation-delay:0.5s]" />
+            <div className="w-20 h-20 rounded-full bg-primary/15 animate-ping [animation-delay:0.3s]" />
           </div>
-          {/* Logo */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-primary/10 animate-ping [animation-delay:0.6s]" />
+          </div>
+          
+          {/* Glow effect */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-primary/30 blur-xl animate-pulse" />
+          </div>
+          
+          {/* Logo with rotation and scale animation */}
           <div className="relative">
-            <CoBuyLogo className="h-16 w-16 text-primary animate-pulse" />
+            <div className="animate-spin-slow">
+              <div className="animate-pulse-scale">
+                <CoBuyLogo className="h-16 w-16 text-primary drop-shadow-lg" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -36,10 +48,7 @@ export function LoadingScreen({ message = 'Memuat...', fullScreen = false }: Loa
           <h2 className="text-2xl font-bold text-primary animate-pulse">
             BeliRumahBareng
           </h2>
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">{message}</p>
-          </div>
+          <p className="text-sm text-muted-foreground animate-pulse">{message}</p>
         </div>
 
         {/* Loading Dots Animation */}

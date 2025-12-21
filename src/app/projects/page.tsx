@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { getProjects } from '@/lib/actions/project.actions';
 import ProjectsList from "@/components/projects-list";
 import type { Project } from '@/lib/types';
+import { LoadingInline } from '@/components/loading-inline';
 
 export default function ProjectsPage() {
     const { isAuthenticated, isLoading, isAdmin } = useAuth();
@@ -51,7 +52,7 @@ export default function ProjectsPage() {
     if (isLoading || projectsLoading) {
         return (
             <div className="container mx-auto py-6 sm:py-10">
-                <div className="text-center">Memuat...</div>
+                <LoadingInline message="Memuat proyek..." />
             </div>
         );
     }

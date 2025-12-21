@@ -5,6 +5,7 @@ import ProjectDashboard from '@/components/project-dashboard';
 import { getProject } from '@/lib/actions/project.actions';
 import { notFound } from 'next/navigation';
 import type { Project } from '@/lib/types';
+import { LoadingInline } from '@/components/loading-inline';
 
 export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
     const [projectId, setProjectId] = useState<string | null>(null);
@@ -50,7 +51,11 @@ export default function ProjectPage({ params }: { params: Promise<{ id: string }
 
     // Show loading state
     if (isLoading || !projectId) {
-        return <div className="container mx-auto py-6 sm:py-10">Memuat...</div>;
+        return (
+            <div className="container mx-auto py-6 sm:py-10">
+                <LoadingInline message="Memuat detail proyek..." />
+            </div>
+        );
     }
 
     // Show error or not found

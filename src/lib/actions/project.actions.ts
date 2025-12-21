@@ -112,6 +112,9 @@ export async function createProject(data: z.infer<typeof createProjectSchema>) {
         progressDetails: {
           include: {
             checklist: {
+              include: {
+                completions: true,
+              },
               orderBy: { order: 'asc' },
             },
             completedMembers: true,
@@ -135,9 +138,8 @@ export async function createProject(data: z.infer<typeof createProjectSchema>) {
           checklist: pd.checklist.map((item) => ({
             id: item.id,
             label: item.label,
-            completed: item.completed,
-            completedBy: item.completedBy,
-            completedAt: item.completedAt?.toISOString(),
+            completedMembers: item.completions.map(c => c.userId),
+            order: item.order,
           })),
           completedMembers: pd.completedMembers.map((cm) => cm.userId),
           milestones: pd.milestones.map((m) => ({
@@ -551,6 +553,9 @@ export async function getProject(id: string) {
         progressDetails: {
           include: {
             checklist: {
+              include: {
+                completions: true,
+              },
               orderBy: { order: 'asc' },
             },
             completedMembers: {
@@ -625,9 +630,8 @@ export async function getProject(id: string) {
         checklist: pd.checklist.map((item) => ({
           id: item.id,
           label: item.label,
-          completed: item.completed,
-          completedBy: item.completedBy,
-          completedAt: item.completedAt?.toISOString(),
+          completedMembers: item.completions.map(c => c.userId),
+          order: item.order,
         })),
         completedMembers: pd.completedMembers.map((cm) => cm.userId),
         milestones: pd.milestones.map((m) => ({

@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/admin-sidebar';
 import { AdminHeader } from '@/components/admin/admin-header';
+import { LoadingScreen } from '@/components/loading-screen';
 
 export default function AdminLayout({
   children,
@@ -42,9 +43,7 @@ export default function AdminLayout({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">Memuat...</div>
-      </div>
+      <LoadingScreen message="Memuat..." fullScreen={true} />
     );
   }
 

@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { LoadingScreen } from '@/components/loading-screen';
 
 export default function AdminPage() {
   const { isAuthenticated, isLoading, isAdmin } = useAuth();
@@ -26,8 +27,6 @@ export default function AdminPage() {
 
   // Show loading state while checking auth
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">Memuat...</div>
-    </div>
+    <LoadingScreen message="Memuat..." fullScreen={true} />
   );
 }
