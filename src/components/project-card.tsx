@@ -242,7 +242,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground border-0 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground border-0 shadow-sm hover:shadow-md transition-all duration-300 pointer-events-none"
+                onClick={(e) => e.preventDefault()}
               >
                 Lihat Detail
               </Button>

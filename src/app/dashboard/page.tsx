@@ -103,54 +103,58 @@ export default function DashboardPage() {
                   const isCoBuilding = property.type === 'co-building';
                   
                   return (
-                    <Card key={interest.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="relative h-48 w-full">
-                        <Image
-                          src={property.images[0]?.url || '/images/placeholder.png'}
-                          alt={property.name}
-                          fill
-                          className="object-cover"
-                          data-ai-hint={property.images[0]?.hint || 'property image'}
-                        />
-                        <Badge 
-                          className="absolute top-2 right-2"
-                          variant={interest.status === 'approved' ? 'default' : interest.status === 'rejected' ? 'destructive' : 'secondary'}
-                        >
-                          {interest.status === 'approved' ? 'Disetujui' : interest.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
-                        </Badge>
-                      </div>
-                      <CardHeader>
-                        <CardTitle className="text-lg">{property.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {property.location}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          {interest.unitId && (
-                            <Badge variant="outline">
-                              {property.unitName} {interest.unitId}
-                            </Badge>
-                          )}
-                          {interest.isFirstHome && (
-                            <Badge variant="outline">Rumah Pertama</Badge>
-                          )}
-                          {interest.willOccupy && (
-                            <Badge variant="outline">Akan Ditempati</Badge>
-                          )}
+                    <Link key={interest.id} href={`/property/${property.id}`} className="block">
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="relative h-48 w-full">
+                          <Image
+                            src={property.images[0]?.url || '/images/placeholder.png'}
+                            alt={property.name}
+                            fill
+                            className="object-cover"
+                            data-ai-hint={property.images[0]?.hint || 'property image'}
+                          />
+                          <Badge 
+                            className="absolute top-2 right-2"
+                            variant={interest.status === 'approved' ? 'default' : interest.status === 'rejected' ? 'destructive' : 'secondary'}
+                          >
+                            {interest.status === 'approved' ? 'Disetujui' : interest.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                          </Badge>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          <p>Dibuat: {new Date(interest.createdAt).toLocaleDateString('id-ID')}</p>
-                        </div>
-                        <Button asChild className="w-full" variant="outline">
-                          <Link href={`/property/${property.id}`}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{property.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {property.location}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            {interest.unitId && (
+                              <Badge variant="outline">
+                                {property.unitName} {interest.unitId}
+                              </Badge>
+                            )}
+                            {interest.isFirstHome && (
+                              <Badge variant="outline">Rumah Pertama</Badge>
+                            )}
+                            {interest.willOccupy && (
+                              <Badge variant="outline">Akan Ditempati</Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <p>Dibuat: {new Date(interest.createdAt).toLocaleDateString('id-ID')}</p>
+                          </div>
+                          <Button 
+                            className="w-full pointer-events-none" 
+                            variant="outline"
+                            onClick={(e) => e.preventDefault()}
+                          >
                             Lihat Detail
                             <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   );
                 })}
               </div>
@@ -183,38 +187,42 @@ export default function DashboardPage() {
                   const isCoBuilding = property.type === 'co-building';
                   
                   return (
-                    <Card key={watchlist.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="relative h-48 w-full">
-                        <Image
-                          src={property.images[0]?.url || '/images/placeholder.png'}
-                          alt={property.name}
-                          fill
-                          className="object-cover"
-                          data-ai-hint={property.images[0]?.hint || 'property image'}
-                        />
-                        <Badge className="absolute top-2 right-2">
-                          {isFlexible ? 'Fleksibel' : isCoBuilding ? 'Bangunan' : 'Lahan'}
-                        </Badge>
-                      </div>
-                      <CardHeader>
-                        <CardTitle className="text-lg">{property.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {property.location}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="text-xs text-muted-foreground">
-                          <p>Disimpan: {new Date(watchlist.createdAt).toLocaleDateString('id-ID')}</p>
+                    <Link key={watchlist.id} href={`/property/${property.id}`} className="block">
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+                        <div className="relative h-48 w-full">
+                          <Image
+                            src={property.images[0]?.url || '/images/placeholder.png'}
+                            alt={property.name}
+                            fill
+                            className="object-cover"
+                            data-ai-hint={property.images[0]?.hint || 'property image'}
+                          />
+                          <Badge className="absolute top-2 right-2">
+                            {isFlexible ? 'Fleksibel' : isCoBuilding ? 'Bangunan' : 'Lahan'}
+                          </Badge>
                         </div>
-                        <Button asChild className="w-full" variant="outline">
-                          <Link href={`/property/${property.id}`}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{property.name}</CardTitle>
+                          <CardDescription className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {property.location}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="text-xs text-muted-foreground">
+                            <p>Disimpan: {new Date(watchlist.createdAt).toLocaleDateString('id-ID')}</p>
+                          </div>
+                          <Button 
+                            className="w-full pointer-events-none" 
+                            variant="outline"
+                            onClick={(e) => e.preventDefault()}
+                          >
                             Lihat Detail
                             <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   );
                 })}
               </div>
