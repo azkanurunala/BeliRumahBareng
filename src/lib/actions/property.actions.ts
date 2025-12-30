@@ -21,12 +21,14 @@ export async function createProperty(data: z.infer<typeof createPropertySchema>)
         description: validatedData.description,
         price: validatedData.price,
         totalArea: validatedData.totalArea,
+        buildingArea: validatedData.buildingArea,
         location: validatedData.location,
         type: validatedData.type,
         totalUnits: validatedData.totalUnits,
         unitName: validatedData.unitName,
         unitSize: validatedData.unitSize,
         unitMeasure: validatedData.unitMeasure,
+        unitPrices: validatedData.unitPrices ? JSON.parse(JSON.stringify(validatedData.unitPrices)) : null,
         sitePlanUrl: validatedData.sitePlanUrl || null,
         sitePlanHint: validatedData.sitePlanHint || null,
         developmentPlan: validatedData.developmentPlan || null,
@@ -38,13 +40,13 @@ export async function createProperty(data: z.infer<typeof createPropertySchema>)
             order: img.order ?? index,
           })),
         },
-      },
+      } as any,
       include: {
         images: {
           orderBy: { order: 'asc' },
         },
       },
-    });
+    }) as any;
 
     // Transform ke format yang diharapkan frontend
     const transformedProperty = {
@@ -53,12 +55,14 @@ export async function createProperty(data: z.infer<typeof createPropertySchema>)
       description: property.description,
       price: Number(property.price),
       totalArea: property.totalArea ? Number(property.totalArea) : undefined,
+      buildingArea: (property as any).buildingArea ? Number((property as any).buildingArea) : undefined,
       location: property.location,
       type: property.type as 'co-building' | 'co-owning',
       totalUnits: property.totalUnits,
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,
@@ -133,13 +137,15 @@ export async function updateProperty(
     if (validatedData.description !== undefined) updateData.description = validatedData.description;
     if (validatedData.price !== undefined) updateData.price = validatedData.price;
     if (validatedData.totalArea !== undefined) updateData.totalArea = validatedData.totalArea;
+    if (validatedData.buildingArea !== undefined) updateData.buildingArea = validatedData.buildingArea;
     if (validatedData.location !== undefined) updateData.location = validatedData.location;
     if (validatedData.type !== undefined) updateData.type = validatedData.type;
     if (validatedData.totalUnits !== undefined) updateData.totalUnits = validatedData.totalUnits;
     if (validatedData.unitName !== undefined) updateData.unitName = validatedData.unitName;
-    if (validatedData.unitSize !== undefined) updateData.unitSize = validatedData.unitSize;
-    if (validatedData.unitMeasure !== undefined) updateData.unitMeasure = validatedData.unitMeasure;
-    if (validatedData.sitePlanUrl !== undefined) updateData.sitePlanUrl = validatedData.sitePlanUrl || null;
+      if (validatedData.unitSize !== undefined) updateData.unitSize = validatedData.unitSize;
+      if (validatedData.unitMeasure !== undefined) updateData.unitMeasure = validatedData.unitMeasure;
+      if (validatedData.unitPrices !== undefined) updateData.unitPrices = validatedData.unitPrices ? JSON.parse(JSON.stringify(validatedData.unitPrices)) : null;
+      if (validatedData.sitePlanUrl !== undefined) updateData.sitePlanUrl = validatedData.sitePlanUrl || null;
     if (validatedData.sitePlanHint !== undefined) updateData.sitePlanHint = validatedData.sitePlanHint || null;
     if (validatedData.developmentPlan !== undefined) updateData.developmentPlan = validatedData.developmentPlan || null;
     if (validatedData.environmentalAnalysis !== undefined) updateData.environmentalAnalysis = validatedData.environmentalAnalysis || null;
@@ -178,12 +184,14 @@ export async function updateProperty(
       description: property.description,
       price: Number(property.price),
       totalArea: property.totalArea ? Number(property.totalArea) : undefined,
+      buildingArea: (property as any).buildingArea ? Number((property as any).buildingArea) : undefined,
       location: property.location,
       type: property.type as 'co-building' | 'co-owning',
       totalUnits: property.totalUnits,
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,
@@ -314,12 +322,14 @@ export async function getProperty(id: string) {
       description: property.description,
       price: Number(property.price),
       totalArea: property.totalArea ? Number(property.totalArea) : undefined,
+      buildingArea: (property as any).buildingArea ? Number((property as any).buildingArea) : undefined,
       location: property.location,
       type: property.type as 'co-building' | 'co-owning',
       totalUnits: property.totalUnits,
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,
@@ -402,6 +412,7 @@ export async function getProperties(options?: {
       description: property.description,
       price: Number(property.price),
       totalArea: property.totalArea ? Number(property.totalArea) : undefined,
+      buildingArea: (property as any).buildingArea ? Number((property as any).buildingArea) : undefined,
       location: property.location,
       type: property.type as 'co-building' | 'co-owning',
       totalUnits: property.totalUnits,

@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAdminData } from '@/contexts/admin-data-context';
-import { ArrowLeft, Edit, Building2, MapPin, DollarSign, Home, Square, FileText, Image as ImageIcon, BadgeCheck, Users } from 'lucide-react';
+import { ArrowLeft, Edit, Building2, MapPin, DollarSign, Home, Square, FileText, Image as ImageIcon, BadgeCheck, Users, Table as TableIcon } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/payment-utils';
 import Image from 'next/image';
 import { Breadcrumb } from '@/components/admin/breadcrumb';
@@ -39,6 +40,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   };
 
   const formattedPricePerMeter = isFlexible && property.totalArea ? formatCurrency(property.price / property.totalArea) : '';
+
+  // Calculate total from unitPrices if available
+  const unitPricesTotal = property.unitPrices && property.unitPrices.length > 0
+    ? property.unitPrices.reduce((sum, plot) => sum + (plot.price || 0), 0)
+    : null;
+  
+  const hasPriceDiscrepancy = unitPricesTotal !== null && Math.abs(unitPricesTotal - property.price) > 0.01;
 
   return (
     <div className="space-y-6">
@@ -186,6 +194,79 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </CardContent>
         </Card>
       </div>
+
+      {/* Detail Per Kavling - Only for co-owning with unitPrices */}
+      {!isCoBuilding && !isFlexible && property.unitPrices && property.unitPrices.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TableIcon className="h-5 w-5" />
+              Detail Per Kavling
+            </CardTitle>
+            <CardDescription>
+              Informasi lengkap setiap kavling termasuk ukuran dan harga
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kavling</TableHead>
+                      <TableHead>Ukuran ({property.unitMeasure || 'm²'})</TableHead>
+                      <TableHead className="text-right">Harga</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {property.unitPrices.map((plot, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">Kavling {index + 1}</TableCell>
+                        <TableCell>{plot.size || 0}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(plot.price || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/50 font-bold">
+                      <TableCell colSpan={2}>Total</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(unitPricesTotal || 0)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {hasPriceDiscrepancy && (
+                <div className="rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 p-4">
+                  <div className="flex items-start gap-2">
+                    <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-yellow-900 dark:text-yellow-100">
+                        Perhatian: Perbedaan Harga
+                      </p>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
+                        Total harga dari kavling: <strong>{formatCurrency(unitPricesTotal || 0)}</strong>
+                        <br />
+                        Harga properti: <strong>{formatCurrency(property.price)}</strong>
+                        <br />
+                        Selisih: <strong>{formatCurrency(Math.abs(unitPricesTotal! - property.price))}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {!hasPriceDiscrepancy && unitPricesTotal !== null && (
+                <div className="text-sm text-muted-foreground">
+                  ✓ Total harga kavling sesuai dengan harga properti
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Description */}
       <Card>

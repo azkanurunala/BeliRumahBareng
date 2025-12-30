@@ -33,7 +33,7 @@ export default function PropertiesPage() {
       header: 'Tipe',
       cell: (row) => (
         <Badge variant={row.type === 'co-building' ? 'default' : 'secondary'}>
-          {row.type === 'co-building' ? 'Co-Building' : 'Co-Owning'}
+          {row.type === 'co-building' ? 'Bangunan' : 'Tanah'}
         </Badge>
       ),
     },
@@ -45,7 +45,13 @@ export default function PropertiesPage() {
     {
       key: 'price',
       header: 'Harga',
-      cell: (row) => formatCurrency(row.price),
+      cell: (row) => {
+        // Use total from unitPrices if available, otherwise use price
+        const displayPrice = row.unitPrices && row.unitPrices.length > 0
+          ? row.unitPrices.reduce((sum, plot) => sum + (plot.price || 0), 0)
+          : row.price;
+        return formatCurrency(displayPrice);
+      },
       sortable: true,
     },
     {

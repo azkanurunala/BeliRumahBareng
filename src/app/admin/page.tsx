@@ -19,7 +19,7 @@ export default function AdminPage() {
     if (isAdmin) {
       router.replace('/admin/dashboard');
     } else if (isAuthenticated) {
-      router.replace('/');
+      router.replace('/projects');
     } else {
       router.replace('/admin/login');
     }

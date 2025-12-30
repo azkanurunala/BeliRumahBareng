@@ -38,6 +38,7 @@ export async function GET(
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,
@@ -116,9 +117,10 @@ export async function PUT(
     if (validatedData.type !== undefined) updateData.type = validatedData.type;
     if (validatedData.totalUnits !== undefined) updateData.totalUnits = validatedData.totalUnits;
     if (validatedData.unitName !== undefined) updateData.unitName = validatedData.unitName;
-    if (validatedData.unitSize !== undefined) updateData.unitSize = validatedData.unitSize;
-    if (validatedData.unitMeasure !== undefined) updateData.unitMeasure = validatedData.unitMeasure;
-    if (validatedData.sitePlanUrl !== undefined) updateData.sitePlanUrl = validatedData.sitePlanUrl || null;
+      if (validatedData.unitSize !== undefined) updateData.unitSize = validatedData.unitSize;
+      if (validatedData.unitMeasure !== undefined) updateData.unitMeasure = validatedData.unitMeasure;
+      if (validatedData.unitPrices !== undefined) updateData.unitPrices = validatedData.unitPrices ? JSON.parse(JSON.stringify(validatedData.unitPrices)) : null as any;
+      if (validatedData.sitePlanUrl !== undefined) updateData.sitePlanUrl = validatedData.sitePlanUrl || null;
     if (validatedData.sitePlanHint !== undefined) updateData.sitePlanHint = validatedData.sitePlanHint || null;
     if (validatedData.developmentPlan !== undefined) updateData.developmentPlan = validatedData.developmentPlan || null;
     if (validatedData.environmentalAnalysis !== undefined) updateData.environmentalAnalysis = validatedData.environmentalAnalysis || null;
@@ -163,6 +165,7 @@ export async function PUT(
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,

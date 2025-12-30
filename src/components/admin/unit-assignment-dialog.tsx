@@ -35,6 +35,7 @@ import { addUnitAssignment, removeUnitAssignment } from '@/lib/actions/project.a
 import { unitAssignmentSchema } from '@/lib/validations/project.schema';
 import type { User, UnitAssignment, Property } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 
 interface UnitAssignmentDialogProps {
   open: boolean;
@@ -284,11 +285,14 @@ export function UnitAssignmentDialog({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      type="text"
+                      value={field.value ? formatCurrencyInput(field.value) : ''}
+                      onChange={(e) => {
+                        const parsed = parseCurrencyInput(e.target.value);
+                        field.onChange(parsed);
+                      }}
+                      onBlur={field.onBlur}
+                      placeholder="Contoh: 1.800.000.000"
                     />
                   </FormControl>
                   <FormMessage />

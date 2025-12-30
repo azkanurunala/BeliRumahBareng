@@ -70,7 +70,7 @@ export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPat
         router.push(redirectPath);
       } else {
         const isAdminUser = isAdmin;
-        router.push(isAdminUser ? '/admin/dashboard' : '/');
+        router.push(isAdminUser ? '/admin/dashboard' : '/projects');
       }
       setLoginSuccess(false);
     }
@@ -119,8 +119,8 @@ export function LoginForm({ hideOAuth = false, hideRegister = false, redirectPat
           title: 'Berhasil',
           description: 'Login berhasil!',
         });
-        // OAuth login typically doesn't result in admin user, redirect to home
-        router.push('/');
+        // OAuth login typically doesn't result in admin user, redirect to projects
+        router.push('/projects');
       } else {
         toast({
           variant: 'destructive',

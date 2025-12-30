@@ -196,6 +196,29 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
+ * Format currency input for display (with thousands separator)
+ * Formats number to string with Indonesian format: 1.800.000.000
+ */
+export function formatCurrencyInput(value: number): string {
+  if (isNaN(value) || value === 0) return '';
+  return new Intl.NumberFormat('id-ID', {
+    style: 'decimal',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+/**
+ * Parse currency input string back to number
+ * Removes all non-digit characters before parsing
+ */
+export function parseCurrencyInput(value: string): number {
+  // Remove all non-digit characters
+  const cleaned = value.replace(/[^\d]/g, '');
+  return cleaned ? parseInt(cleaned, 10) : 0;
+}
+
+/**
  * Calculate total payment progress across all installment plans in a project
  */
 export function calculateTotalPaymentProgress(project: Project): {

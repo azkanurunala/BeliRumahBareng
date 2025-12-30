@@ -419,6 +419,26 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                           </p>
                         </div>
                       )}
+                      {isCoBuilding && property.totalArea && (
+                        <div className="flex items-center gap-2">
+                          <Square className="h-4 w-4 text-primary" />
+                          <p>
+                            <strong>Luas Lahan:</strong>{" "}
+                            {property.totalArea}{" "}
+                            {normalizeUnitMeasure(property.unitMeasure)}
+                          </p>
+                        </div>
+                      )}
+                      {isCoBuilding && property.buildingArea && (
+                        <div className="flex items-center gap-2">
+                          <Square className="h-4 w-4 text-primary" />
+                          <p>
+                            <strong>Total Luas Bangunan:</strong>{" "}
+                            {property.buildingArea}{" "}
+                            {normalizeUnitMeasure(property.unitMeasure)}
+                          </p>
+                        </div>
+                      )}
                       {!isCoBuilding && property.unitSize && (
                         <div className="flex items-center gap-2">
                           <Square className="h-4 w-4 text-primary" />

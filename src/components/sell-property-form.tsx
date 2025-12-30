@@ -28,6 +28,7 @@ import { useAdminData } from '@/contexts/admin-data-context';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 
 const sellPropertySchema = z.object({
   type: z.enum(['co-building', 'co-owning'], {
@@ -36,7 +37,8 @@ const sellPropertySchema = z.object({
   name: z.string().min(3, 'Nama properti minimal 3 karakter'),
   description: z.string().min(10, 'Deskripsi minimal 10 karakter'),
   location: z.string().min(3, 'Lokasi minimal 3 karakter'),
-  totalArea: z.number().optional(),
+  landArea: z.number().optional(),
+  buildingArea: z.number().optional(),
   totalUnits: z.number().optional(),
   unitSize: z.number().optional(),
   unitMeasure: z.string().optional(),
@@ -49,14 +51,14 @@ const sellPropertySchema = z.object({
   if (data.type === 'co-building') {
     return !!data.totalUnits;
   }
-  // For co-owning, either totalUnits or totalArea is required
+  // For co-owning, at least one area field should be filled
   if (data.type === 'co-owning') {
-    return !!data.totalUnits || !!data.totalArea;
+    return !!(data.landArea || data.buildingArea);
   }
   return true;
 }, {
-  message: 'Total unit atau total area wajib diisi untuk tipe co-owning',
-  path: ['totalUnits'],
+  message: 'Luas Lahan atau Luas Bangunan wajib diisi untuk tipe co-owning',
+  path: ['landArea'],
 });
 
 type SellPropertyFormValues = z.infer<typeof sellPropertySchema>;
@@ -78,7 +80,8 @@ export function SellPropertyForm() {
       name: '',
       description: '',
       location: user?.profile?.locationPreference || '',
-      totalArea: undefined,
+      landArea: undefined,
+      buildingArea: undefined,
       totalUnits: undefined,
       unitSize: undefined,
       unitMeasure: 'm²',
@@ -175,6 +178,13 @@ export function SellPropertyForm() {
 
     setIsLoading(true);
     try {
+      // For co-owning: totalArea should be from landArea (or buildingArea if no landArea)
+      // Not adding them together - they are separate fields
+      // For co-building: totalArea will be filled by admin when approving
+      const totalArea = data.type === 'co-owning' 
+        ? (data.landArea || data.buildingArea)
+        : undefined;
+
       const submission = {
         id: `submission-${Date.now()}`,
         submittedBy: user.id, // User must be logged in
@@ -182,7 +192,7 @@ export function SellPropertyForm() {
         name: data.name,
         description: data.description,
         location: data.location,
-        totalArea: data.totalArea,
+        totalArea: totalArea,
         totalUnits: data.totalUnits,
         unitSize: data.unitSize,
         unitMeasure: data.unitMeasure || 'm²',
@@ -208,7 +218,8 @@ export function SellPropertyForm() {
         name: '',
         description: '',
         location: user?.profile?.locationPreference || '',
-        totalArea: undefined,
+        landArea: undefined,
+        buildingArea: undefined,
         totalUnits: undefined,
         unitSize: undefined,
         unitMeasure: 'm²',
@@ -328,35 +339,10 @@ export function SellPropertyForm() {
             <>
               <FormField
                 control={form.control}
-                name="totalUnits"
+                name="landArea"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Kavling (Opsional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        value={field.value ?? ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(value === '' ? undefined : parseInt(value) || undefined);
-                        }}
-                        onBlur={field.onBlur}
-                        placeholder="Contoh: 9"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Kosongkan jika properti fleksibel
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="totalArea"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Luas (Opsional)</FormLabel>
+                    <FormLabel>Luas Lahan (m²)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -369,9 +355,28 @@ export function SellPropertyForm() {
                         placeholder="Contoh: 1000"
                       />
                     </FormControl>
-                    <FormDescription>
-                      Untuk properti fleksibel
-                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="buildingArea"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Luas Bangunan (m²)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        value={field.value ?? ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === '' ? undefined : parseFloat(value) || undefined);
+                        }}
+                        onBlur={field.onBlur}
+                        placeholder="Contoh: 500"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -435,16 +440,16 @@ export function SellPropertyForm() {
               <FormLabel>Harga Penawaran (IDR)</FormLabel>
               <FormControl>
                 <Input
-                  type="number"
-                  value={field.value ?? 0}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  type="text"
+                  value={field.value ? formatCurrencyInput(field.value) : ''}
+                  onChange={(e) => {
+                    const parsed = parseCurrencyInput(e.target.value);
+                    field.onChange(parsed);
+                  }}
                   onBlur={field.onBlur}
-                  placeholder="Contoh: 1800000000"
+                  placeholder="Contoh: 1.800.000.000"
                 />
               </FormControl>
-              <FormDescription>
-                Masukkan harga dalam Rupiah (tanpa titik atau koma)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

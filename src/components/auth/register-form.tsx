@@ -96,7 +96,7 @@ export function RegisterForm() {
         if (redirectTo) {
           router.push(redirectTo);
         } else {
-          router.push('/');
+          router.push('/projects');
         }
       } else {
         toast({

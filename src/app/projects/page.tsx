@@ -9,7 +9,7 @@ import type { Project } from '@/lib/types';
 import { LoadingInline } from '@/components/loading-inline';
 
 export default function ProjectsPage() {
-    const { isAuthenticated, isLoading, isAdmin } = useAuth();
+    const { isAuthenticated, isLoading, isAdmin, user } = useAuth();
     const [projects, setProjects] = useState<Project[]>([]);
     const [projectsLoading, setProjectsLoading] = useState(true);
     const router = useRouter();
@@ -19,7 +19,11 @@ export default function ProjectsPage() {
         const loadProjects = async () => {
             try {
                 setProjectsLoading(true);
-                const result = await getProjects({ page: 1, limit: 1000 });
+                const result = await getProjects({ 
+                    page: 1, 
+                    limit: 1000,
+                    userId: user?.id 
+                });
                 if (result.success && result.data) {
                     setProjects(result.data);
                 } else {
@@ -34,10 +38,10 @@ export default function ProjectsPage() {
             }
         };
 
-        if (isAuthenticated && !isAdmin) {
+        if (isAuthenticated && !isAdmin && user?.id) {
             loadProjects();
         }
-    }, [isAuthenticated, isAdmin]);
+    }, [isAuthenticated, isAdmin, user?.id]);
 
     useEffect(() => {
         if (!isLoading) {

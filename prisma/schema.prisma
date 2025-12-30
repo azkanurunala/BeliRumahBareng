@@ -50,12 +50,14 @@ model Property {
   description           String
   price                 Decimal            @db.Decimal(15, 2)
   totalArea             Decimal?           @db.Decimal(10, 2)
+  buildingArea          Decimal?           @db.Decimal(10, 2)
   location              String
   type                  String
   totalUnits            Int?
   unitName              String
   unitSize              Decimal?           @db.Decimal(10, 2)
   unitMeasure           String?
+  unitPrices            Json?
   sitePlanUrl           String?
   sitePlanHint          String?
   developmentPlan       String?

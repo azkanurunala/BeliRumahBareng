@@ -43,8 +43,8 @@ import { apiClient } from '@/lib/api-client';
 
 export default function PropertyDetailClient({ property }: { property: Property }) {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
-  const [isFirstHome, setIsFirstHome] = useState(false);
-  const [willOccupy, setWillOccupy] = useState(false);
+  const [isFirstHome, setIsFirstHome] = useState<boolean | null>(null);
+  const [willOccupy, setWillOccupy] = useState<boolean | null>(null);
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const { toast } = useToast();
@@ -65,16 +65,13 @@ export default function PropertyDetailClient({ property }: { property: Property 
   // Fullscreen states for each carousel
   const [mainCarouselFullscreen, setMainCarouselFullscreen] = useState({ isOpen: false, index: 0 });
   const [floorPlanFullscreen, setFloorPlanFullscreen] = useState({ isOpen: false, index: 0 });
-  const [developmentPlanFullscreen, setDevelopmentPlanFullscreen] = useState({ isOpen: false, index: 0 });
   
   // Carousel API states to track current index
   const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>();
   const [floorPlanCarouselApi, setFloorPlanCarouselApi] = useState<CarouselApi>();
-  const [developmentPlanCarouselApi, setDevelopmentPlanCarouselApi] = useState<CarouselApi>();
   
   const [mainCarouselCurrent, setMainCarouselCurrent] = useState(0);
   const [floorPlanCarouselCurrent, setFloorPlanCarouselCurrent] = useState(0);
-  const [developmentPlanCarouselCurrent, setDevelopmentPlanCarouselCurrent] = useState(0);
 
   // Track current index for main carousel
   useEffect(() => {
@@ -110,61 +107,42 @@ export default function PropertyDetailClient({ property }: { property: Property 
     };
   }, [floorPlanCarouselApi]);
 
-  // Track current index for development plan carousel
-  useEffect(() => {
-    if (!developmentPlanCarouselApi) return;
-
-    setDevelopmentPlanCarouselCurrent(developmentPlanCarouselApi.selectedScrollSnap());
-
-    const onSelect = () => {
-      setDevelopmentPlanCarouselCurrent(developmentPlanCarouselApi.selectedScrollSnap());
-    };
-
-    developmentPlanCarouselApi.on('select', onSelect);
-
-    return () => {
-      developmentPlanCarouselApi.off('select', onSelect);
-    };
-  }, [developmentPlanCarouselApi]);
-
-  // Generate array of all 16 floor plan images
-  const floorPlanImages = Array.from({ length: 16 }, (_, i) => ({
-    url: `/images/floor-plans/${String(i + 1).padStart(2, '0')}.png`,
-    hint: `floor plan ${i + 1}`
-  }));
-
-  // Generate array of development plan images (04.png to 16.png)
-  const developmentPlanImages = Array.from({ length: 13 }, (_, i) => ({
-    url: `/images/floor-plans/${String(i + 4).padStart(2, '0')}.png`,
-    hint: `development plan ${i + 4}`
-  }));
+  // Use actual site plan from property data
+  const floorPlanImages = property.planningInfo?.sitePlanUrl 
+    ? [{ url: property.planningInfo.sitePlanUrl, hint: property.planningInfo.sitePlanHint || 'Denah lokasi' }]
+    : [];
 
   const isCoBuilding = property.type === 'co-building';
   const isFlexible = !property.totalUnits && property.totalArea;
 
-  const unitPrices = isFlexible ? [] : Array.from({ length: property.totalUnits! }, (_, i) => {
-    let weight;
-    const floorWeight = isCoBuilding ? (property.totalUnits! - i -1) * 0.05 : (i * 0.02);
+  // Use stored unitPrices if available (for co-owning with manual prices), otherwise calculate
+  const unitPrices = isFlexible 
+    ? [] 
+    : (property.unitPrices && property.unitPrices.length > 0 && !isCoBuilding)
+      ? property.unitPrices.map(plot => plot.price)
+      : Array.from({ length: property.totalUnits! }, (_, i) => {
+          let weight;
+          const floorWeight = isCoBuilding ? (property.totalUnits! - i -1) * 0.05 : (i * 0.02);
 
-    weight = 1.0 + floorWeight;
-    
-    if (isCoBuilding && i === 0) {
-      weight = 1.0 + ((property.totalUnits! - 1) * 0.05) + 0.10;
-    } else if(isCoBuilding) {
-       weight = 1.0 + (property.totalUnits! - 1 - i) * 0.05;
-    } else {
-       weight = 1.0 + (i * 0.02);
-    }
-    
-    if(isCoBuilding) {
-        const basePricePerUnit = property.price / property.totalUnits!;
-        const premium = (property.totalUnits! - 1 - i) * 0.05;
-        return basePricePerUnit * (1 + premium);
+          weight = 1.0 + floorWeight;
+          
+          if (isCoBuilding && i === 0) {
+            weight = 1.0 + ((property.totalUnits! - 1) * 0.05) + 0.10;
+          } else if(isCoBuilding) {
+             weight = 1.0 + (property.totalUnits! - 1 - i) * 0.05;
+          } else {
+             weight = 1.0 + (i * 0.02);
+          }
+          
+          if(isCoBuilding) {
+              const basePricePerUnit = property.price / property.totalUnits!;
+              const premium = (property.totalUnits! - 1 - i) * 0.05;
+              return basePricePerUnit * (1 + premium);
 
-    }
+          }
 
-    return (property.price / property.totalUnits!) * weight;
-  });
+          return (property.price / property.totalUnits!) * weight;
+        });
 
 
   const formattedTotalPrice = new Intl.NumberFormat('id-ID', {
@@ -268,7 +246,12 @@ export default function PropertyDetailClient({ property }: { property: Property 
   }
 
   const getUnitSize = (index: number) => {
-    if (isCoBuilding || !property.unitSize || isFlexible) return null;
+    if (isCoBuilding || isFlexible) return null;
+    // Use stored plot size if available, otherwise calculate from average
+    if (property.unitPrices && property.unitPrices.length > index) {
+      return property.unitPrices[index].size;
+    }
+    if (!property.unitSize) return null;
     const baseSize = property.unitSize;
     const variation = (index - Math.floor(property.totalUnits! / 2)) * 2;
     return baseSize + variation;
@@ -330,8 +313,8 @@ export default function PropertyDetailClient({ property }: { property: Property 
       userId: user.id,
       unitId: !isFlexible && selectedUnit ? parseInt(selectedUnit) : undefined,
       unitSize: isFlexible ? undefined : undefined, // For flexible, will be determined later
-      isFirstHome,
-      willOccupy,
+      isFirstHome: isFirstHome ?? false,
+      willOccupy: willOccupy ?? false,
       email: email.trim(),
       phoneNumber: phoneNumber.trim(),
     });
@@ -413,6 +396,12 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       {property.totalUnits && (
                         <div className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /><p><strong>Kapasitas Grup:</strong> {property.totalUnits} {property.unitName}</p></div>
                       )}
+                      {isCoBuilding && property.totalArea && (
+                        <div className="flex items-center gap-2"><Square className="h-4 w-4 text-primary" /><p><strong>Luas Lahan:</strong> {property.totalArea} {normalizeUnitMeasure(property.unitMeasure)}</p></div>
+                      )}
+                      {isCoBuilding && property.buildingArea && (
+                        <div className="flex items-center gap-2"><Square className="h-4 w-4 text-primary" /><p><strong>Total Luas Bangunan:</strong> {property.buildingArea} {normalizeUnitMeasure(property.unitMeasure)}</p></div>
+                      )}
                       {!isCoBuilding && property.unitSize && (
                          <div className="flex items-center gap-2"><Square className="h-4 w-4 text-primary" /><p><strong>Luas per Kavling:</strong> ~{property.unitSize} {normalizeUnitMeasure(property.unitMeasure)}</p></div>
                       )}
@@ -438,76 +427,64 @@ export default function PropertyDetailClient({ property }: { property: Property 
                       <TabsTrigger value="env"><Microscope className="mr-2 h-4 w-4" />Analisis Lingkungan</TabsTrigger>
                     </TabsList>
                     <TabsContent value="plan" className="mt-4">
-                      <div className="relative">
-                        <Carousel className="w-full" setApi={setFloorPlanCarouselApi}>
-                          <CarouselContent>
-                            {floorPlanImages.map((image, index) => (
-                              <CarouselItem key={index}>
-                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
-                                  <Image
-                                    src={image.url}
-                                    alt={`Denah Lokasi ${index + 1}`}
-                                    fill
-                                    className="object-contain"
-                                    data-ai-hint={image.hint}
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                                    onClick={() => setFloorPlanFullscreen({ isOpen: true, index: floorPlanCarouselCurrent })}
-                                    aria-label="Open fullscreen"
-                                  >
-                                    <Maximize2 className="h-5 w-5" />
-                                  </Button>
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-4" />
-                          <CarouselNext className="right-4" />
-                        </Carousel>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="dev" className="mt-4">
-                      <div className="relative">
-                        <Carousel className="w-full" setApi={setDevelopmentPlanCarouselApi}>
-                          <CarouselContent>
-                            {developmentPlanImages.map((image, index) => (
-                              <CarouselItem key={index}>
-                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
-                                  <Image
-                                    src={image.url}
-                                    alt={`Rencana Pengembangan ${index + 4}`}
-                                    fill
-                                    className="object-contain"
-                                    data-ai-hint={image.hint}
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
-                                    onClick={() => setDevelopmentPlanFullscreen({ isOpen: true, index: developmentPlanCarouselCurrent })}
-                                    aria-label="Open fullscreen"
-                                  >
-                                    <Maximize2 className="h-5 w-5" />
-                                  </Button>
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious className="left-4" />
-                          <CarouselNext className="right-4" />
-                        </Carousel>
-                      </div>
-                      {property.planningInfo.developmentPlan && (
-                        <div className="mt-4 text-sm text-muted-foreground">
-                          <p>{property.planningInfo.developmentPlan}</p>
+                      {floorPlanImages.length > 0 ? (
+                        <div className="relative">
+                          <Carousel className="w-full" setApi={setFloorPlanCarouselApi}>
+                            <CarouselContent>
+                              {floorPlanImages.map((image, index) => (
+                                <CarouselItem key={index}>
+                                  <div className="relative aspect-video w-full rounded-lg overflow-hidden border group">
+                                    <Image
+                                      src={image.url}
+                                      alt={image.hint || 'Denah Lokasi'}
+                                      fill
+                                      className="object-contain"
+                                      data-ai-hint={image.hint}
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110"
+                                      onClick={() => setFloorPlanFullscreen({ isOpen: true, index: floorPlanCarouselCurrent })}
+                                      aria-label="Open fullscreen"
+                                    >
+                                      <Maximize2 className="h-5 w-5" />
+                                    </Button>
+                                  </div>
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-4" />
+                            <CarouselNext className="right-4" />
+                          </Carousel>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>Denah lokasi belum tersedia</p>
                         </div>
                       )}
                     </TabsContent>
-                    <TabsContent value="env" className="mt-4 text-sm text-muted-foreground">
-                      <p>{property.planningInfo.environmentalAnalysis}</p>
+                    <TabsContent value="dev" className="mt-4">
+                      {property.planningInfo.developmentPlan ? (
+                        <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          <p>{property.planningInfo.developmentPlan}</p>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>Rencana pengembangan belum tersedia</p>
+                        </div>
+                      )}
+                    </TabsContent>
+                    <TabsContent value="env" className="mt-4">
+                      {property.planningInfo.environmentalAnalysis ? (
+                        <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          <p>{property.planningInfo.environmentalAnalysis}</p>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <p>Analisis lingkungan belum tersedia</p>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </CardContent>
@@ -703,34 +680,44 @@ export default function PropertyDetailClient({ property }: { property: Property 
 
                       <div className='mt-4 space-y-4 rounded-lg border p-4'>
                         <h4 className='font-semibold text-sm mb-3'>Informasi Tambahan</h4>
-                        <div className="flex items-start space-x-3">
-                          <Checkbox 
-                            id="isFirstHome" 
-                            checked={isFirstHome}
-                            onCheckedChange={(checked) => setIsFirstHome(checked === true)}
-                          />
-                          <div className="grid gap-1.5 leading-none">
-                            <Label
-                              htmlFor="isFirstHome"
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">
                               Apakah ini untuk rumah pertama Anda?
                             </Label>
-                          </div>
-                        </div>
-                        <div className="flex items-start space-x-3">
-                          <Checkbox 
-                            id="willOccupy" 
-                            checked={willOccupy}
-                            onCheckedChange={(checked) => setWillOccupy(checked === true)}
-                          />
-                          <div className="grid gap-1.5 leading-none">
-                            <Label
-                              htmlFor="willOccupy"
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            <RadioGroup
+                              value={isFirstHome === null ? undefined : (isFirstHome ? "yes" : "no")}
+                              onValueChange={(value) => setIsFirstHome(value === "yes")}
+                              className="flex gap-6"
                             >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="yes" id="isFirstHome-yes" />
+                                <Label htmlFor="isFirstHome-yes" className="cursor-pointer">Ya</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="no" id="isFirstHome-no" />
+                                <Label htmlFor="isFirstHome-no" className="cursor-pointer">Tidak</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium">
                               Apakah rumah ini akan Anda tempati sendiri?
                             </Label>
+                            <RadioGroup
+                              value={willOccupy === null ? undefined : (willOccupy ? "yes" : "no")}
+                              onValueChange={(value) => setWillOccupy(value === "yes")}
+                              className="flex gap-6"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="yes" id="willOccupy-yes" />
+                                <Label htmlFor="willOccupy-yes" className="cursor-pointer">Ya</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="no" id="willOccupy-no" />
+                                <Label htmlFor="willOccupy-no" className="cursor-pointer">Tidak</Label>
+                              </div>
+                            </RadioGroup>
                           </div>
                         </div>
                       </div>
@@ -807,13 +794,6 @@ export default function PropertyDetailClient({ property }: { property: Property 
         initialIndex={floorPlanFullscreen.index}
         isOpen={floorPlanFullscreen.isOpen}
         onClose={() => setFloorPlanFullscreen({ isOpen: false, index: 0 })}
-      />
-
-      <FullscreenImageViewer
-        images={developmentPlanImages.map(img => ({ url: img.url, alt: `Rencana Pengembangan`, hint: img.hint }))}
-        initialIndex={developmentPlanFullscreen.index}
-        isOpen={developmentPlanFullscreen.isOpen}
-        onClose={() => setDevelopmentPlanFullscreen({ isOpen: false, index: 0 })}
       />
     </main>
   );

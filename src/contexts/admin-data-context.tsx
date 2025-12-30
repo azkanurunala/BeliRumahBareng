@@ -212,6 +212,9 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       if (updates.unitName !== undefined) updateData.unitName = updates.unitName;
       if (updates.unitSize !== undefined) updateData.unitSize = updates.unitSize;
       if (updates.unitMeasure !== undefined) updateData.unitMeasure = updates.unitMeasure;
+      if ((updates as any).unitPrices !== undefined) {
+        updateData.unitPrices = (updates as any).unitPrices;
+      }
       if (updates.planningInfo) {
         updateData.sitePlanUrl = updates.planningInfo.sitePlanUrl || '';
         updateData.sitePlanHint = updates.planningInfo.sitePlanHint;

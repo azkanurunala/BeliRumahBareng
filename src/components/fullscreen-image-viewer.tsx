@@ -260,26 +260,30 @@ export default function FullscreenImageViewer({
       </Button>
 
       {/* Previous Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 h-14 w-14 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm transition-all duration-200 hover:scale-110"
-        onClick={goToPrevious}
-        aria-label="Previous image"
-      >
-        <ChevronLeft className="h-8 w-8" />
-      </Button>
+      {images.length > 1 && currentIndex > 0 && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-50 h-14 w-14 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm transition-all duration-200 hover:scale-110"
+          onClick={goToPrevious}
+          aria-label="Previous image"
+        >
+          <ChevronLeft className="h-8 w-8" />
+        </Button>
+      )}
 
       {/* Next Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 h-14 w-14 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm transition-all duration-200 hover:scale-110"
-        onClick={goToNext}
-        aria-label="Next image"
-      >
-        <ChevronRight className="h-8 w-8" />
-      </Button>
+      {images.length > 1 && currentIndex < images.length - 1 && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-50 h-14 w-14 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-sm transition-all duration-200 hover:scale-110"
+          onClick={goToNext}
+          aria-label="Next image"
+        >
+          <ChevronRight className="h-8 w-8" />
+        </Button>
+      )}
 
       {/* Zoom Controls */}
       <div className="absolute top-4 left-4 z-50 flex gap-2">

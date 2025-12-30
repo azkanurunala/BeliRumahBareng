@@ -25,22 +25,7 @@ import {
 import type { InstallmentPlan, User, UnitAssignment } from '@/lib/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-// Helper functions for currency masking
-const formatCurrencyInput = (value: number): string => {
-  if (isNaN(value) || value === 0) return '';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'decimal',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-};
-
-const parseCurrencyInput = (value: string): number => {
-  // Remove all non-digit characters
-  const cleaned = value.replace(/[^\d]/g, '');
-  return cleaned ? parseInt(cleaned, 10) : 0;
-};
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 
 const paymentSchema = z.object({
   id: z.string(),

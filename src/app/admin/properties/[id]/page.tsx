@@ -24,15 +24,23 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     notFound();
   }
 
-  const handleSubmit = (data: any) => {
-    updateProperty(id, data);
-    
-    toast({
-      title: 'Berhasil',
-      description: 'Property berhasil diperbarui',
-    });
-    
-    router.push('/admin/properties');
+  const handleSubmit = async (data: any) => {
+    try {
+      await updateProperty(id, data);
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Property berhasil diperbarui',
+      });
+      
+      router.push('/admin/properties');
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal',
+        description: error instanceof Error ? error.message : 'Gagal memperbarui property',
+      });
+    }
   };
 
   return (

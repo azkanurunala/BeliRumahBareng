@@ -28,6 +28,7 @@ import type { Project, Property, User } from '@/lib/types';
 import { useAdminData } from '@/contexts/admin-data-context';
 import { Plus, X, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 
 const progressChecklistItemSchema = z.object({
   id: z.string(),
@@ -361,9 +362,14 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
                             <FormLabel>Harga</FormLabel>
                             <FormControl>
                               <Input
-                                type="number"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                type="text"
+                                value={field.value ? formatCurrencyInput(field.value) : ''}
+                                onChange={(e) => {
+                                  const parsed = parseCurrencyInput(e.target.value);
+                                  field.onChange(parsed);
+                                }}
+                                onBlur={field.onBlur}
+                                placeholder="Contoh: 1.800.000.000"
                               />
                             </FormControl>
                             <FormMessage />

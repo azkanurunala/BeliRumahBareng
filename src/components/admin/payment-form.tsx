@@ -25,6 +25,7 @@ import {
 import type { MonthlyPayment, User } from '@/lib/types';
 import { useState } from 'react';
 import { FileText, X } from 'lucide-react';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 
 const paymentSchema = z.object({
   amount: z.number().min(1, 'Jumlah harus lebih dari 0'),
@@ -167,9 +168,14 @@ export function PaymentForm({ payment, projectMembers, onSubmit, onCancel }: Pay
                 <FormLabel>Jumlah Pembayaran (IDR)</FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    type="text"
+                    value={field.value ? formatCurrencyInput(field.value) : ''}
+                    onChange={(e) => {
+                      const parsed = parseCurrencyInput(e.target.value);
+                      field.onChange(parsed);
+                    }}
+                    onBlur={field.onBlur}
+                    placeholder="Contoh: 1.800.000.000"
                   />
                 </FormControl>
                 <FormMessage />

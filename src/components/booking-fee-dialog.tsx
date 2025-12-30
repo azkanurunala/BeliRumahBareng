@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Upload, X, FileText } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/payment-utils';
+import { formatCurrency, formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 import type { PurchaseTransaction } from '@/lib/types';
 
 type BookingFeeDialogProps = {
@@ -69,7 +69,8 @@ export default function BookingFeeDialog({
     setValidationError('');
 
     // Validation
-    if (!bookingFeeAmount || parseFloat(bookingFeeAmount) <= 0) {
+    const parsedAmount = parseCurrencyInput(bookingFeeAmount);
+    if (!bookingFeeAmount || parsedAmount <= 0) {
       setValidationError('Jumlah booking fee harus diisi dan lebih dari 0');
       return;
     }
@@ -111,7 +112,7 @@ export default function BookingFeeDialog({
       // Submit booking fee payment
       const response = await apiClient.post('/payments/booking-fee', {
         transactionId: transaction.id,
-        bookingFeeAmount: parseFloat(bookingFeeAmount),
+        bookingFeeAmount: parseCurrencyInput(bookingFeeAmount),
         bookingDate: new Date(bookingDate).toISOString(),
         paymentProofUrl,
       });
@@ -173,17 +174,18 @@ export default function BookingFeeDialog({
               </Label>
               <Input
                 id="bookingFeeAmount"
-                type="number"
-                placeholder="0"
+                type="text"
+                placeholder="Contoh: 1.800.000.000"
                 value={bookingFeeAmount}
-                onChange={(e) => setBookingFeeAmount(e.target.value)}
-                min="0"
-                step="1000"
+                onChange={(e) => {
+                  const parsed = parseCurrencyInput(e.target.value);
+                  setBookingFeeAmount(formatCurrencyInput(parsed));
+                }}
                 required
               />
               {bookingFeeAmount && (
                 <p className="text-xs text-muted-foreground">
-                  {formatCurrency(parseFloat(bookingFeeAmount) || 0)}
+                  {formatCurrency(parseCurrencyInput(bookingFeeAmount))}
                 </p>
               )}
             </div>

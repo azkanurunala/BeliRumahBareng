@@ -1,3 +1,5 @@
+'use client';
+
 import DiscoverTab from "@/components/discover-tab";
 
 export default function DiscoverPage() {

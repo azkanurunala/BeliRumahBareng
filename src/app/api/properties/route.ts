@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,
@@ -118,6 +119,7 @@ export async function POST(request: NextRequest) {
         unitName: validatedData.unitName,
         unitSize: validatedData.unitSize,
         unitMeasure: validatedData.unitMeasure,
+        unitPrices: validatedData.unitPrices ? JSON.parse(JSON.stringify(validatedData.unitPrices)) : null as any,
         sitePlanUrl: validatedData.sitePlanUrl || null,
         sitePlanHint: validatedData.sitePlanHint || null,
         developmentPlan: validatedData.developmentPlan || null,
@@ -150,6 +152,7 @@ export async function POST(request: NextRequest) {
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,

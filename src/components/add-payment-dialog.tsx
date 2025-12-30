@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/popover';
 import { ChevronDown } from 'lucide-react';
 import type { InstallmentPlan } from '@/lib/types';
-import { formatCurrency } from '@/lib/payment-utils';
+import { formatCurrency, formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 import { Upload, FileText, X } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -53,7 +53,7 @@ export default function AddPaymentDialog({
   plan,
   onSubmit,
 }: AddPaymentDialogProps) {
-  const [amount, setAmount] = useState<string>(plan.installmentAmount.toString());
+  const [amount, setAmount] = useState<string>(formatCurrencyInput(plan.installmentAmount));
   const [paymentDate, setPaymentDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
@@ -135,7 +135,7 @@ export default function AddPaymentDialog({
     setValidationError('');
 
     onSubmit?.({
-      amount: parseFloat(amount),
+      amount: parseCurrencyInput(amount),
       paymentDate: new Date(paymentDate).toISOString(),
       period,
       paymentMethod,
@@ -145,7 +145,7 @@ export default function AddPaymentDialog({
     });
 
     // Reset form
-    setAmount(plan.installmentAmount.toString());
+    setAmount(formatCurrencyInput(plan.installmentAmount));
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setPeriod('');
     setPaymentMethod('transfer');
@@ -198,7 +198,7 @@ export default function AddPaymentDialog({
   const handleClose = (open: boolean) => {
     if (!open) {
       // Reset form when closing
-      setAmount(plan.installmentAmount.toString());
+      setAmount(formatCurrencyInput(plan.installmentAmount));
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setPeriod('');
       setPaymentMethod('transfer');
@@ -304,13 +304,14 @@ export default function AddPaymentDialog({
               <div className="relative">
                 <Input
                   id="amount"
-                  type="number"
+                  type="text"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={formatCurrency(plan.installmentAmount)}
+                  onChange={(e) => {
+                    const parsed = parseCurrencyInput(e.target.value);
+                    setAmount(formatCurrencyInput(parsed));
+                  }}
+                  placeholder={formatCurrencyInput(plan.installmentAmount)}
                   required
-                  min={0}
-                  step={1000}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                   IDR
@@ -450,7 +451,7 @@ export default function AddPaymentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Batal
             </Button>
-            <Button type="submit" disabled={!period || !amount || !paymentDate}>
+            <Button type="submit" disabled={!period || !amount || !paymentDate || parseCurrencyInput(amount) === 0}>
               Simpan Pembayaran
             </Button>
           </DialogFooter>

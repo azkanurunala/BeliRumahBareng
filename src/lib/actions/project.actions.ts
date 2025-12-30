@@ -761,6 +761,7 @@ export async function getProjects(options?: {
   limit?: number;
   search?: string;
   status?: string;
+  userId?: string;
 }) {
   // Force fresh data from database, no cache
   const { unstable_noStore } = await import('next/cache');
@@ -771,6 +772,7 @@ export async function getProjects(options?: {
     const limit = options?.limit || 10;
     const search = options?.search || '';
     const status = options?.status || '';
+    const userId = options?.userId;
     const skip = (page - 1) * limit;
 
     // Build where clause
@@ -784,6 +786,15 @@ export async function getProjects(options?: {
     
     if (status) {
       where.status = status;
+    }
+
+    // Filter by user membership if userId is provided
+    if (userId) {
+      where.members = {
+        some: {
+          userId: userId
+        }
+      };
     }
 
     // Get projects dengan pagination (simplified include untuk performance)

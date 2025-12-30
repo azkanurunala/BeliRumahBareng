@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { InstallmentPlan } from '@/lib/types';
-import { formatCurrency } from '@/lib/payment-utils';
+import { formatCurrency, formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 import { Upload, FileText, X } from 'lucide-react';
 
 type AddDPPaymentDialogProps = {
@@ -44,7 +44,7 @@ export default function AddDPPaymentDialog({
   plan,
   onSubmit,
 }: AddDPPaymentDialogProps) {
-  const [amount, setAmount] = useState<string>(plan.downPayment?.toString() || '0');
+  const [amount, setAmount] = useState<string>(formatCurrencyInput(plan.downPayment || 0));
   const [paymentDate, setPaymentDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
@@ -58,7 +58,7 @@ export default function AddDPPaymentDialog({
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      setAmount(plan.downPayment?.toString() || '0');
+      setAmount(formatCurrencyInput(plan.downPayment || 0));
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setPaymentMethod('transfer');
       setNotes('');
@@ -85,7 +85,7 @@ export default function AddDPPaymentDialog({
     setValidationError('');
 
     onSubmit?.({
-      amount: parseFloat(amount),
+      amount: parseCurrencyInput(amount),
       paymentDate: new Date(paymentDate).toISOString(),
       paymentMethod,
       notes: notes || undefined,
@@ -94,7 +94,7 @@ export default function AddDPPaymentDialog({
     });
 
     // Reset form
-    setAmount(plan.downPayment?.toString() || '0');
+    setAmount(formatCurrencyInput(plan.downPayment || 0));
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setPaymentMethod('transfer');
     setNotes('');
@@ -136,7 +136,7 @@ export default function AddDPPaymentDialog({
   const handleClose = (open: boolean) => {
     if (!open) {
       // Reset form when closing
-      setAmount(plan.downPayment?.toString() || '0');
+      setAmount(formatCurrencyInput(plan.downPayment || 0));
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setPaymentMethod('transfer');
       setNotes('');
@@ -167,13 +167,14 @@ export default function AddDPPaymentDialog({
               <div className="relative">
                 <Input
                   id="amount"
-                  type="number"
+                  type="text"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={formatCurrency(plan.downPayment || 0)}
+                  onChange={(e) => {
+                    const parsed = parseCurrencyInput(e.target.value);
+                    setAmount(formatCurrencyInput(parsed));
+                  }}
+                  placeholder={formatCurrencyInput(plan.downPayment || 0)}
                   required
-                  min={0}
-                  step={1000}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                   IDR
@@ -313,7 +314,7 @@ export default function AddDPPaymentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Batal
             </Button>
-            <Button type="submit" disabled={!amount || !paymentDate}>
+            <Button type="submit" disabled={!amount || !paymentDate || parseCurrencyInput(amount) === 0}>
               Simpan Pembayaran DP
             </Button>
           </DialogFooter>

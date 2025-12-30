@@ -11,14 +11,19 @@ import { Heart, Eye, MapPin, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { LoadingInline } from '@/components/loading-inline';
+import PropertyCard from '@/components/property-card';
+import { getProperties } from '@/lib/actions/property.actions';
+import type { Property } from '@/lib/types';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
   const { getUserInterests, getUserWatchlists } = useUserData();
   const { properties } = useAdminData();
   const router = useRouter();
+  const [recommendedProperties, setRecommendedProperties] = useState<Property[]>([]);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
 
   useEffect(() => {
     if (!isLoading) {
@@ -29,6 +34,36 @@ export default function DashboardPage() {
     }
     }
   }, [isAuthenticated, isLoading, isAdmin, router]);
+
+  // Load recommended properties when user has no data
+  useEffect(() => {
+    const loadRecommendedProperties = async () => {
+      const interests = getUserInterests();
+      const watchlists = getUserWatchlists();
+      const hasNoData = interests.length === 0 && watchlists.length === 0;
+
+      if (hasNoData && isAuthenticated && !isAdmin && user?.id) {
+        setIsLoadingProperties(true);
+        try {
+          const result = await getProperties({ page: 1, limit: 3 });
+          if (result.success && result.data) {
+            setRecommendedProperties(result.data);
+          }
+        } catch (error) {
+          console.error('Error loading recommended properties:', error);
+        } finally {
+          setIsLoadingProperties(false);
+        }
+      } else {
+        setIsLoadingProperties(false);
+      }
+    };
+
+    if (!isLoading) {
+      loadRecommendedProperties();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isAdmin, user?.id, isLoading]);
 
   if (isLoading) {
     return (
@@ -55,6 +90,9 @@ export default function DashboardPage() {
     return { watchlist, property };
   }).filter(item => item.property);
 
+  // Check if user has no interests and no watchlists
+  const hasNoData = interests.length === 0 && watchlists.length === 0;
+
   return (
     <main className="flex-1 bg-muted/20">
       <div className="container mx-auto py-6 sm:py-10">
@@ -65,7 +103,55 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="interests" className="space-y-6">
+        {hasNoData ? (
+          <div className="space-y-8">
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Heart className="h-16 w-16 text-muted-foreground mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Belum ada proyek yang diikuti</h2>
+                <p className="text-sm text-muted-foreground mb-6 text-center max-w-md">
+                  Jelajahi properti yang tersedia dan bergabunglah dengan proyek patungan untuk mewujudkan impian properti Anda.
+                </p>
+                <Button asChild size="lg">
+                  <Link href="/discover">
+                    Jelajahi Properti
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {isLoadingProperties ? (
+              <Card>
+                <CardContent className="py-12">
+                  <LoadingInline message="Memuat rekomendasi properti..." />
+                </CardContent>
+              </Card>
+            ) : recommendedProperties.length > 0 ? (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                    Mulai dengan Properti Ini
+                  </h2>
+                  <p className="text-muted-foreground mt-2">
+                    Jelajahi properti yang tersedia untuk memulai proyek co-buy pertama Anda
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {recommendedProperties.map((property) => (
+                    <PropertyCard key={property.id} property={property} />
+                  ))}
+                </div>
+                <div className="text-center pt-4">
+                  <Button asChild variant="outline" className="border-2 border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-300 hover:scale-105">
+                    <Link href="/discover">Lihat Semua Properti</Link>
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <Tabs defaultValue="interests" className="space-y-6">
           <TabsList>
             <TabsTrigger value="interests" className="flex items-center gap-2">
               <Heart className="h-4 w-4" />
@@ -229,6 +315,7 @@ export default function DashboardPage() {
             )}
           </TabsContent>
         </Tabs>
+        )}
       </div>
     </main>
   );

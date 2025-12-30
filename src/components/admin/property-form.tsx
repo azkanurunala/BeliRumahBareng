@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import type { Property } from '@/lib/types';
 import { Plus, X, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
 
 const propertySchema = z.object({
   name: z.string().min(1, 'Nama properti wajib diisi'),
@@ -36,11 +37,20 @@ const propertySchema = z.object({
   type: z.enum(['co-building', 'co-owning'], {
     required_error: 'Tipe properti wajib dipilih',
   }),
+  totalArea: z.number().optional(),
+  buildingArea: z.number().optional(),
   totalUnits: z.number().optional(),
   unitName: z.enum(['Lantai', 'Kavling', 'Kepemilikan']).optional(),
   unitSize: z.number().optional(),
   unitMeasure: z.string().optional(),
-  totalArea: z.number().optional(),
+  plots: z.array(z.object({
+    size: z.number().min(0, 'Ukuran harus positif'),
+    price: z.number().min(0, 'Harga harus positif'),
+  })).optional(),
+  units: z.array(z.object({
+    size: z.number().min(0, 'Ukuran harus positif'),
+    price: z.number().min(0, 'Harga harus positif'),
+  })).optional(),
   images: z.array(z.object({
     url: z.string().min(1, 'URL gambar wajib diisi'),
     hint: z.string().optional(),
@@ -52,34 +62,34 @@ const propertySchema = z.object({
     environmentalAnalysis: z.string().optional(),
   }).optional(),
 }).refine((data) => {
-  // Co-Building: wajib totalUnits
+  // Co-Building: wajib totalArea (Luas Lahan), totalUnits, dan units array
   if (data.type === 'co-building') {
-    return data.totalUnits !== undefined && data.totalUnits > 0;
+    return data.totalArea !== undefined && data.totalArea > 0 &&
+           data.totalUnits !== undefined && data.totalUnits > 0 &&
+           data.units !== undefined && data.units.length === data.totalUnits &&
+           data.units.every(unit => unit.size > 0 && unit.price > 0);
   }
   return true;
 }, {
-  message: 'Total unit wajib diisi untuk tipe co-building',
-  path: ['totalUnits'],
+  message: 'Luas Lahan, Total Unit, dan Data per Unit wajib diisi untuk tipe co-building',
+  path: ['units'],
 }).refine((data) => {
-  // Co-Owning Flexible: wajib totalArea dan unitMeasure, TIDAK ada totalUnits
-  if (data.type === 'co-owning' && data.totalArea) {
-    return data.unitMeasure !== undefined && data.unitMeasure.length > 0;
+  // Co-Owning: wajib totalArea (Luas Lahan), totalUnits, dan plots
+  if (data.type === 'co-owning') {
+    const hasTotalArea = data.totalArea !== undefined && data.totalArea > 0;
+    const hasTotalUnits = data.totalUnits !== undefined && data.totalUnits > 0;
+    const hasPlots = data.plots !== undefined && data.plots.length === (data.totalUnits || 0);
+    // Jika tidak flexible (ada totalUnits), wajib totalArea dan plots
+    if (data.totalUnits && data.totalUnits > 0) {
+      return hasTotalArea && hasPlots;
+    }
+    // Jika flexible (tidak ada totalUnits), hanya wajib totalArea
+    return hasTotalArea;
   }
   return true;
 }, {
-  message: 'Satuan unit wajib diisi untuk model fleksibel',
-  path: ['unitMeasure'],
-}).refine((data) => {
-  // Co-Owning Non-Flexible: wajib totalUnits, unitSize, unitMeasure
-  if (data.type === 'co-owning' && !data.totalArea) {
-    return data.totalUnits !== undefined && data.totalUnits > 0 && 
-           data.unitSize !== undefined && data.unitSize > 0 && 
-           data.unitMeasure !== undefined && data.unitMeasure.length > 0;
-  }
-  return true;
-}, {
-  message: 'Total unit, ukuran unit, dan satuan wajib diisi untuk tipe co-owning non-fleksibel',
-  path: ['totalUnits'],
+  message: 'Luas Lahan wajib diisi untuk tipe co-owning',
+  path: ['totalArea'],
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -108,20 +118,43 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
-    defaultValues: property
+        defaultValues: property
       ? {
           name: property.name,
           description: property.description,
           price: property.price,
           location: property.location,
           type: property.type,
+          totalArea: property.totalArea,
+          buildingArea: property.buildingArea,
           totalUnits: property.totalUnits,
           unitName: property.unitName,
           unitSize: property.unitSize,
           unitMeasure: property.unitMeasure,
-          totalArea: property.totalArea,
           images: property.images,
           planningInfo: property.planningInfo,
+          plots: property.totalUnits && property.type === 'co-owning' 
+            ? (property.unitPrices && property.unitPrices.length > 0
+                ? property.unitPrices.map(plot => ({
+                    size: plot.size || 0,
+                    price: plot.price || 0,
+                  }))
+                : Array.from({ length: property.totalUnits }, (_, i) => ({
+                    size: property.unitSize || 0,
+                    price: property.price / (property.totalUnits || 1),
+                  })))
+            : undefined,
+          units: property.totalUnits && property.type === 'co-building'
+            ? (property.unitPrices && property.unitPrices.length > 0
+                ? property.unitPrices.map(unit => ({
+                    size: unit.size || 0,
+                    price: unit.price || 0,
+                  }))
+                : Array.from({ length: property.totalUnits }, (_, i) => ({
+                    size: property.unitSize || 0,
+                    price: property.price / (property.totalUnits || 1),
+                  })))
+            : undefined,
         }
       : {
           name: '',
@@ -130,12 +163,176 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
           location: '',
           type: 'co-owning',
           images: [],
+          plots: [],
+          units: [],
         },
   });
 
   const watchType = form.watch('type');
+  const watchTotalUnits = form.watch('totalUnits');
+  const watchBuildingArea = form.watch('buildingArea');
+  const watchUnitSize = form.watch('unitSize');
+  const watchPrice = form.watch('price');
   const watchTotalArea = form.watch('totalArea');
-  const isFlexible = watchType === 'co-owning' && watchTotalArea;
+  
+  const { fields: plotFields, append: appendPlot, remove: removePlot } = useFieldArray({
+    control: form.control,
+    name: 'plots',
+  });
+
+  const { fields: unitFields, append: appendUnit, remove: removeUnit } = useFieldArray({
+    control: form.control,
+    name: 'units',
+  });
+
+  // Initialize plots when totalUnits changes for co-owning
+  useEffect(() => {
+    if (watchType === 'co-owning' && watchTotalUnits && watchTotalUnits > 0) {
+      const currentPlots = form.getValues('plots') || [];
+      if (currentPlots.length !== watchTotalUnits) {
+        const newPlots = Array.from({ length: watchTotalUnits }, (_, i) => 
+          currentPlots[i] || { size: 0, price: 0 }
+        );
+        form.setValue('plots', newPlots);
+      }
+    }
+  }, [watchType, watchTotalUnits, form]);
+
+  // Initialize units when totalUnits changes for co-building
+  useEffect(() => {
+    if (watchType === 'co-building' && watchTotalUnits && watchTotalUnits > 0) {
+      const currentUnits = form.getValues('units') || [];
+      if (currentUnits.length !== watchTotalUnits) {
+        const newUnits = Array.from({ length: watchTotalUnits }, (_, i) => 
+          currentUnits[i] || { size: 0, price: 0 }
+        );
+        form.setValue('units', newUnits);
+      }
+    }
+  }, [watchType, watchTotalUnits, form]);
+
+  // Auto-calculate buildingArea from sum of unit sizes (co-building)
+  useEffect(() => {
+    if (watchType === 'co-building' && unitFields.length > 0) {
+      const totalSize = unitFields.reduce((sum, _, index) => {
+        const unitSize = form.getValues(`units.${index}.size`) || 0;
+        return sum + unitSize;
+      }, 0);
+      const currentBuildingArea = form.getValues('buildingArea') || 0;
+      // Only update if the calculated value is significantly different (avoid infinite loops)
+      // This allows auto-calculate from units when units change
+      if (totalSize > 0 && Math.abs(currentBuildingArea - totalSize) > 0.01) {
+        form.setValue('buildingArea', totalSize);
+      }
+    }
+  }, [unitFields, watchType, form]);
+
+  // Auto-calculate total price from plots/units
+  useEffect(() => {
+    if (watchType === 'co-owning' && plotFields.length > 0) {
+      const totalPrice = plotFields.reduce((sum, _, index) => {
+        const plotPrice = form.getValues(`plots.${index}.price`) || 0;
+        return sum + plotPrice;
+      }, 0);
+      const currentPrice = form.getValues('price') || 0;
+      // Only update if the calculated value is significantly different (avoid infinite loops)
+      if (Math.abs(currentPrice - totalPrice) > 0.01) {
+        form.setValue('price', totalPrice);
+      }
+    } else if (watchType === 'co-building' && unitFields.length > 0) {
+      const totalPrice = unitFields.reduce((sum, _, index) => {
+        const unitPrice = form.getValues(`units.${index}.price`) || 0;
+        return sum + unitPrice;
+      }, 0);
+      const currentPrice = form.getValues('price') || 0;
+      // Only update if the calculated value is significantly different (avoid infinite loops)
+      if (Math.abs(currentPrice - totalPrice) > 0.01) {
+        form.setValue('price', totalPrice);
+      }
+    }
+  }, [plotFields, unitFields, watchType, form]);
+
+  // Auto-calculate totalArea from sum of plot sizes (co-owning)
+  useEffect(() => {
+    if (watchType === 'co-owning' && plotFields.length > 0) {
+      const totalSize = plotFields.reduce((sum, _, index) => {
+        const plotSize = form.getValues(`plots.${index}.size`) || 0;
+        return sum + plotSize;
+      }, 0);
+      const currentTotalArea = form.getValues('totalArea') || 0;
+      // Only update if the calculated value is significantly different (avoid infinite loops)
+      if (Math.abs(currentTotalArea - totalSize) > 0.01) {
+        form.setValue('totalArea', totalSize);
+      }
+    }
+  }, [plotFields, watchType, form]);
+
+  // Sync total price to plots/units proportionally when manually edited
+  useEffect(() => {
+    if (watchType === 'co-owning' && plotFields.length > 0 && watchPrice && watchPrice > 0) {
+      const currentTotal = plotFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`plots.${index}.price`) || 0);
+      }, 0);
+      // Only sync if there's a significant difference (user manually edited total)
+      if (currentTotal > 0 && Math.abs(currentTotal - watchPrice) > 0.01) {
+        // Distribute proportionally based on current ratios
+        plotFields.forEach((_, index) => {
+          const currentPlotPrice = form.getValues(`plots.${index}.price`) || 0;
+          const ratio = currentTotal > 0 ? currentPlotPrice / currentTotal : 1 / plotFields.length;
+          form.setValue(`plots.${index}.price`, watchPrice * ratio);
+        });
+      }
+    } else if (watchType === 'co-building' && unitFields.length > 0 && watchPrice && watchPrice > 0) {
+      const currentTotal = unitFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`units.${index}.price`) || 0);
+      }, 0);
+      // Only sync if there's a significant difference (user manually edited total)
+      if (currentTotal > 0 && Math.abs(currentTotal - watchPrice) > 0.01) {
+        // Distribute proportionally based on current ratios
+        unitFields.forEach((_, index) => {
+          const currentUnitPrice = form.getValues(`units.${index}.price`) || 0;
+          const ratio = currentTotal > 0 ? currentUnitPrice / currentTotal : 1 / unitFields.length;
+          form.setValue(`units.${index}.price`, watchPrice * ratio);
+        });
+      }
+    }
+  }, [watchPrice, plotFields, unitFields, watchType, form]);
+
+  // Sync totalArea to plots proportionally when manually edited (co-owning)
+  useEffect(() => {
+    if (watchType === 'co-owning' && plotFields.length > 0 && watchTotalArea && watchTotalArea > 0) {
+      const currentTotal = plotFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`plots.${index}.size`) || 0);
+      }, 0);
+      // Only sync if there's a significant difference (user manually edited total)
+      if (currentTotal > 0 && Math.abs(currentTotal - watchTotalArea) > 0.01) {
+        // Distribute proportionally based on current ratios
+        plotFields.forEach((_, index) => {
+          const currentPlotSize = form.getValues(`plots.${index}.size`) || 0;
+          const ratio = currentTotal > 0 ? currentPlotSize / currentTotal : 1 / plotFields.length;
+          form.setValue(`plots.${index}.size`, watchTotalArea * ratio);
+        });
+      }
+    }
+  }, [watchTotalArea, plotFields, watchType, form]);
+
+  // Sync buildingArea to units proportionally when manually edited (co-building)
+  useEffect(() => {
+    if (watchType === 'co-building' && unitFields.length > 0 && watchBuildingArea && watchBuildingArea > 0) {
+      const currentTotal = unitFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`units.${index}.size`) || 0);
+      }, 0);
+      // Only sync if there's a significant difference (user manually edited total)
+      if (currentTotal > 0 && Math.abs(currentTotal - watchBuildingArea) > 0.01) {
+        // Distribute proportionally based on current ratios
+        unitFields.forEach((_, index) => {
+          const currentUnitSize = form.getValues(`units.${index}.size`) || 0;
+          const ratio = currentTotal > 0 ? currentUnitSize / currentTotal : 1 / unitFields.length;
+          form.setValue(`units.${index}.size`, watchBuildingArea * ratio);
+        });
+      }
+    }
+  }, [watchBuildingArea, unitFields, watchType, form]);
 
   // Update form when uploadedImages change
   useEffect(() => {
@@ -277,20 +474,45 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
       data.planningInfo.sitePlanHint = uploadedSitePlan.hint;
     }
 
+    // Ensure totalArea and buildingArea are included in the data
+    // These are already in the form data, but we ensure they're properly formatted
+    if (data.totalArea !== undefined) {
+      data.totalArea = Number(data.totalArea);
+    }
+    if (data.buildingArea !== undefined) {
+      data.buildingArea = Number(data.buildingArea);
+    }
+
     // Auto-set unitName berdasarkan tipe
     if (data.type === 'co-building') {
       data.unitName = 'Lantai';
-    } else if (data.type === 'co-owning') {
-      if (data.totalArea) {
-        // Flexible
-        data.unitName = 'Kepemilikan';
-        data.totalUnits = undefined; // Pastikan tidak ada totalUnits untuk flexible
-        data.unitSize = undefined; // Pastikan tidak ada unitSize untuk flexible
-      } else {
-        // Non-Flexible
-        data.unitName = 'Kavling';
-        data.totalArea = undefined; // Pastikan tidak ada totalArea untuk non-flexible
+      // Process units array untuk co-building
+      if (data.units && data.units.length > 0) {
+        const totalPrice = data.units.reduce((sum, unit) => sum + (unit.price || 0), 0);
+        const totalSize = data.units.reduce((sum, unit) => sum + (unit.size || 0), 0);
+        data.price = totalPrice;
+        // Use manual buildingArea if provided, otherwise use calculated from sum of unit sizes
+        if (!data.buildingArea || data.buildingArea === 0) {
+          data.buildingArea = totalSize;
+        }
+        // Store individual unit prices and sizes
+        (data as any).unitPrices = data.units;
       }
+      // Remove units from final data as it's not part of Property type
+      delete (data as any).units;
+    } else if (data.type === 'co-owning') {
+      data.unitName = 'Kavling';
+      // Calculate average unitSize and total price from plots
+      if (data.plots && data.plots.length > 0) {
+        const totalSize = data.plots.reduce((sum, plot) => sum + (plot.size || 0), 0);
+        const totalPrice = data.plots.reduce((sum, plot) => sum + (plot.price || 0), 0);
+        data.unitSize = totalSize / data.plots.length;
+        data.price = totalPrice;
+        // Store individual plot prices and sizes
+        (data as any).unitPrices = data.plots;
+      }
+      // Remove plots from final data as it's not part of Property type
+      delete (data as any).plots;
     }
     onSubmit(data);
   };
@@ -326,39 +548,19 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Harga (IDR)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Lokasi</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lokasi</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -373,8 +575,8 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="co-building">Co-Building</SelectItem>
-                  <SelectItem value="co-owning">Co-Owning</SelectItem>
+                  <SelectItem value="co-building">Bangunan</SelectItem>
+                  <SelectItem value="co-owning">Lahan</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -387,9 +589,213 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
             <FormField
               control={form.control}
               name="totalUnits"
+              render={({ field }) => {
+                const { value, onChange, onBlur, ...restField } = field;
+                return (
+                  <FormItem>
+                    <FormLabel>Total Unit</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...restField}
+                        value={value ?? ''}
+                        onChange={(e) => {
+                          const newValue = parseInt(e.target.value) || 0;
+                          onChange(newValue);
+                          form.setValue('unitName', 'Lantai');
+                          // Initialize units array
+                          if (newValue > 0) {
+                            const currentUnits = form.getValues('units') || [];
+                            const newUnits = Array.from({ length: newValue }, (_, i) => 
+                              currentUnits[i] || { size: 0, price: 0 }
+                            );
+                            form.setValue('units', newUnits);
+                          }
+                        }}
+                        onBlur={onBlur}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Jumlah unit yang akan dibangun
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+
+            {watchTotalUnits && watchTotalUnits > 0 && (
+              <div className="space-y-4 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <FormLabel className="text-base font-semibold">Data per Unit</FormLabel>
+                </div>
+                <div className="space-y-3">
+                  {unitFields.map((field, index) => (
+                    <div key={field.id} className="grid grid-cols-2 gap-4 p-3 border rounded-lg">
+                      <div className="font-medium text-sm">Unit {index + 1}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`units.${index}.size`}
+                          render={({ field }) => {
+                            const { value, onChange, onBlur, ...restField } = field;
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-xs">Luas (m²)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    {...restField}
+                                    value={value ?? ''}
+                                    onChange={(e) => {
+                                      const newValue = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0;
+                                      onChange(newValue);
+                                    }}
+                                    onBlur={onBlur}
+                                    placeholder="0"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`units.${index}.price`}
+                          render={({ field }) => {
+                            const { value, onChange, onBlur, ...restField } = field;
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-xs">Harga</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="text"
+                                    {...restField}
+                                    value={value ? value.toLocaleString('id-ID') : ''}
+                                    onChange={(e) => {
+                                      const value = e.target.value.replace(/\./g, '');
+                                      const numValue = parseFloat(value) || 0;
+                                      onChange(numValue);
+                                    }}
+                                    onBlur={onBlur}
+                                    placeholder="0"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Total Section */}
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/50">
+              <FormLabel className="text-base font-semibold">Total</FormLabel>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="totalArea"
+                  render={({ field }) => {
+                    const { value, onChange, onBlur, ...restField } = field;
+                    return (
+                      <FormItem>
+                        <FormLabel>Luas Lahan (m²)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...restField}
+                            value={value ?? ''}
+                            onChange={(e) => {
+                              const newValue = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                              onChange(newValue);
+                            }}
+                            onBlur={onBlur}
+                            placeholder="Contoh: 1000"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Total luas lahan properti
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="buildingArea"
+                  render={({ field }) => {
+                    const { value, onChange, onBlur, ...restField } = field;
+                    return (
+                      <FormItem>
+                        <FormLabel>Luas Bangunan (m²)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...restField}
+                            value={value ?? ''}
+                            onChange={(e) => {
+                              const newValue = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                              onChange(newValue);
+                            }}
+                            onBlur={onBlur}
+                            placeholder="Akan terhitung otomatis"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Total luas bangunan (akan terhitung otomatis dari jumlah semua unit)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Harga Total (IDR)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          value={field.value ? formatCurrencyInput(field.value) : ''}
+                          onChange={(e) => {
+                            const parsed = parseCurrencyInput(e.target.value);
+                            field.onChange(parsed);
+                          }}
+                          onBlur={field.onBlur}
+                          placeholder="Akan terhitung otomatis"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Total harga (akan terhitung otomatis dari jumlah semua unit)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {watchType === 'co-owning' && (
+          <>
+            <FormField
+              control={form.control}
+              name="totalUnits"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Total Unit (Lantai)</FormLabel>
+                  <FormLabel>Total Unit (Kavling)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -397,148 +803,146 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 0;
                         field.onChange(value);
-                        form.setValue('unitName', 'Lantai');
+                        form.setValue('unitName', 'Kavling');
+                        // Initialize plots array
+                        if (value > 0) {
+                          const currentPlots = form.getValues('plots') || [];
+                          const newPlots = Array.from({ length: value }, (_, i) => 
+                            currentPlots[i] || { size: 0, price: 0 }
+                          );
+                          form.setValue('plots', newPlots);
+                        }
                       }}
                     />
                   </FormControl>
                   <FormDescription>
-                    Jumlah lantai yang akan dibangun
+                    Jumlah kavling yang akan dibagi
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </>
-        )}
-
-        {watchType === 'co-owning' && (
-          <>
-            <div className="rounded-lg border p-4 bg-muted/50">
-              <FormField
-                control={form.control}
-                name="totalArea"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Total Luas Tanah (untuk model fleksibel)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || undefined;
-                          field.onChange(value);
-                          if (value) {
-                            // Flexible mode
-                            form.setValue('unitName', 'Kepemilikan');
-                            form.setValue('totalUnits', undefined);
-                            form.setValue('unitSize', undefined);
-                          } else {
-                            // Non-flexible mode - clear flexible fields
-                            form.setValue('unitName', 'Kavling');
-                          }
-                        }}
-                        value={field.value || ''}
-                        placeholder="Kosongkan untuk model non-fleksibel"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Isi jika menggunakan model fleksibel (pembagian berdasarkan jumlah investor final). Kosongkan untuk model kavling tetap.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {isFlexible ? (
-              // Flexible mode: hanya totalArea dan unitMeasure
-              <>
-                <FormField
-                  control={form.control}
-                  name="unitMeasure"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Satuan Luas</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="m²" />
-                      </FormControl>
-                      <FormDescription>
-                        Satuan untuk total luas tanah (misalnya: m²)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="rounded-lg border p-3 bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-800 dark:text-blue-300">
-                  <strong>Model Fleksibel:</strong> Unit name akan otomatis di-set ke "Kepemilikan". Pembagian luas akan ditentukan berdasarkan jumlah investor final.
+            
+            {watchTotalUnits && watchTotalUnits > 0 && (
+              <div className="space-y-4 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <FormLabel className="text-base font-semibold">Data per Kavling</FormLabel>
                 </div>
-              </>
-            ) : (
-              // Non-flexible mode: totalUnits, unitSize, unitMeasure
-              <>
-                <FormField
-                  control={form.control}
-                  name="totalUnits"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total Unit (Kavling)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value) || 0;
-                            field.onChange(value);
-                            form.setValue('unitName', 'Kavling');
-                          }}
+                <div className="space-y-3">
+                  {plotFields.map((field, index) => (
+                    <div key={field.id} className="grid grid-cols-2 gap-4 p-3 border rounded-lg">
+                      <div className="font-medium text-sm">Kavling {index + 1}</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`plots.${index}.size`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Ukuran (m²)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  value={field.value || ''}
+                                  placeholder="0"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormDescription>
-                        Jumlah kavling yang akan dibagi
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="unitSize"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ukuran per Kavling</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                          value={field.value || ''}
+                        <FormField
+                          control={form.control}
+                          name={`plots.${index}.price`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Harga</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="text"
+                                  value={field.value ? field.value.toLocaleString('id-ID') : ''}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(/\./g, '');
+                                    const numValue = parseFloat(value) || 0;
+                                    field.onChange(numValue);
+                                  }}
+                                  onBlur={field.onBlur}
+                                  placeholder="0"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
-                      </FormControl>
-                      <FormDescription>
-                        Ukuran rata-rata per kavling
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="unitMeasure"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Satuan Unit</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="m²" />
-                      </FormControl>
-                      <FormDescription>
-                        Satuan untuk ukuran kavling (misalnya: m²)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
+
+            {/* Total Section */}
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/50">
+              <FormLabel className="text-base font-semibold">Total</FormLabel>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="totalArea"
+                  render={({ field }) => {
+                    const { value, onChange, onBlur, ...restField } = field;
+                    return (
+                      <FormItem>
+                        <FormLabel>Luas Lahan (m²)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...restField}
+                            value={value ?? ''}
+                            onChange={(e) => {
+                              const newValue = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                              onChange(newValue);
+                            }}
+                            onBlur={onBlur}
+                            placeholder="Akan terhitung otomatis"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Total luas lahan (akan terhitung otomatis dari jumlah semua kavling)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Harga Total (IDR)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          value={field.value ? formatCurrencyInput(field.value) : ''}
+                          onChange={(e) => {
+                            const parsed = parseCurrencyInput(e.target.value);
+                            field.onChange(parsed);
+                          }}
+                          onBlur={field.onBlur}
+                          placeholder="Akan terhitung otomatis"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Total harga (akan terhitung otomatis dari jumlah semua kavling)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
           </>
         )}
 

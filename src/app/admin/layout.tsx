@@ -31,7 +31,7 @@ export default function AdminLayout({
         router.replace('/admin/login');
       } else if (!isAdmin) {
         hasRedirected.current = true;
-        router.replace('/');
+        router.replace('/projects');
       }
     }
   }, [isAuthenticated, isLoading, isAdmin, router, isLoginPage]);

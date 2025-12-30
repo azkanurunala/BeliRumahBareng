@@ -4,6 +4,7 @@ export type Property = {
   description: string;
   price: number;
   totalArea?: number;
+  buildingArea?: number;
   location: string;
   images: { url: string; hint: string }[];
   type: 'co-building' | 'co-owning';
@@ -11,6 +12,7 @@ export type Property = {
   unitName: 'Lantai' | 'Kavling' | 'Kepemilikan';
   unitSize?: number; // e.g. 110
   unitMeasure?: string; // e.g. m²
+  unitPrices?: Array<{ size: number; price: number }>; // Individual plot/unit prices and sizes
   planningInfo?: {
     sitePlanUrl: string;
     sitePlanHint: string;
