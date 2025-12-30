@@ -17,7 +17,6 @@ import { useState, useMemo } from 'react';
 import { CheckCircle, XCircle, Eye, DollarSign, User, Mail, Phone, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SubmissionDetailModal } from '@/components/admin/submission-detail-modal';
-import { ApprovalConfirmDialog } from '@/components/admin/approval-confirm-dialog';
 import { normalizeUnitMeasure } from '@/lib/utils';
 import type { PropertySubmission } from '@/lib/types';
 
@@ -41,15 +40,6 @@ export default function AdminPropertySubmissionsPage() {
   const [locationFilter, setLocationFilter] = useState('');
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithDetails | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [approvalDialog, setApprovalDialog] = useState<{
-    open: boolean;
-    type: 'approve' | 'reject';
-    submissionId: string | null;
-  }>({
-    open: false,
-    type: 'approve',
-    submissionId: null,
-  });
 
   // Transform submissions to include computed fields
   const submissionsWithDetails = useMemo<SubmissionWithDetails[]>(() => {
@@ -115,26 +105,28 @@ export default function AdminPropertySubmissionsPage() {
     return result;
   }, [submissionsWithDetails, filters, locationFilter, priceMin, priceMax]);
 
-  const handleApproveClick = (submissionId: string) => {
-    setApprovalDialog({
-      open: true,
-      type: 'approve',
-      submissionId,
-    });
+  const handleMarkAsContacted = async (submissionId: string) => {
+    try {
+      await updatePropertySubmission(submissionId, {
+        status: 'contacted',
+        reviewedAt: new Date().toISOString(),
+      });
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Status submission telah diupdate menjadi "Sudah dihubungi"',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Gagal mengupdate status submission',
+      });
+    }
   };
 
-  const handleRejectClick = (submissionId: string) => {
-    setApprovalDialog({
-      open: true,
-      type: 'reject',
-      submissionId,
-    });
-  };
-
-  const handleApproveConfirm = async (notes?: string) => {
-    if (!approvalDialog.submissionId) return;
-
-    const submission = propertySubmissions.find((s) => s.id === approvalDialog.submissionId);
+  const handleCreatePropertyFromSubmission = async (submissionId: string) => {
+    const submission = propertySubmissions.find((s) => s.id === submissionId);
     if (!submission) {
       toast({
         variant: 'destructive',
@@ -149,7 +141,7 @@ export default function AdminPropertySubmissionsPage() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Property submission harus memiliki minimal 1 gambar untuk bisa disetujui',
+        description: 'Property submission harus memiliki minimal 1 gambar untuk bisa dibuat properti',
       });
       return;
     }
@@ -185,44 +177,25 @@ export default function AdminPropertySubmissionsPage() {
       await createProperty(newProperty);
 
       // Update submission status (async)
-      await updatePropertySubmission(approvalDialog.submissionId, {
-        status: 'approved',
+      await updatePropertySubmission(submissionId, {
+        status: 'contacted',
         reviewedAt: new Date().toISOString(),
-        notes: notes,
       });
 
       toast({
         title: 'Berhasil',
-        description: 'Property submission telah disetujui dan properti baru telah dibuat.',
+        description: 'Properti baru telah dibuat dari submission.',
       });
-
-      setApprovalDialog({ open: false, type: 'approve', submissionId: null });
     } catch (error) {
-      console.error('Error approving property submission:', error);
+      console.error('Error creating property from submission:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Gagal menyetujui property submission',
+        description: error instanceof Error ? error.message : 'Gagal membuat properti dari submission',
       });
     }
   };
 
-  const handleRejectConfirm = (notes?: string) => {
-    if (!approvalDialog.submissionId) return;
-
-    updatePropertySubmission(approvalDialog.submissionId, {
-      status: 'rejected',
-      reviewedAt: new Date().toISOString(),
-      notes: notes,
-    });
-
-    toast({
-      title: 'Berhasil',
-      description: 'Property submission telah ditolak.',
-    });
-
-    setApprovalDialog({ open: false, type: 'reject', submissionId: null });
-  };
 
   const handleViewDetail = (submission: SubmissionWithDetails) => {
     setSelectedSubmission(submission);
@@ -302,6 +275,8 @@ export default function AdminPropertySubmissionsPage() {
                   ? 'default'
                   : row.status === 'rejected'
                   ? 'destructive'
+                  : row.status === 'contacted'
+                  ? 'default'
                   : 'secondary'
               }
               className="text-xs"
@@ -310,6 +285,8 @@ export default function AdminPropertySubmissionsPage() {
                 ? 'Disetujui'
                 : row.status === 'rejected'
                 ? 'Ditolak'
+                : row.status === 'contacted'
+                ? 'Sudah dihubungi'
                 : 'Menunggu'}
             </Badge>
           </div>
@@ -331,20 +308,12 @@ export default function AdminPropertySubmissionsPage() {
       size: 'icon',
     },
     {
-      label: 'Setujui & Buat Properti',
-      icon: <CheckCircle className="h-4 w-4" />,
-      onClick: (row) => handleApproveClick(row.id),
-      variant: 'default',
-      size: 'sm',
-      show: (row) => row.status === 'pending',
-    },
-    {
-      label: 'Tolak',
-      icon: <XCircle className="h-4 w-4" />,
-      onClick: (row) => handleRejectClick(row.id),
+      label: 'Tandai sebagai Contacted',
+      icon: <Phone className="h-4 w-4" />,
+      onClick: (row) => handleMarkAsContacted(row.id),
       variant: 'outline',
       size: 'sm',
-      show: (row) => row.status === 'pending',
+      show: (row) => row.status !== 'contacted',
     },
   ];
 
@@ -380,6 +349,7 @@ export default function AdminPropertySubmissionsPage() {
                   <SelectItem value="pending">Menunggu</SelectItem>
                   <SelectItem value="approved">Disetujui</SelectItem>
                   <SelectItem value="rejected">Ditolak</SelectItem>
+                  <SelectItem value="contacted">Sudah dihubungi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -455,34 +425,12 @@ export default function AdminPropertySubmissionsPage() {
           onOpenChange={setModalOpen}
           submission={selectedSubmission}
           submitter={users.find((u) => u.id === selectedSubmission.submittedBy) || null}
-          onApprove={handleApproveClick}
-          onReject={handleRejectClick}
+          onApprove={(id) => handleCreatePropertyFromSubmission(id)}
+          onReject={() => {}}
+          onMarkAsContacted={handleMarkAsContacted}
         />
       )}
 
-      <ApprovalConfirmDialog
-        open={approvalDialog.open}
-        onOpenChange={(open) =>
-          setApprovalDialog({ ...approvalDialog, open })
-        }
-        type={approvalDialog.type}
-        title={
-          approvalDialog.type === 'approve'
-            ? 'Setujui Property Submission?'
-            : 'Tolak Property Submission?'
-        }
-        description={
-          approvalDialog.type === 'approve'
-            ? 'Apakah Anda yakin ingin menyetujui submission ini? Properti baru akan dibuat setelah approval.'
-            : 'Apakah Anda yakin ingin menolak submission ini? Notes rejection wajib diisi.'
-        }
-        onConfirm={
-          approvalDialog.type === 'approve'
-            ? handleApproveConfirm
-            : handleRejectConfirm
-        }
-        requireNotes={approvalDialog.type === 'reject'}
-      />
     </div>
   );
 }

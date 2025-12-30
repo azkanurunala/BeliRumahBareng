@@ -227,6 +227,32 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
     }
   }, [unitFields, watchType, form]);
 
+  // Helper function to recalculate buildingArea from units
+  const recalculateBuildingArea = () => {
+    if (watchType === 'co-building' && unitFields.length > 0) {
+      const totalSize = unitFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`units.${index}.size`) || 0);
+      }, 0);
+      const currentBuildingArea = form.getValues('buildingArea') || 0;
+      if (totalSize > 0 && Math.abs(currentBuildingArea - totalSize) > 0.01) {
+        form.setValue('buildingArea', totalSize);
+      }
+    }
+  };
+
+  // Helper function to recalculate totalArea from plots
+  const recalculateTotalArea = () => {
+    if (watchType === 'co-owning' && plotFields.length > 0) {
+      const totalSize = plotFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`plots.${index}.size`) || 0);
+      }, 0);
+      const currentTotalArea = form.getValues('totalArea') || 0;
+      if (totalSize > 0 && Math.abs(currentTotalArea - totalSize) > 0.01) {
+        form.setValue('totalArea', totalSize);
+      }
+    }
+  };
+
   // Auto-calculate total price from plots/units
   useEffect(() => {
     if (watchType === 'co-owning' && plotFields.length > 0) {
@@ -600,7 +626,10 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                         {...restField}
                         value={value ?? ''}
                         onChange={(e) => {
-                          const newValue = parseInt(e.target.value) || 0;
+                          // Remove leading zeros
+                          let value = e.target.value.replace(/^0+/, '');
+                          if (value === '') value = '0';
+                          const newValue = parseInt(value) || 0;
                           onChange(newValue);
                           form.setValue('unitName', 'Lantai');
                           // Initialize units array
@@ -648,8 +677,13 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                                     {...restField}
                                     value={value ?? ''}
                                     onChange={(e) => {
-                                      const newValue = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0;
+                                      // Remove leading zeros
+                                      let value = e.target.value.replace(/^0+/, '');
+                                      if (value === '') value = '0';
+                                      const newValue = value === '' ? 0 : parseFloat(value) || 0;
                                       onChange(newValue);
+                                      // Trigger buildingArea recalculation
+                                      setTimeout(() => recalculateBuildingArea(), 0);
                                     }}
                                     onBlur={onBlur}
                                     placeholder="0"
@@ -801,13 +835,16 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                       type="number"
                       {...field}
                       onChange={(e) => {
-                        const value = parseInt(e.target.value) || 0;
-                        field.onChange(value);
+                        // Remove leading zeros
+                        let value = e.target.value.replace(/^0+/, '');
+                        if (value === '') value = '0';
+                        const numValue = parseInt(value) || 0;
+                        field.onChange(numValue);
                         form.setValue('unitName', 'Kavling');
                         // Initialize plots array
-                        if (value > 0) {
+                        if (numValue > 0) {
                           const currentPlots = form.getValues('plots') || [];
-                          const newPlots = Array.from({ length: value }, (_, i) => 
+                          const newPlots = Array.from({ length: numValue }, (_, i) => 
                             currentPlots[i] || { size: 0, price: 0 }
                           );
                           form.setValue('plots', newPlots);
@@ -843,7 +880,14 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                                 <Input
                                   type="number"
                                   {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  onChange={(e) => {
+                                    // Remove leading zeros
+                                    let value = e.target.value.replace(/^0+/, '');
+                                    if (value === '') value = '0';
+                                    field.onChange(parseFloat(value) || 0);
+                                    // Trigger totalArea recalculation
+                                    setTimeout(() => recalculateTotalArea(), 0);
+                                  }}
                                   value={field.value || ''}
                                   placeholder="0"
                                 />

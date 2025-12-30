@@ -25,13 +25,16 @@ export async function POST(
       throw new NotFoundError('Property submission not found');
     }
 
-    // Check if reviewer exists
-    const reviewer = await db.user.findUnique({
-      where: { id: validatedData.reviewedBy },
-    });
+    // Check if reviewer exists (optional now)
+    let reviewer = null;
+    if (validatedData.reviewedBy) {
+      reviewer = await db.user.findUnique({
+        where: { id: validatedData.reviewedBy },
+      });
 
-    if (!reviewer) {
-      throw new NotFoundError('Reviewer not found');
+      if (!reviewer) {
+        throw new NotFoundError('Reviewer not found');
+      }
     }
 
     // Update submission dengan review
@@ -84,7 +87,7 @@ export async function POST(
         url: img.url,
         hint: img.hint,
       })),
-      status: updatedSubmission.status as 'pending' | 'approved' | 'rejected',
+      status: updatedSubmission.status as 'pending' | 'approved' | 'rejected' | 'contacted',
       reviewedBy: updatedSubmission.reviewedBy,
       reviewedAt: updatedSubmission.reviewedAt?.toISOString(),
       notes: updatedSubmission.notes,

@@ -36,11 +36,11 @@ export const updatePropertySubmissionSchema = createPropertySubmissionSchema.par
 // Property Submission Review Schema (for admin)
 export const reviewPropertySubmissionSchema = z.object({
   id: z.string().cuid('ID submission tidak valid'),
-  status: z.enum(['approved', 'rejected'], {
+  status: z.enum(['approved', 'rejected', 'contacted'], {
     required_error: 'Status wajib dipilih',
   }),
   notes: z.string().optional(),
-  reviewedBy: z.string().cuid('ID reviewer tidak valid'),
+  reviewedBy: z.string().cuid('ID reviewer tidak valid').optional(),
 });
 
 export type CreatePropertySubmissionInput = z.infer<typeof createPropertySubmissionSchema>;

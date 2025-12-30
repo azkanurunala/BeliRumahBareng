@@ -197,7 +197,7 @@ export type PropertySubmission = {
   contactPhone: string;
   contactEmail: string;
   images?: { url: string; hint: string }[];
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'contacted';
   reviewedBy?: string; // admin userId
   reviewedAt?: string; // ISO date string
   notes?: string; // admin notes

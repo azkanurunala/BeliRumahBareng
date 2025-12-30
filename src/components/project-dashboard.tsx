@@ -379,7 +379,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
               <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
             </CardHeader>
             <CardContent>
-              <p className="text-base">
+              <p className="text-base whitespace-pre-wrap">
                 {property?.description || "Deskripsi properti"}
               </p>
 

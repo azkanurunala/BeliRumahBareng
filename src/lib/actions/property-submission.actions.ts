@@ -13,14 +13,39 @@ import { createNotificationForAdmin, createNotificationForUser } from '@/lib/not
 export async function createPropertySubmission(data: z.infer<typeof createPropertySubmissionSchema>) {
   try {
     const validatedData = createPropertySubmissionSchema.parse(data);
-    const submitter = await db.user.findUnique({ where: { id: validatedData.submittedBy } });
-    if (!submitter) {
-      return { success: false, error: { message: 'Submitter not found', code: 'NOT_FOUND' } };
+    
+    // Handle guest submissions - create or find guest user
+    let submitterId = validatedData.submittedBy;
+    if (submitterId === 'guest') {
+      // Find or create guest user
+      let guestUser = await db.user.findUnique({ where: { email: 'guest@belirumahbareng.com' } });
+      if (!guestUser) {
+        guestUser = await db.user.create({
+          data: {
+            name: 'Guest User',
+            email: 'guest@belirumahbareng.com',
+            phoneNumber: '0000000000',
+            avatarUrl: '',
+            avatarHint: '',
+            locationPreference: '',
+            priceRange: '',
+            investmentGoals: '',
+            financialCapacity: '',
+            timeHorizon: '',
+          },
+        });
+      }
+      submitterId = guestUser.id;
+    } else {
+      const submitter = await db.user.findUnique({ where: { id: validatedData.submittedBy } });
+      if (!submitter) {
+        return { success: false, error: { message: 'Submitter not found', code: 'NOT_FOUND' } };
+      }
     }
 
     const submission = await db.propertySubmission.create({
       data: {
-        submittedBy: validatedData.submittedBy,
+        submittedBy: submitterId,
         type: validatedData.type,
         name: validatedData.name,
         description: validatedData.description,
@@ -72,12 +97,21 @@ export async function createPropertySubmission(data: z.infer<typeof createProper
     revalidatePath('/api/property-submissions');
     
     // Create notification untuk admin
-    await createNotificationForAdmin(
-      'Pengajuan Properti Baru',
-      `Pengajuan properti baru: ${submission.name} dari ${submitter.name}`,
-      'property_submission_new',
-      `/admin/property-submissions`
-    );
+    if (submitter) {
+      await createNotificationForAdmin(
+        'Pengajuan Properti Baru',
+        `Pengajuan properti baru: ${submission.name} dari ${submitter.name}`,
+        'property_submission_new',
+        `/admin/property-submissions`
+      );
+    } else {
+      await createNotificationForAdmin(
+        'Pengajuan Properti Baru',
+        `Pengajuan properti baru: ${submission.name} dari Guest User`,
+        'property_submission_new',
+        `/admin/property-submissions`
+      );
+    }
     
     return { success: true, data: transformed };
   } catch (error) {
@@ -319,7 +353,7 @@ export async function reviewPropertySubmission(data: z.infer<typeof reviewProper
       contactPhone: updated.contactPhone,
       contactEmail: updated.contactEmail,
       images: updated.images.map((img) => ({ url: img.url, hint: img.hint })),
-      status: updated.status as 'pending' | 'approved' | 'rejected',
+      status: updated.status as 'pending' | 'approved' | 'rejected' | 'contacted',
       reviewedBy: updated.reviewedBy,
       reviewedAt: updated.reviewedAt?.toISOString(),
       notes: updated.notes,
@@ -333,21 +367,33 @@ export async function reviewPropertySubmission(data: z.infer<typeof reviewProper
     // Create notification untuk user yang submit
     const notificationType = validatedData.status === 'approved' 
       ? 'property_submission_approved' 
-      : 'property_submission_rejected';
-    const notificationTitle = validatedData.status === 'approved'
-      ? 'Pengajuan Properti Disetujui'
-      : 'Pengajuan Properti Ditolak';
-    const notificationDesc = validatedData.status === 'approved'
-      ? `Pengajuan properti "${updated.name}" telah disetujui oleh admin.`
-      : `Pengajuan properti "${updated.name}" telah ditolak.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`;
+      : validatedData.status === 'rejected'
+      ? 'property_submission_rejected'
+      : validatedData.status === 'contacted'
+      ? 'property_submission_contacted'
+      : null;
     
-    await createNotificationForUser(
-      submission.submittedBy,
-      notificationTitle,
-      notificationDesc,
-      notificationType,
-      validatedData.status === 'approved' ? `/property/${updated.id}` : null
-    );
+    if (notificationType) {
+      const notificationTitle = validatedData.status === 'approved'
+        ? 'Pengajuan Properti Disetujui'
+        : validatedData.status === 'rejected'
+        ? 'Pengajuan Properti Ditolak'
+        : 'Pengajuan Properti Sudah Dihubungi';
+      
+      const notificationDesc = validatedData.status === 'approved'
+        ? `Pengajuan properti "${updated.name}" telah disetujui oleh admin.`
+        : validatedData.status === 'rejected'
+        ? `Pengajuan properti "${updated.name}" telah ditolak.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`
+        : `Pengajuan properti "${updated.name}" telah dihubungi oleh tim BeliRumahBareng.${validatedData.notes ? ` Catatan: ${validatedData.notes}` : ''}`;
+      
+      await createNotificationForUser(
+        submission.submittedBy,
+        notificationTitle,
+        notificationDesc,
+        notificationType,
+        validatedData.status === 'approved' ? `/property/${updated.id}` : null
+      );
+    }
     
     return { success: true, data: transformed };
   } catch (error) {

@@ -16,8 +16,9 @@ export async function getRecommendationsAction(
     const recommendations = await getPersonalizedPropertyRecommendations(input);
     return { success: true, data: recommendations };
   } catch (error) {
-    console.error(error);
-    return { success: false, error: "Gagal mendapatkan rekomendasi." };
+    console.error('Error in getRecommendationsAction:', error);
+    const errorMessage = error instanceof Error ? error.message : "Gagal mendapatkan rekomendasi.";
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -30,7 +31,7 @@ export async function getMatchmakingAction(
     const matchedUserIds = matches.matchedUserIds.map(id => parseInt(id, 10));
     return { success: true, data: { ...matches, matchedUserIds } };
   } catch (error) {
-    console.error(error);
+    console.error('Error in getMatchmakingAction:', error);
     return { success: false, error: "Gagal menemukan pasangan." };
   }
 }

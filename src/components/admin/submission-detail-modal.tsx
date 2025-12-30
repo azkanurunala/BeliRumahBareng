@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,14 +17,16 @@ import Image from 'next/image';
 import type { PropertySubmission } from '@/lib/types';
 import type { User as UserType } from '@/lib/types';
 import { normalizeUnitMeasure } from '@/lib/utils';
+import FullscreenImageViewer from '@/components/fullscreen-image-viewer';
 
 interface SubmissionDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   submission: PropertySubmission | null;
   submitter: UserType | null;
-  onApprove: (submissionId: string) => void; // Changed: no notes parameter, will use confirmation dialog
-  onReject: (submissionId: string) => void; // Changed: no notes parameter, will use confirmation dialog
+  onApprove: (submissionId: string) => void;
+  onReject: (submissionId: string) => void;
+  onMarkAsContacted: (submissionId: string) => void;
 }
 
 export function SubmissionDetailModal({
@@ -33,8 +36,17 @@ export function SubmissionDetailModal({
   submitter,
   onApprove,
   onReject,
+  onMarkAsContacted,
 }: SubmissionDetailModalProps) {
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   if (!submission) return null;
+
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
+    setImageViewerOpen(true);
+  };
 
   const handleApprove = () => {
     onApprove(submission.id);
@@ -71,6 +83,8 @@ export function SubmissionDetailModal({
                   ? 'default'
                   : submission.status === 'rejected'
                   ? 'destructive'
+                  : submission.status === 'contacted'
+                  ? 'default'
                   : 'secondary'
               }
               className="text-sm"
@@ -79,6 +93,8 @@ export function SubmissionDetailModal({
                 ? 'Disetujui'
                 : submission.status === 'rejected'
                 ? 'Ditolak'
+                : submission.status === 'contacted'
+                ? 'Sudah dihubungi'
                 : 'Menunggu Review'}
             </Badge>
             {submission.reviewedAt && (
@@ -160,7 +176,11 @@ export function SubmissionDetailModal({
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {submission.images.map((img, idx) => (
-                  <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border">
+                  <div 
+                    key={idx} 
+                    className="relative aspect-video rounded-lg overflow-hidden border cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => handleImageClick(idx)}
+                  >
                     <Image
                       src={img.url}
                       alt={img.hint || `Gambar ${idx + 1}`}
@@ -170,6 +190,19 @@ export function SubmissionDetailModal({
                   </div>
                 ))}
               </div>
+              
+              {submission.images && submission.images.length > 0 && (
+                <FullscreenImageViewer
+                  images={submission.images.map((img, idx) => ({
+                    url: img.url,
+                    alt: img.hint || `Gambar ${idx + 1}`,
+                    hint: img.hint,
+                  }))}
+                  initialIndex={selectedImageIndex}
+                  isOpen={imageViewerOpen}
+                  onClose={() => setImageViewerOpen(false)}
+                />
+              )}
             </div>
           )}
 
@@ -218,31 +251,31 @@ export function SubmissionDetailModal({
           )}
 
           {/* Action Buttons */}
-          {submission.status === 'pending' && (
-            <div className="space-y-4 border-t pt-4">
-              <DialogFooter>
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
-                  Tutup
-                </Button>
-                <Button variant="destructive" onClick={handleReject}>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Tolak
-                </Button>
-                <Button onClick={handleApprove}>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Setujui & Buat Properti
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
-
-          {submission.status !== 'pending' && (
+          <div className="space-y-4 border-t pt-4">
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Tutup
               </Button>
+              {submission.status !== 'contacted' && (
+                <Button variant="outline" onClick={() => onMarkAsContacted(submission.id)}>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Tandai sebagai Contacted
+                </Button>
+              )}
+              {submission.status === 'pending' && (
+                <>
+                  <Button variant="destructive" onClick={handleReject}>
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Tolak
+                  </Button>
+                  <Button onClick={handleApprove}>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Setujui & Buat Properti
+                  </Button>
+                </>
+              )}
             </DialogFooter>
-          )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

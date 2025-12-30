@@ -165,17 +165,6 @@ export function SellPropertyForm() {
       return;
     }
 
-    // Validate user is logged in (should not happen due to page check, but double check)
-    if (!user?.id) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Anda harus login terlebih dahulu',
-      });
-      router.push('/auth/register?redirect=/sell-property');
-      return;
-    }
-
     setIsLoading(true);
     try {
       // For co-owning: totalArea should be from landArea (or buildingArea if no landArea)
@@ -187,7 +176,7 @@ export function SellPropertyForm() {
 
       const submission = {
         id: `submission-${Date.now()}`,
-        submittedBy: user.id, // User must be logged in
+        submittedBy: user?.id || 'guest', // Use guest if no user
         type: data.type,
         name: data.name,
         description: data.description,
@@ -229,7 +218,7 @@ export function SellPropertyForm() {
         contactEmail: user?.email || '',
       });
       setUploadedImages([]);
-      router.push('/dashboard');
+      router.push('/projects');
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -304,7 +293,7 @@ export function SellPropertyForm() {
             <FormItem>
               <FormLabel>Lokasi</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Contoh: Sidoarjo, Surabaya" />
+                <Input {...field} placeholder="Contoh: Surabaya" />
               </FormControl>
               <FormMessage />
             </FormItem>

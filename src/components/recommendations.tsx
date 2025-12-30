@@ -101,30 +101,42 @@ export default function Recommendations() {
     setIsLoading(true);
     setRecommendations([]);
 
-    const priceRangeParts = data.priceRange.split('-');
-    const minPrice = parseInt(priceRangeParts[0].replace('jt', '000000').replace('M','000000000'), 10);
-    const maxPrice = priceRangeParts[1] ? parseInt(priceRangeParts[1].replace('jt', '000000').replace('M','000000000'), 10) : 9999999999;
-    
-    const investmentGoalLabel = investmentGoalsOptions.find(opt => opt.value === data.investmentGoals)?.label ?? data.investmentGoals;
+    try {
+      const priceRangeParts = data.priceRange.split('-');
+      const minPriceStr = priceRangeParts[0].replace('jt', '000000').replace('M', '000000000').replace('+', '');
+      const minPrice = parseInt(minPriceStr, 10);
+      const maxPrice = priceRangeParts[1] 
+        ? parseInt(priceRangeParts[1].replace('jt', '000000').replace('M', '000000000'), 10) 
+        : 9999999999;
+      
+      const investmentGoalLabel = investmentGoalsOptions.find(opt => opt.value === data.investmentGoals)?.label ?? data.investmentGoals;
 
+      const result = await getRecommendationsAction({
+          location: data.location,
+          priceRange: { min: minPrice, max: maxPrice },
+          investmentGoals: investmentGoalLabel,
+          financialCapacity: `Rp ${new Intl.NumberFormat('id-ID').format(data.financialCapacity)}`
+      });
 
-    const result = await getRecommendationsAction({
-        location: data.location,
-        priceRange: { min: minPrice, max: maxPrice },
-        investmentGoals: investmentGoalLabel,
-        financialCapacity: `Rp ${new Intl.NumberFormat('id-ID').format(data.financialCapacity)}`
-    });
-
-    if (result.success && result.data) {
-        setRecommendations(result.data.recommendations);
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: result.error || "Terjadi kesalahan yang tidak diketahui.",
-        });
+      if (result.success && result.data) {
+          setRecommendations(result.data.recommendations || []);
+      } else {
+          toast({
+              variant: "destructive",
+              title: "Error",
+              description: result.error || "Terjadi kesalahan yang tidak diketahui.",
+          });
+      }
+    } catch (error) {
+      console.error('Error in onSubmit:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   const formatPrice = (price: number) => new Intl.NumberFormat('id-ID', {
