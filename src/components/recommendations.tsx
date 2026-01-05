@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MapPin, Search } from 'lucide-react';
 import { LoadingInline } from './loading-inline';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -158,6 +159,13 @@ export default function Recommendations() {
     maximumFractionDigits: 1,
   }).format(price);
 
+  // Helper function untuk membatasi deskripsi menjadi maksimal 50 kata
+  const truncateWords = (text: string, maxWords: number = 50): string => {
+    const words = text.trim().split(/\s+/);
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
+
   if (authLoading) {
     return (
       <div className="space-y-6 rounded-lg border p-4">
@@ -307,24 +315,26 @@ export default function Recommendations() {
           <h3 className="text-lg font-semibold">Berikut adalah rekomendasi teratas untuk Anda:</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {recommendations.map(rec => (
-              <Card key={rec.propertyId} className='overflow-hidden'>
-                <CardHeader>
-                    <CardTitle className="text-base">{rec.propertyName}</CardTitle>
-                    <CardDescription className='flex items-center text-xs'>
-                        <MapPin className="mr-1 h-3 w-3" /> {rec.location}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p>{rec.propertyDescription}</p>
-                  <div className="flex justify-between items-baseline">
-                    <p className="font-semibold text-primary">{formatPrice(rec.propertyPrice)}</p>
-                    <div className="text-right">
-                        <p className="font-bold text-green-600">{rec.suitabilityScore}/100</p>
-                        <p className="text-xs text-muted-foreground">Kecocokan</p>
+              <Link key={rec.propertyId} href={`/property/${rec.propertyId}`} className="block">
+                <Card className='overflow-hidden hover:shadow-lg transition-shadow cursor-pointer'>
+                  <CardHeader>
+                      <CardTitle className="text-base">{rec.propertyName}</CardTitle>
+                      <CardDescription className='flex items-center text-xs'>
+                          <MapPin className="mr-1 h-3 w-3" /> {rec.location}
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <p>{truncateWords(rec.propertyDescription, 50)}</p>
+                    <div className="flex justify-between items-baseline">
+                      <p className="font-semibold text-primary">{formatPrice(rec.propertyPrice)}</p>
+                      <div className="text-right">
+                          <p className="font-bold text-green-600">{rec.suitabilityScore}/100</p>
+                          <p className="text-xs text-muted-foreground">Kecocokan</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
