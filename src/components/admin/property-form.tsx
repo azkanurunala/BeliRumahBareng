@@ -174,6 +174,8 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
   const watchUnitSize = form.watch('unitSize');
   const watchPrice = form.watch('price');
   const watchTotalArea = form.watch('totalArea');
+  const watchPlots = form.watch('plots');
+  const watchUnits = form.watch('units');
   
   const { fields: plotFields, append: appendPlot, remove: removePlot } = useFieldArray({
     control: form.control,
@@ -253,6 +255,27 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
     }
   };
 
+  // Helper function to recalculate total price from plots/units
+  const recalculateTotalPrice = () => {
+    if (watchType === 'co-owning' && plotFields.length > 0) {
+      const totalPrice = plotFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`plots.${index}.price`) || 0);
+      }, 0);
+      const currentPrice = form.getValues('price') || 0;
+      if (totalPrice > 0 && Math.abs(currentPrice - totalPrice) > 0.01) {
+        form.setValue('price', totalPrice);
+      }
+    } else if (watchType === 'co-building' && unitFields.length > 0) {
+      const totalPrice = unitFields.reduce((sum, _, index) => {
+        return sum + (form.getValues(`units.${index}.price`) || 0);
+      }, 0);
+      const currentPrice = form.getValues('price') || 0;
+      if (totalPrice > 0 && Math.abs(currentPrice - totalPrice) > 0.01) {
+        form.setValue('price', totalPrice);
+      }
+    }
+  };
+
   // Auto-calculate total price from plots/units
   useEffect(() => {
     if (watchType === 'co-owning' && plotFields.length > 0) {
@@ -276,22 +299,21 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
         form.setValue('price', totalPrice);
       }
     }
-  }, [plotFields, unitFields, watchType, form]);
+  }, [plotFields, unitFields, watchType, watchPlots, watchUnits, form]);
 
   // Auto-calculate totalArea from sum of plot sizes (co-owning)
   useEffect(() => {
     if (watchType === 'co-owning' && plotFields.length > 0) {
-      const totalSize = plotFields.reduce((sum, _, index) => {
-        const plotSize = form.getValues(`plots.${index}.size`) || 0;
-        return sum + plotSize;
-      }, 0);
-      const currentTotalArea = form.getValues('totalArea') || 0;
-      // Only update if the calculated value is significantly different (avoid infinite loops)
-      if (Math.abs(currentTotalArea - totalSize) > 0.01) {
-        form.setValue('totalArea', totalSize);
-      }
+      recalculateTotalArea();
     }
-  }, [plotFields, watchType, form]);
+  }, [plotFields, watchType, watchPlots]);
+  
+  // Auto-calculate buildingArea from sum of unit sizes (co-building)
+  useEffect(() => {
+    if (watchType === 'co-building' && unitFields.length > 0) {
+      recalculateBuildingArea();
+    }
+  }, [unitFields, watchType, watchUnits]);
 
   // Sync total price to plots/units proportionally when manually edited
   useEffect(() => {
@@ -626,10 +648,14 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                         {...restField}
                         value={value ?? ''}
                         onChange={(e) => {
-                          // Remove leading zeros
-                          let value = e.target.value.replace(/^0+/, '');
-                          if (value === '') value = '0';
-                          const newValue = parseInt(value) || 0;
+                          // Remove leading zeros and handle empty state
+                          let inputValue = e.target.value.replace(/^0+/, '');
+                          // Allow empty string, don't force to '0'
+                          if (inputValue === '') {
+                            onChange(undefined);
+                            return;
+                          }
+                          const newValue = parseInt(inputValue) || 0;
                           onChange(newValue);
                           form.setValue('unitName', 'Lantai');
                           // Initialize units array
@@ -673,15 +699,20 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                                 <FormLabel className="text-xs">Luas (m²)</FormLabel>
                                 <FormControl>
                                   <Input
-                                    type="number"
+                                    type="text"
                                     {...restField}
-                                    value={value ?? ''}
+                                    value={value ? formatCurrencyInput(Math.floor(value)) : ''}
                                     onChange={(e) => {
-                                      // Remove leading zeros
-                                      let value = e.target.value.replace(/^0+/, '');
-                                      if (value === '') value = '0';
-                                      const newValue = value === '' ? 0 : parseFloat(value) || 0;
-                                      onChange(newValue);
+                                      // Remove dots (thousand separators) and leading zeros
+                                      let cleaned = e.target.value.replace(/\./g, '').replace(/^0+/, '');
+                                      if (cleaned === '') {
+                                        onChange(0);
+                                        setTimeout(() => recalculateBuildingArea(), 0);
+                                        return;
+                                      }
+                                      // Remove leading zeros but preserve the number
+                                      const numValue = parseFloat(cleaned) || 0;
+                                      onChange(numValue);
                                       // Trigger buildingArea recalculation
                                       setTimeout(() => recalculateBuildingArea(), 0);
                                     }}
@@ -706,11 +737,12 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                                   <Input
                                     type="text"
                                     {...restField}
-                                    value={value ? value.toLocaleString('id-ID') : ''}
+                                    value={value ? formatCurrencyInput(value) : ''}
                                     onChange={(e) => {
-                                      const value = e.target.value.replace(/\./g, '');
-                                      const numValue = parseFloat(value) || 0;
-                                      onChange(numValue);
+                                      const parsed = parseCurrencyInput(e.target.value);
+                                      onChange(parsed);
+                                      // Trigger total price recalculation
+                                      setTimeout(() => recalculateTotalPrice(), 0);
                                     }}
                                     onBlur={onBlur}
                                     placeholder="0"
@@ -742,12 +774,18 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                         <FormLabel>Luas Lahan (m²)</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
+                            type="text"
                             {...restField}
-                            value={value ?? ''}
+                            value={value ? formatCurrencyInput(Math.floor(value)) : ''}
                             onChange={(e) => {
-                              const newValue = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                              onChange(newValue);
+                              // Remove dots (thousand separators) and leading zeros
+                              let cleaned = e.target.value.replace(/\./g, '').replace(/^0+/, '');
+                              if (cleaned === '') {
+                                onChange(undefined);
+                                return;
+                              }
+                              const numValue = parseFloat(cleaned) || 0;
+                              onChange(numValue);
                             }}
                             onBlur={onBlur}
                             placeholder="Contoh: 1000"
@@ -772,12 +810,18 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                         <FormLabel>Luas Bangunan (m²)</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
+                            type="text"
                             {...restField}
-                            value={value ?? ''}
+                            value={value ? formatCurrencyInput(Math.floor(value)) : ''}
                             onChange={(e) => {
-                              const newValue = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                              onChange(newValue);
+                              // Remove dots (thousand separators) and leading zeros
+                              let cleaned = e.target.value.replace(/\./g, '').replace(/^0+/, '');
+                              if (cleaned === '') {
+                                onChange(undefined);
+                                return;
+                              }
+                              const numValue = parseFloat(cleaned) || 0;
+                              onChange(numValue);
                             }}
                             onBlur={onBlur}
                             placeholder="Akan terhitung otomatis"
@@ -834,11 +878,16 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                     <Input
                       type="number"
                       {...field}
+                      value={field.value ?? ''}
                       onChange={(e) => {
-                        // Remove leading zeros
-                        let value = e.target.value.replace(/^0+/, '');
-                        if (value === '') value = '0';
-                        const numValue = parseInt(value) || 0;
+                        // Remove leading zeros and handle empty state
+                        let inputValue = e.target.value.replace(/^0+/, '');
+                        // Allow empty string, don't force to '0'
+                        if (inputValue === '') {
+                          field.onChange(undefined);
+                          return;
+                        }
+                        const numValue = parseInt(inputValue) || 0;
                         field.onChange(numValue);
                         form.setValue('unitName', 'Kavling');
                         // Initialize plots array
@@ -873,51 +922,66 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                         <FormField
                           control={form.control}
                           name={`plots.${index}.size`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Ukuran (m²)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  {...field}
-                                  onChange={(e) => {
-                                    // Remove leading zeros
-                                    let value = e.target.value.replace(/^0+/, '');
-                                    if (value === '') value = '0';
-                                    field.onChange(parseFloat(value) || 0);
-                                    // Trigger totalArea recalculation
-                                    setTimeout(() => recalculateTotalArea(), 0);
-                                  }}
-                                  value={field.value || ''}
-                                  placeholder="0"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                          render={({ field }) => {
+                            const { value, onChange, onBlur, ...restField } = field;
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-xs">Ukuran (m²)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="text"
+                                    {...restField}
+                                    value={value ? formatCurrencyInput(Math.floor(value)) : ''}
+                                    onChange={(e) => {
+                                      // Remove dots (thousand separators) and leading zeros
+                                      let cleaned = e.target.value.replace(/\./g, '').replace(/^0+/, '');
+                                      if (cleaned === '') {
+                                        onChange(0);
+                                        setTimeout(() => recalculateTotalArea(), 0);
+                                        return;
+                                      }
+                                      // Remove leading zeros but preserve the number
+                                      const numValue = parseFloat(cleaned) || 0;
+                                      onChange(numValue);
+                                      // Trigger totalArea recalculation
+                                      setTimeout(() => recalculateTotalArea(), 0);
+                                    }}
+                                    onBlur={onBlur}
+                                    placeholder="0"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
                         />
                         <FormField
                           control={form.control}
                           name={`plots.${index}.price`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">Harga</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="text"
-                                  value={field.value ? field.value.toLocaleString('id-ID') : ''}
-                                  onChange={(e) => {
-                                    const value = e.target.value.replace(/\./g, '');
-                                    const numValue = parseFloat(value) || 0;
-                                    field.onChange(numValue);
-                                  }}
-                                  onBlur={field.onBlur}
-                                  placeholder="0"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                          render={({ field }) => {
+                            const { value, onChange, onBlur, ...restField } = field;
+                            return (
+                              <FormItem>
+                                <FormLabel className="text-xs">Harga</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="text"
+                                    {...restField}
+                                    value={value ? formatCurrencyInput(value) : ''}
+                                    onChange={(e) => {
+                                      const parsed = parseCurrencyInput(e.target.value);
+                                      onChange(parsed);
+                                      // Trigger total price recalculation
+                                      setTimeout(() => recalculateTotalPrice(), 0);
+                                    }}
+                                    onBlur={onBlur}
+                                    placeholder="0"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            );
+                          }}
                         />
                       </div>
                     </div>
@@ -940,12 +1004,18 @@ export function PropertyForm({ property, onSubmit, onCancel }: PropertyFormProps
                         <FormLabel>Luas Lahan (m²)</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
+                            type="text"
                             {...restField}
-                            value={value ?? ''}
+                            value={value ? formatCurrencyInput(Math.floor(value)) : ''}
                             onChange={(e) => {
-                              const newValue = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                              onChange(newValue);
+                              // Remove dots (thousand separators) and leading zeros
+                              let cleaned = e.target.value.replace(/\./g, '').replace(/^0+/, '');
+                              if (cleaned === '') {
+                                onChange(undefined);
+                                return;
+                              }
+                              const numValue = parseFloat(cleaned) || 0;
+                              onChange(numValue);
                             }}
                             onBlur={onBlur}
                             placeholder="Akan terhitung otomatis"

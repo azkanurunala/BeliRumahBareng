@@ -16,6 +16,8 @@ export async function createPropertySubmission(data: z.infer<typeof createProper
     
     // Handle guest submissions - create or find guest user
     let submitterId = validatedData.submittedBy;
+    let submitter: { id: string; name: string; email: string } | null = null;
+
     if (submitterId === 'guest') {
       // Find or create guest user
       let guestUser = await db.user.findUnique({ where: { email: 'guest@belirumahbareng.com' } });
@@ -36,8 +38,16 @@ export async function createPropertySubmission(data: z.infer<typeof createProper
         });
       }
       submitterId = guestUser.id;
+      submitter = {
+        id: guestUser.id,
+        name: guestUser.name,
+        email: guestUser.email,
+      };
     } else {
-      const submitter = await db.user.findUnique({ where: { id: validatedData.submittedBy } });
+      submitter = await db.user.findUnique({ 
+        where: { id: validatedData.submittedBy },
+        select: { id: true, name: true, email: true }
+      });
       if (!submitter) {
         return { success: false, error: { message: 'Submitter not found', code: 'NOT_FOUND' } };
       }
@@ -145,7 +155,21 @@ export async function updatePropertySubmission(id: string, data: Partial<z.infer
     if (validatedData.contactPerson !== undefined) updateData.contactPerson = validatedData.contactPerson;
     if (validatedData.contactPhone !== undefined) updateData.contactPhone = validatedData.contactPhone;
     if (validatedData.contactEmail !== undefined) updateData.contactEmail = validatedData.contactEmail;
-    if (validatedData.status !== undefined) updateData.status = validatedData.status;
+    if (validatedData.status !== undefined) {
+      updateData.status = validatedData.status;
+      // Set reviewedAt when status is updated to non-pending
+      if (validatedData.status !== 'pending') {
+        if (validatedData.reviewedAt) {
+          updateData.reviewedAt = new Date(validatedData.reviewedAt);
+        } else {
+          updateData.reviewedAt = new Date();
+        }
+      }
+    }
+    if (validatedData.reviewedBy !== undefined) updateData.reviewedBy = validatedData.reviewedBy;
+    if (validatedData.reviewedAt !== undefined && validatedData.status === undefined) {
+      updateData.reviewedAt = new Date(validatedData.reviewedAt);
+    }
     if (validatedData.notes !== undefined) updateData.notes = validatedData.notes;
 
     if (validatedData.images !== undefined) {
@@ -181,7 +205,7 @@ export async function updatePropertySubmission(id: string, data: Partial<z.infer
       contactPhone: submission.contactPhone,
       contactEmail: submission.contactEmail,
       images: submission.images.map((img) => ({ url: img.url, hint: img.hint })),
-      status: submission.status as 'pending' | 'approved' | 'rejected',
+      status: submission.status as 'pending' | 'approved' | 'rejected' | 'contacted',
       reviewedBy: submission.reviewedBy,
       reviewedAt: submission.reviewedAt?.toISOString(),
       notes: submission.notes,

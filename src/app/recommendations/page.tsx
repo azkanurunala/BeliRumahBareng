@@ -8,7 +8,7 @@ export default function RecommendationsPage() {
                 <CardHeader>
                     <CardTitle>Rekomendasi Properti</CardTitle>
                     <CardDescription>
-                        Masukkan preferensi Anda dan biarkan AI kami menemukan properti yang paling cocok untuk Anda.
+                        Masukkan preferensi Anda dan kami akan menemukan properti yang paling cocok untuk Anda.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

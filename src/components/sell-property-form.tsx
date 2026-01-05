@@ -29,6 +29,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, X, Image as ImageIcon } from 'lucide-react';
 import { formatCurrencyInput, parseCurrencyInput } from '@/lib/payment-utils';
+import { getPropertySubmissions } from '@/lib/actions/property-submission.actions';
 
 const sellPropertySchema = z.object({
   type: z.enum(['co-building', 'co-owning'], {
@@ -79,7 +80,7 @@ export function SellPropertyForm() {
       type: undefined,
       name: '',
       description: '',
-      location: user?.profile?.locationPreference || '',
+      location: '', // Empty by default, not pre-filled
       landArea: undefined,
       buildingArea: undefined,
       totalUnits: undefined,
@@ -92,15 +93,13 @@ export function SellPropertyForm() {
     },
   });
 
-  // Update form values when user data is available
+  // Update form values when user data is available (only contact info, not location)
   React.useEffect(() => {
     if (user) {
       form.setValue('contactPerson', user.name);
       form.setValue('contactPhone', user.phoneNumber);
       form.setValue('contactEmail', user.email);
-      if (user.profile?.locationPreference) {
-        form.setValue('location', user.profile.locationPreference);
-      }
+      // Location is not pre-filled - user must enter it manually
     }
   }, [user, form]);
 
@@ -201,12 +200,29 @@ export function SellPropertyForm() {
         description: 'Form jual properti telah dikirim. Tim kami akan menghubungi Anda untuk proses selanjutnya.',
       });
       
-      // Reset form dengan default values dari user
+      // Check if user has previous submissions to determine redirect
+      let hasPreviousSubmissions = false;
+      if (user?.id) {
+        try {
+          const submissionsResult = await getPropertySubmissions({ 
+            submittedBy: user.id, 
+            limit: 1 
+          });
+          if (submissionsResult.success && submissionsResult.data && submissionsResult.data.length > 1) {
+            // More than 1 because we just created one, so if there's more than 1, they had previous ones
+            hasPreviousSubmissions = true;
+          }
+        } catch (error) {
+          console.error('Error checking previous submissions:', error);
+        }
+      }
+      
+      // Reset form
       form.reset({
         type: undefined,
         name: '',
         description: '',
-        location: user?.profile?.locationPreference || '',
+        location: '', // Empty, not pre-filled
         landArea: undefined,
         buildingArea: undefined,
         totalUnits: undefined,
@@ -218,7 +234,13 @@ export function SellPropertyForm() {
         contactEmail: user?.email || '',
       });
       setUploadedImages([]);
-      router.push('/projects');
+      
+      // Redirect: if user has previous submissions, go to /projects, otherwise to confirmation page
+      if (hasPreviousSubmissions) {
+        router.push('/projects');
+      } else {
+        router.push('/sell-property/confirmation');
+      }
     } catch (error) {
       toast({
         variant: 'destructive',

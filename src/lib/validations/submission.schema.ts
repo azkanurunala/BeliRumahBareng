@@ -9,7 +9,10 @@ export const propertySubmissionImageSchema = z.object({
 
 // Property Submission Create Schema
 export const createPropertySubmissionSchema = z.object({
-  submittedBy: z.string().cuid('ID submitter tidak valid'),
+  submittedBy: z.string().refine(
+    (val) => val === 'guest' || z.string().cuid().safeParse(val).success,
+    { message: 'ID submitter tidak valid' }
+  ),
   type: z.enum(['co-building', 'co-owning'], {
     required_error: 'Tipe properti wajib dipilih',
   }),
@@ -31,6 +34,10 @@ export const createPropertySubmissionSchema = z.object({
 export const updatePropertySubmissionSchema = createPropertySubmissionSchema.partial().extend({
   id: z.string().cuid('ID submission tidak valid'),
   images: z.array(propertySubmissionImageSchema).optional(),
+  status: z.enum(['pending', 'approved', 'rejected', 'contacted']).optional(),
+  reviewedBy: z.string().cuid('ID reviewer tidak valid').optional(),
+  reviewedAt: z.string().datetime().optional(),
+  notes: z.string().optional(),
 });
 
 // Property Submission Review Schema (for admin)

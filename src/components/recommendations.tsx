@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, MapPin, Sparkles } from 'lucide-react';
+import { Loader2, MapPin, Search } from 'lucide-react';
 import { LoadingInline } from './loading-inline';
 
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { getRecommendationsAction } from '@/app/actions';
+import { getRecommendationsAction, type RecommendationItem } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import type { PersonalizedPropertyRecommendationsOutput } from '@/ai/flows/personalized-property-recommendations';
 import { useToast } from '@/hooks/use-toast';
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 import { useAuth } from '@/contexts/auth-context';
@@ -70,7 +69,7 @@ const FormSchema = z.object({
 export default function Recommendations() {
   const { user: currentUser, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [recommendations, setRecommendations] = useState<PersonalizedPropertyRecommendationsOutput['recommendations']>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -110,29 +109,42 @@ export default function Recommendations() {
         : 9999999999;
       
       const investmentGoalLabel = investmentGoalsOptions.find(opt => opt.value === data.investmentGoals)?.label ?? data.investmentGoals;
+      const timeHorizonLabel = timeHorizonOptions.find(opt => opt.value === data.timeHorizon)?.label ?? data.timeHorizon;
 
       const result = await getRecommendationsAction({
           location: data.location,
           priceRange: { min: minPrice, max: maxPrice },
           investmentGoals: investmentGoalLabel,
-          financialCapacity: `Rp ${new Intl.NumberFormat('id-ID').format(data.financialCapacity)}`
+          financialCapacity: `Rp ${new Intl.NumberFormat('id-ID').format(data.financialCapacity)}`,
+          timeHorizon: timeHorizonLabel
       });
 
       if (result.success && result.data) {
           setRecommendations(result.data.recommendations || []);
+          if (!result.data.recommendations || result.data.recommendations.length === 0) {
+            toast({
+              title: "Info",
+              description: "Tidak ada rekomendasi yang ditemukan untuk preferensi Anda.",
+            });
+          }
       } else {
+          const errorMessage = result.error || "Terjadi kesalahan yang tidak diketahui.";
+          console.error('Recommendations error:', errorMessage);
           toast({
               variant: "destructive",
               title: "Error",
-              description: result.error || "Terjadi kesalahan yang tidak diketahui.",
+              description: errorMessage,
           });
       }
     } catch (error) {
       console.error('Error in onSubmit:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Terjadi kesalahan yang tidak diketahui.";
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Terjadi kesalahan yang tidak diketahui.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -171,7 +183,7 @@ export default function Recommendations() {
   return (
     <div className="space-y-6 rounded-lg border p-4">
       <p className="text-muted-foreground">
-        Masukkan preferensi Anda di bawah ini dan AI kami akan menemukan properti yang cocok untuk Anda.
+        Masukkan preferensi Anda di bawah ini dan kami akan menemukan properti yang cocok untuk Anda.
       </p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -278,7 +290,7 @@ export default function Recommendations() {
                  />
             </div>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
             Hasilkan Rekomendasi
           </Button>
         </form>
@@ -286,7 +298,7 @@ export default function Recommendations() {
 
       {isLoading && (
          <div className="mt-6">
-            <LoadingInline message="AI kami sedang mencari properti sempurna untuk Anda..." size="md" />
+            <LoadingInline message="Sedang mencari properti yang sesuai dengan preferensi Anda..." size="md" />
          </div>
       )}
 

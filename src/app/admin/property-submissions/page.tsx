@@ -13,12 +13,13 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { DataTable, Column, CustomAction } from '@/components/admin/data-table';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CheckCircle, XCircle, Eye, DollarSign, User, Mail, Phone, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { SubmissionDetailModal } from '@/components/admin/submission-detail-modal';
 import { normalizeUnitMeasure } from '@/lib/utils';
 import type { PropertySubmission } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 // Extended submission type with computed fields for easier searching
 interface SubmissionWithDetails extends PropertySubmission {
@@ -31,6 +32,7 @@ interface SubmissionWithDetails extends PropertySubmission {
 export default function AdminPropertySubmissionsPage() {
   const { propertySubmissions, users, createProperty, updatePropertySubmission } = useAdminData();
   const { toast } = useToast();
+  const router = useRouter();
   const [filters, setFilters] = useState<Record<string, string[]>>({
     status: [],
     type: [],
@@ -67,6 +69,17 @@ export default function AdminPropertySubmissionsPage() {
       };
     });
   }, [propertySubmissions, users]);
+
+  // Sync selectedSubmission when submissionsWithDetails changes
+  useEffect(() => {
+    if (selectedSubmission) {
+      const updated = submissionsWithDetails.find(s => s.id === selectedSubmission.id);
+      if (updated) {
+        // Always update to ensure sync
+        setSelectedSubmission(updated);
+      }
+    }
+  }, [submissionsWithDetails, selectedSubmission?.id]);
 
   // Apply filters
   const filteredSubmissions = useMemo(() => {
@@ -112,6 +125,8 @@ export default function AdminPropertySubmissionsPage() {
         reviewedAt: new Date().toISOString(),
       });
       
+      // Note: useEffect will automatically sync selectedSubmission when submissionsWithDetails updates
+      
       toast({
         title: 'Berhasil',
         description: 'Status submission telah diupdate menjadi "Sudah dihubungi"',
@@ -125,75 +140,11 @@ export default function AdminPropertySubmissionsPage() {
     }
   };
 
-  const handleCreatePropertyFromSubmission = async (submissionId: string) => {
-    const submission = propertySubmissions.find((s) => s.id === submissionId);
-    if (!submission) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Property submission tidak ditemukan',
-      });
-      return;
-    }
-
-    // Validate images
-    if (!submission.images || submission.images.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Property submission harus memiliki minimal 1 gambar untuk bisa dibuat properti',
-      });
-      return;
-    }
-
-    try {
-      // Create property from submission
-      const newProperty = {
-        id: `prop-${Date.now()}`,
-        name: submission.name,
-        description: submission.description,
-        price: submission.askingPrice,
-        totalArea: submission.totalArea,
-        location: submission.location,
-        images: submission.images,
-        type: submission.type,
-        totalUnits: submission.totalUnits,
-        unitSize: submission.unitSize,
-        unitMeasure: submission.unitMeasure || 'm²',
-        unitName: (submission.type === 'co-building'
-          ? 'Lantai'
-          : submission.totalUnits
-          ? 'Kavling'
-          : 'Kepemilikan') as const,
-        planningInfo: {
-          sitePlanUrl: '',
-          sitePlanHint: '',
-          developmentPlan: '',
-          environmentalAnalysis: '',
-        },
-      };
-
-      // Create property (async)
-      await createProperty(newProperty);
-
-      // Update submission status (async)
-      await updatePropertySubmission(submissionId, {
-        status: 'contacted',
-        reviewedAt: new Date().toISOString(),
-      });
-
-      toast({
-        title: 'Berhasil',
-        description: 'Properti baru telah dibuat dari submission.',
-      });
-    } catch (error) {
-      console.error('Error creating property from submission:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Gagal membuat properti dari submission',
-      });
-    }
+  const handleCreatePropertyFromSubmission = (submissionId: string) => {
+    // Close modal if open
+    setModalOpen(false);
+    // Redirect to new property page with submission ID
+    router.push(`/admin/properties/new?fromSubmission=${submissionId}`);
   };
 
 
@@ -271,23 +222,15 @@ export default function AdminPropertySubmissionsPage() {
           <div>
             <Badge
               variant={
-                row.status === 'approved'
-                  ? 'default'
-                  : row.status === 'rejected'
-                  ? 'destructive'
-                  : row.status === 'contacted'
+                row.status === 'contacted'
                   ? 'default'
                   : 'secondary'
               }
               className="text-xs"
             >
-              {row.status === 'approved'
-                ? 'Disetujui'
-                : row.status === 'rejected'
-                ? 'Ditolak'
-                : row.status === 'contacted'
+              {row.status === 'contacted'
                 ? 'Sudah dihubungi'
-                : 'Menunggu'}
+                : 'Baru'}
             </Badge>
           </div>
           <div className="flex items-center gap-1 text-sm">
@@ -346,9 +289,7 @@ export default function AdminPropertySubmissionsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="pending">Menunggu</SelectItem>
-                  <SelectItem value="approved">Disetujui</SelectItem>
-                  <SelectItem value="rejected">Ditolak</SelectItem>
+                  <SelectItem value="pending">Baru</SelectItem>
                   <SelectItem value="contacted">Sudah dihubungi</SelectItem>
                 </SelectContent>
               </Select>

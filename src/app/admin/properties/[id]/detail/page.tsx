@@ -14,6 +14,14 @@ import { formatCurrency } from '@/lib/payment-utils';
 import Image from 'next/image';
 import { Breadcrumb } from '@/components/admin/breadcrumb';
 
+// Helper function to format numbers with thousand separators (Indonesian format)
+const formatNumber = (value: number): string => {
+  return new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -178,7 +186,32 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <Square className="h-4 w-4 text-primary" />
                   <span>Luas per Kavling:</span>
                 </div>
-                <p className="font-medium">~{property.unitSize}{property.unitMeasure}</p>
+                <p className="font-medium">
+                  {(() => {
+                    // If unitPrices exists and has data, use actual data
+                    if (property.unitPrices && property.unitPrices.length > 0) {
+                      const sizes = property.unitPrices
+                        .map(plot => plot.size || 0)
+                        .filter(size => size > 0);
+                      
+                      if (sizes.length > 0) {
+                        const minSize = Math.min(...sizes);
+                        const maxSize = Math.max(...sizes);
+                        
+                        // If all sizes are the same, show exact value
+                        if (minSize === maxSize) {
+                          return `${formatNumber(minSize)}${property.unitMeasure || 'm²'}`;
+                        }
+                        
+                        // If sizes vary, show range
+                        return `${formatNumber(minSize)}-${formatNumber(maxSize)}${property.unitMeasure || 'm²'}`;
+                      }
+                    }
+                    
+                    // Fallback to approximation if unitPrices not available
+                    return `~${property.unitSize}${property.unitMeasure || 'm²'}`;
+                  })()}
+                </p>
               </div>
             )}
 
@@ -188,7 +221,27 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   <Square className="h-4 w-4 text-primary" />
                   <span>Total Luas Tanah:</span>
                 </div>
-                <p className="font-medium">{property.totalArea}{property.unitMeasure}</p>
+                <p className="font-medium">{formatNumber(property.totalArea)}{property.unitMeasure}</p>
+              </div>
+            )}
+
+            {!isCoBuilding && !isFlexible && property.totalArea && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Square className="h-4 w-4 text-primary" />
+                  <span>Total Luas Lahan:</span>
+                </div>
+                <p className="font-medium">{formatNumber(property.totalArea)}{property.unitMeasure || 'm²'}</p>
+              </div>
+            )}
+
+            {isCoBuilding && property.buildingArea && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Square className="h-4 w-4 text-primary" />
+                  <span>Total Luas Bangunan:</span>
+                </div>
+                <p className="font-medium">{formatNumber(property.buildingArea)}{property.unitMeasure || 'm²'}</p>
               </div>
             )}
           </CardContent>
@@ -222,7 +275,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     {property.unitPrices.map((plot, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">Kavling {index + 1}</TableCell>
-                        <TableCell>{plot.size || 0}</TableCell>
+                        <TableCell>{formatNumber(plot.size || 0)}</TableCell>
                         <TableCell className="text-right font-medium">
                           {formatCurrency(plot.price || 0)}
                         </TableCell>
@@ -261,6 +314,79 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               {!hasPriceDiscrepancy && unitPricesTotal !== null && (
                 <div className="text-sm text-muted-foreground">
                   ✓ Total harga kavling sesuai dengan harga properti
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detail Per Unit - Only for co-building with unitPrices */}
+      {isCoBuilding && property.unitPrices && property.unitPrices.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TableIcon className="h-5 w-5" />
+              Detail Per Unit
+            </CardTitle>
+            <CardDescription>
+              Informasi lengkap setiap unit termasuk ukuran dan harga
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Unit</TableHead>
+                      <TableHead>Luas ({property.unitMeasure || 'm²'})</TableHead>
+                      <TableHead className="text-right">Harga</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {property.unitPrices.map((unit, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">Unit {index + 1}</TableCell>
+                        <TableCell>{formatNumber(unit.size || 0)}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(unit.price || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/50 font-bold">
+                      <TableCell colSpan={2}>Total</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(unitPricesTotal || 0)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {hasPriceDiscrepancy && (
+                <div className="rounded-lg border border-yellow-500/50 bg-yellow-50 dark:bg-yellow-950/20 p-4">
+                  <div className="flex items-start gap-2">
+                    <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-semibold text-yellow-900 dark:text-yellow-100">
+                        Perhatian: Perbedaan Harga
+                      </p>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 mt-1">
+                        Total harga dari unit: <strong>{formatCurrency(unitPricesTotal || 0)}</strong>
+                        <br />
+                        Harga properti: <strong>{formatCurrency(property.price)}</strong>
+                        <br />
+                        Selisih: <strong>{formatCurrency(Math.abs(unitPricesTotal! - property.price))}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {!hasPriceDiscrepancy && unitPricesTotal !== null && (
+                <div className="text-sm text-muted-foreground">
+                  ✓ Total harga unit sesuai dengan harga properti
                 </div>
               )}
             </div>
@@ -316,6 +442,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     data-ai-hint={property.planningInfo.sitePlanHint}
                   />
                 </div>
+                {property.planningInfo.sitePlanHint && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {property.planningInfo.sitePlanHint}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

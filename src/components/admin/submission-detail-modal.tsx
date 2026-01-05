@@ -66,7 +66,7 @@ export function SubmissionDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Detail Property Submission</DialogTitle>
           <DialogDescription>
@@ -79,23 +79,15 @@ export function SubmissionDetailModal({
           <div className="flex items-center justify-between">
             <Badge
               variant={
-                submission.status === 'approved'
-                  ? 'default'
-                  : submission.status === 'rejected'
-                  ? 'destructive'
-                  : submission.status === 'contacted'
+                submission.status === 'contacted'
                   ? 'default'
                   : 'secondary'
               }
               className="text-sm"
             >
-              {submission.status === 'approved'
-                ? 'Disetujui'
-                : submission.status === 'rejected'
-                ? 'Ditolak'
-                : submission.status === 'contacted'
+              {submission.status === 'contacted'
                 ? 'Sudah dihubungi'
-                : 'Menunggu Review'}
+                : 'Baru'}
             </Badge>
             {submission.reviewedAt && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -263,16 +255,10 @@ export function SubmissionDetailModal({
                 </Button>
               )}
               {submission.status === 'pending' && (
-                <>
-                  <Button variant="destructive" onClick={handleReject}>
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Tolak
-                  </Button>
-                  <Button onClick={handleApprove}>
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Setujui & Buat Properti
-                  </Button>
-                </>
+                <Button onClick={handleApprove}>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Buat Properti
+                </Button>
               )}
             </DialogFooter>
           </div>

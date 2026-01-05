@@ -419,6 +419,7 @@ export async function getProperties(options?: {
       unitName: property.unitName as 'Lantai' | 'Kavling' | 'Kepemilikan',
       unitSize: property.unitSize ? Number(property.unitSize) : undefined,
       unitMeasure: property.unitMeasure,
+      unitPrices: (property as any).unitPrices ? ((property as any).unitPrices as any) : undefined,
       images: property.images.map((img) => ({
         url: img.url,
         hint: img.hint,
