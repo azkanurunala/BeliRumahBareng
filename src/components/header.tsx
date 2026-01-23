@@ -31,7 +31,7 @@ type Notification = {
   href: string | null;
   type: string;
   read: boolean;
-  readAt: string | null;
+  readAt: string | null | undefined;
   createdAt: string;
 };
 
@@ -243,7 +243,7 @@ export default function Header() {
                 {!isAdmin && (
                   <>
                     <DropdownMenuItem asChild className="px-4 py-2.5">
-                      <Link href={`/profile/${user?.id}`} className="flex items-center gap-3">
+                      <Link href="/profile" className="flex items-center gap-3">
                         <User className="h-4 w-4" />
                         <span>Profil</span>
                       </Link>

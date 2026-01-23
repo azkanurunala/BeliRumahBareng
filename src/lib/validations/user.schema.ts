@@ -43,7 +43,7 @@ export const createUserSchema = z.object({
   financialCapacity: z.string().min(1, 'Kapasitas finansial wajib diisi'),
   timeHorizon: z.string().min(1, 'Time horizon wajib diisi'),
   passwordHash: z.string().optional(),
-  oauthProvider: z.enum(['google', 'facebook']).nullable().optional(),
+  oauthProvider: z.enum(['google']).nullable().optional(),
   oauthId: z.string().optional(),
 });
 
@@ -62,7 +62,7 @@ export const loginUserSchema = z.object({
 export const oauthUserSchema = z.object({
   email: z.string().email('Email tidak valid'),
   name: z.string().min(1, 'Nama wajib diisi'),
-  oauthProvider: z.enum(['google', 'facebook']),
+  oauthProvider: z.enum(['google']),
   oauthId: z.string().min(1, 'OAuth ID wajib diisi'),
   avatarUrl: avatarUrlSchema.optional(),
 });

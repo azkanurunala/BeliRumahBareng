@@ -37,9 +37,10 @@ export type User = {
   avatarUrl: string;
   avatarHint: string;
   profile: UserProfile;
+  role: number;
   // Auth fields
   passwordHash?: string; // untuk email/password
-  oauthProvider?: 'google' | 'facebook' | null; // untuk OAuth
+  oauthProvider?: 'google' | null; // untuk OAuth
   oauthId?: string; // untuk OAuth
 };
 

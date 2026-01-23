@@ -187,3 +187,110 @@ export async function getUserById(id: string) {
   }
 }
 
+export async function loginWithGoogle(data: {
+  email: string;
+  name: string;
+  photoURL: string | null;
+  googleId: string;
+}) {
+  try {
+    // Check if user exists
+    let user = await db.user.findUnique({
+      where: { email: data.email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        avatarUrl: true,
+        avatarHint: true,
+        role: true,
+        oauthProvider: true,
+        locationPreference: true,
+        priceRange: true,
+        investmentGoals: true,
+        financialCapacity: true,
+        timeHorizon: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      // Create new user
+      const newUser = await db.user.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          phoneNumber: '', // Phone number not provided by Google usually, or optional
+          passwordHash: null, // No password for OAuth users initially
+          oauthProvider: 'google',
+          oauthId: data.googleId,
+          avatarUrl: data.photoURL || '/images/default-avatar.png',
+          avatarHint: 'google',
+          role: 1, // Default to user role
+          // Default profile values
+          locationPreference: '',
+          priceRange: '',
+          investmentGoals: '',
+          financialCapacity: '',
+          timeHorizon: '',
+        },
+      });
+
+      // Transform for return
+      user = {
+        ...newUser,
+        // Ensure nullable fields are handled if necessary, though Type checks should pass if Prisma types match
+      };
+    } else {
+      // Update existing user if needed (e.g. update avatar or link google if not linked)
+      if (user.oauthProvider !== 'google') {
+          await db.user.update({
+              where: { id: user.id },
+              data: {
+                  oauthProvider: 'google',
+                  oauthId: data.googleId,
+                  avatarUrl: data.photoURL || user.avatarUrl, // Update avatar if user has no custom one? keeping simple for now
+              }
+          });
+      }
+    }
+
+    // Transform response
+    const transformedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      avatarUrl: user.avatarUrl,
+      avatarHint: user.avatarHint,
+      role: user.role,
+      profile: {
+        locationPreference: user.locationPreference,
+        priceRange: user.priceRange,
+        investmentGoals: user.investmentGoals,
+        financialCapacity: user.financialCapacity,
+        timeHorizon: user.timeHorizon,
+      },
+      oauthProvider: user.oauthProvider,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
+
+    return {
+      success: true,
+      data: transformedUser,
+    };
+
+  } catch (error) {
+    console.error('Error logging in with Google:', error);
+    return {
+      success: false,
+      error: {
+        message: 'Failed to login with Google',
+        code: 'LOGIN_ERROR',
+      },
+    };
+  }
+}

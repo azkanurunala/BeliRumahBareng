@@ -3,13 +3,15 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import type { User } from '@/lib/types';
 import { createUser as createUserAction } from '@/lib/actions/user.actions';
-import { login as loginAction, getUserById } from '@/lib/actions/auth.actions';
+import { login as loginAction, getUserById, loginWithGoogle as loginWithGoogleAction } from '@/lib/actions/auth.actions';
+import { auth, googleProvider } from '@/lib/firebase';
+import { signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (emailOrPhone: string, password: string) => Promise<boolean>;
-  loginWithOAuth: (provider: 'google' | 'facebook') => Promise<boolean>;
+  loginWithGoogle: () => Promise<boolean>;
   register: (data: {
     name: string;
     email: string;
@@ -68,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (result.success && result.data) {
-        setUser(result.data);
+        setUser(result.data as User);
         localStorage.setItem('currentUserId', result.data.id);
         setIsLoading(false);
         return true;
@@ -83,20 +85,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const loginWithOAuth = useCallback(async (provider: 'google' | 'facebook'): Promise<boolean> => {
+  const loginWithGoogle = useCallback(async (): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Simulate OAuth flow
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = userCredential.user;
+
+      if (firebaseUser && firebaseUser.email) {
+        // Sync with backend
+        const result = await loginWithGoogleAction({
+          email: firebaseUser.email,
+          name: firebaseUser.displayName || 'User',
+          photoURL: firebaseUser.photoURL,
+          googleId: firebaseUser.uid,
+        });
+
+        if (result.success && result.data) {
+           setUser(result.data as User);
+           localStorage.setItem('currentUserId', result.data.id);
+           setIsLoading(false);
+           return true;
+        }
+      }
       
-      // In real app, handle OAuth callback
-      // For now, use first user as demo
-      const demoUser = mockUsers[0];
-      setUser(demoUser);
-      localStorage.setItem('currentUserId', demoUser.id);
       setIsLoading(false);
-      return true;
+      return false;
     } catch (error) {
+      console.error('Error logging in with Google:', error);
       setIsLoading(false);
       return false;
     }
@@ -126,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passwordHash: data.password, // In real app, hash this with bcrypt
         oauthProvider: null,
         oauthId: undefined,
+        role: 1,
       });
 
       if (!result.success || !result.data) {
@@ -150,7 +166,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+        await firebaseSignOut(auth);
+    } catch(e) {
+        console.error("Error signing out from firebase", e);
+    }
     setUser(null);
     localStorage.removeItem('currentUserId');
   }, []);
@@ -162,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     login,
-    loginWithOAuth,
+    loginWithGoogle,
     register,
     logout,
     isAuthenticated: !!user,
