@@ -167,13 +167,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-        await firebaseSignOut(auth);
-    } catch(e) {
-        console.error("Error signing out from firebase", e);
-    }
+    setIsLoading(true);
+    
+    // Clear local state immediately (Optimistic)
     setUser(null);
     localStorage.removeItem('currentUserId');
+
+    // Trigger Firebase signout in background (don't block UI)
+    firebaseSignOut(auth).catch((e) => {
+      console.error("Error signing out from firebase", e);
+    });
+
+    // Short aesthetic delay to show the transition, then unblock
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
   }, []);
 
   // Check if current user is admin (based on role)

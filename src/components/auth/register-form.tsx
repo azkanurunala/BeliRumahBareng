@@ -15,13 +15,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -33,11 +26,6 @@ const registerSchema = z.object({
   phoneNumber: z.string().min(10, 'Nomor telepon minimal 10 digit').regex(/^[0-9+\-\s()]+$/, 'Format nomor telepon tidak valid'),
   password: z.string().min(8, 'Password minimal 8 karakter'),
   confirmPassword: z.string(),
-  locationPreference: z.string().min(1, 'Preferensi lokasi wajib diisi'),
-  priceRange: z.string().min(1, 'Rentang harga wajib diisi'),
-  investmentGoals: z.string().min(1, 'Tujuan investasi wajib diisi'),
-  financialCapacity: z.string().min(1, 'Kapasitas finansial wajib diisi'),
-  timeHorizon: z.string().min(1, 'Horison waktu wajib diisi'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password tidak cocok',
   path: ['confirmPassword'],
@@ -62,11 +50,6 @@ export function RegisterForm() {
       phoneNumber: '',
       password: '',
       confirmPassword: '',
-      locationPreference: '',
-      priceRange: '',
-      investmentGoals: '',
-      financialCapacity: '',
-      timeHorizon: '',
     },
   });
 
@@ -78,12 +61,13 @@ export function RegisterForm() {
         email: data.email,
         phoneNumber: data.phoneNumber,
         password: data.password,
+        // Profile preferences will be collected in onboarding
         profile: {
-          locationPreference: data.locationPreference,
-          priceRange: data.priceRange,
-          investmentGoals: data.investmentGoals,
-          financialCapacity: data.financialCapacity,
-          timeHorizon: data.timeHorizon,
+          locationPreference: "",
+          priceRange: "",
+          investmentGoals: "",
+          financialCapacity: "",
+          timeHorizon: "",
         },
       });
 
@@ -93,13 +77,8 @@ export function RegisterForm() {
           description: 'Akun berhasil dibuat. Selamat datang!',
         });
         
-        // Check for redirect parameter
-        const redirectTo = searchParams.get('redirect');
-        if (redirectTo) {
-          router.push(redirectTo);
-        } else {
-          router.push('/projects');
-        }
+        // Always redirect to onboarding for new registrations
+        router.push('/onboarding');
       } else {
         toast({
           variant: 'destructive',
@@ -127,25 +106,18 @@ export function RegisterForm() {
           title: 'Berhasil',
           description: 'Login dengan Google berhasil!',
         });
-        
-        // For Google login (which is also signup), check profile completeness?
-        // Ideally yes, same as login form. 
-        // But since we can't easily access 'user' state instantly here without waiting,
-        // we might assume they need onboarding if it's a new user.
-        // However, 'loginWithGoogle' action syncs user.
-        // Let's just redirect to /onboarding for safety if we can't check.
-        // OR better: redirect to /projects and let the middleware/auth context handle it?
-        // But we implemented the check in Login Form.
-        // Since Register Form is for *new* users usually, 
-        // if they use Google, they might already exist OR be new.
-        // Use the same logic: router.push('/projects') generally, 
-        // but if we want to force onboarding, we should check user profile.
-        // The auth context 'user' will update.
-        // Let's just redirect to /projects, and rely on the user navigating to profile or 
-        // adding a global check later if strictly required. 
-        // OR: Redirect to /onboarding by default for google signups here?
-        // No, that might annoy existing users who click "Register" but actually login.
-        // Let's stick to /projects.
+        // For Google login, since we can't easily distinguish new vs returning here without more logic,
+        // we'll send to /onboarding. The onboarding page should ideally handle
+        // existing profiles gracefully (e.g. pre-fill or skip if complete, 
+        // though currently it just shows the form). 
+        // A better UX would be to check profile completeness in a middleware or context.
+        // For now, let's keep it safe and redirect to projects, assuming most google logins might be returning users.
+        // If they are new, they will eventually find the profile page or we can add prompts later.
+        // Or if the requirement is strict, we change this. 
+        // Given the prompt "Preferensi properti tidak seharusnya ada di halaman register, karena dia adalah proses yang dilakukan setelah registrasi",
+        // forcing /onboarding for Google signup/login here is acceptable if it's a new flow.
+        // However, standard Google login usually goes to dashboard.
+        // Let's stick to /projects as before for Google, but manual register goes to /onboarding.
         router.push('/projects');
       } else {
         toast({
@@ -284,136 +256,6 @@ export function RegisterForm() {
                 <FormControl>
                   <Input type="password" {...field} placeholder="Ulangi password" />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="border-t pt-4 space-y-4">
-          <h3 className="font-semibold text-sm">Preferensi Properti</h3>
-          
-          <FormField
-            control={form.control}
-            name="locationPreference"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Lokasi Pilihan</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih lokasi" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Jakarta">Jakarta</SelectItem>
-                    <SelectItem value="Bandung">Bandung</SelectItem>
-                    <SelectItem value="Surabaya">Surabaya</SelectItem>
-                    <SelectItem value="Yogyakarta">Yogyakarta</SelectItem>
-                    <SelectItem value="Bekasi">Bekasi</SelectItem>
-                    <SelectItem value="Tangerang">Tangerang</SelectItem>
-                    <SelectItem value="Sidoarjo">Sidoarjo</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="priceRange"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rentang Harga</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih rentang harga" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="200-400 juta IDR">200-400 juta IDR</SelectItem>
-                    <SelectItem value="250-400 juta IDR">250-400 juta IDR</SelectItem>
-                    <SelectItem value="250-450 juta IDR">250-450 juta IDR</SelectItem>
-                    <SelectItem value="300-500 juta IDR">300-500 juta IDR</SelectItem>
-                    <SelectItem value="300-600 juta IDR">300-600 juta IDR</SelectItem>
-                    <SelectItem value="400-800 juta IDR">400-800 juta IDR</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="investmentGoals"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tujuan Kepemilikan</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih tujuan" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Kepemilikan rumah pertama">Kepemilikan rumah pertama</SelectItem>
-                    <SelectItem value="Pendapatan sewa">Pendapatan sewa</SelectItem>
-                    <SelectItem value="Apresiasi modal">Apresiasi modal</SelectItem>
-                    <SelectItem value="Penggunaan bisnis (ruko)">Penggunaan bisnis (ruko)</SelectItem>
-                    <SelectItem value="Investasi jangka panjang">Investasi jangka panjang</SelectItem>
-                    <SelectItem value="Penggunaan pribadi di masa depan">Penggunaan pribadi di masa depan</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="financialCapacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Kapasitas Finansial</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih kapasitas" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="300 juta IDR">300 juta IDR</SelectItem>
-                    <SelectItem value="350 juta IDR">350 juta IDR</SelectItem>
-                    <SelectItem value="400 juta IDR">400 juta IDR</SelectItem>
-                    <SelectItem value="500 juta IDR">500 juta IDR</SelectItem>
-                    <SelectItem value="700 juta IDR">700 juta IDR</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="timeHorizon"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Horison Waktu</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih horison waktu" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Jangka menengah (5-10 tahun)">Jangka menengah (5-10 tahun)</SelectItem>
-                    <SelectItem value="Jangka panjang (10+ tahun)">Jangka panjang (10+ tahun)</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}
