@@ -96,7 +96,7 @@ export default function MonthlyPaymentCard({
               <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-lg bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              <CardTitle className="text-lg bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                 {user.name}
               </CardTitle>
               <CardDescription className="flex items-center gap-1 mt-1">

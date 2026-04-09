@@ -90,18 +90,18 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
-            <Badge className="bg-gradient-to-r from-primary/90 to-primary/70 text-white border-0 shadow-sm">
+            <Badge className="bg-gradient-to-br from-[#243665] to-[#2F457E] text-white border-0 shadow-sm">
               {getBadgeText()}
             </Badge>
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
             {property.name}
           </CardTitle>
           <CardDescription className="flex items-center text-lg text-muted-foreground mt-2">
             <MapPin className="mr-2 h-5 w-5" />
             {property.location}
           </CardDescription>
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
         </CardHeader>
       </Card>
 

@@ -68,7 +68,7 @@ export default function ProjectsList({ projects }: ProjectsListProps) {
         ) : recommendedProperties.length > 0 ? (
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                 Mulai dengan Properti Ini
               </h2>
               <p className="text-muted-foreground mt-2">

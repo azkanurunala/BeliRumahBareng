@@ -153,7 +153,7 @@ export default function PaymentHistoryTable({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+            <CardTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
               Riwayat Pembayaran
             </CardTitle>
             <CardDescription>History pembayaran cicilan bulanan</CardDescription>

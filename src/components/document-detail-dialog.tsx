@@ -214,7 +214,7 @@ export default function DocumentDetailDialog({
             </DialogTitle>
           ) : (
             <>
-              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent flex items-center gap-2">
+              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent flex items-center gap-2">
                 <FileText className="h-6 w-6 text-primary" />
                 {document.name}
               </DialogTitle>

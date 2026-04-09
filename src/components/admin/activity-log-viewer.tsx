@@ -77,10 +77,10 @@ export default function ActivityLogViewer({
 
   const getActionBadge = (action: ActivityLogAction) => {
     const colors: Record<string, string> = {
-      state_transition: 'bg-blue-600',
+      state_transition: 'bg-primary',
       payment: 'bg-green-600',
       appointment_scheduled: 'bg-purple-600',
-      appointment_completed: 'bg-indigo-600',
+      appointment_completed: 'bg-primary',
       appointment_cancelled: 'bg-red-600',
       interview_recorded: 'bg-orange-600',
       kpr_status_updated: 'bg-yellow-600',

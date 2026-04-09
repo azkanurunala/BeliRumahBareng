@@ -67,7 +67,7 @@ export default function KprStatusTracker({
         );
       case 'SUBMITTED':
         return (
-          <Badge className="bg-blue-600">
+          <Badge className="bg-primary">
             <Clock className="h-3 w-3 mr-1" />
             Menunggu Persetujuan
           </Badge>

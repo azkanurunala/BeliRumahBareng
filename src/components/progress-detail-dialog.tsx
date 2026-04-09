@@ -55,7 +55,7 @@ export default function ProgressDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
             {progressDetail.title}
           </DialogTitle>
           <DialogDescription>{progressDetail.description}</DialogDescription>

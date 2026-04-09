@@ -28,7 +28,7 @@ const STATE_DEFINITIONS: Record<
   BOOKED: {
     label: 'Booking Fee Dibayar',
     description: 'Booking fee telah dibayar, unit terkunci',
-    color: 'bg-blue-500',
+    color: 'bg-primary',
   },
   INTERVIEWED: {
     label: 'Wawancara Selesai',
@@ -53,7 +53,7 @@ const STATE_DEFINITIONS: Record<
   HANDOVER: {
     label: 'Serah Terima',
     description: 'Rumah selesai, siap diserahkan',
-    color: 'bg-indigo-500',
+    color: 'bg-primary',
   },
   COMPLETED: {
     label: 'Selesai',

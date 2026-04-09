@@ -109,7 +109,7 @@ export default function ConstructionCheckpointCard({
                           <CheckCircle2 className="h-5 w-5" />
                         </div>
                       ) : isInProgress ? (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
                           <Clock className="h-5 w-5 animate-pulse" />
                         </div>
                       ) : (

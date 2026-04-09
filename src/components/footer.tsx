@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CoBuyLogo } from './icons';
+import { LogoWide } from './icons';
 
 export default function Footer() {
   return (
@@ -7,9 +7,8 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid gap-8 md:grid-cols-3">
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
-              <CoBuyLogo className="h-7 w-7 text-primary" />
-              <span className="text-xl font-bold">BeliRumahBareng</span>
+            <Link href="/">
+              <LogoWide className="h-20 w-auto" />
             </Link>
             <p className="text-sm text-muted-foreground">
               Wujudkan properti impian dengan patungan. Beli lahan luas atau bangun hunian dengan biaya lebih terjangkau.

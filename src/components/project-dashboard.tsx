@@ -376,7 +376,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                 {property?.location || "Lokasi"}
               </CardDescription>
               {/* Gradient divider */}
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
             </CardHeader>
             <CardContent>
               <p className="text-base whitespace-pre-wrap">
@@ -743,7 +743,7 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                   <>
                     {/* Monthly Payment Cards */}
                     <div className="space-y-4">
-                      <h2 className="text-xl font-semibold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                      <h2 className="text-xl font-semibold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                         Pembayaran per Unit
                       </h2>
                       <div className="grid gap-4 md:grid-cols-2">
@@ -873,11 +873,11 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
                 {property?.planningInfo && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                      <CardTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                         Perencanaan & Detail Proyek
                       </CardTitle>
                       {/* Gradient divider */}
-                      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+                      <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
                     </CardHeader>
                     <CardContent>
                       <Tabs defaultValue="plan">
@@ -1075,11 +1075,11 @@ export default function ProjectDashboard({ project, onProjectUpdate }: ProjectDa
           {property?.planningInfo && (
             <Card>
               <CardHeader>
-                <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                <CardTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                   Perencanaan & Detail Proyek
                 </CardTitle>
                 {/* Gradient divider */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="plan">

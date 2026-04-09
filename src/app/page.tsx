@@ -28,7 +28,7 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center text-center text-white">
           {/* Gradient Overlay yang lebih menarik */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/60 via-primary/40 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#243665]/60 via-[#2F457E]/40 to-transparent z-10" />
           <div className="absolute inset-0 bg-black/30 z-10" />
           <Image
             src="/images/floor-plans/01.png"
@@ -45,7 +45,7 @@ export default function HomePage() {
             <p className="mt-4 text-lg md:text-xl text-white/90">
               BeliRumahBareng membuka jalan baru untuk memiliki properti. Dengan patungan, Anda bisa membeli lahan luas atau membangun hunian dengan biaya yang jauh lebih terjangkau.
             </p>
-            <Button asChild size="lg" className="mt-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <Button asChild size="lg" className="mt-8 bg-gradient-to-br from-[#243665] to-[#2F457E] hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <Link href="/discover">
                 Jelajahi Properti <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
@@ -58,11 +58,11 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-xl mx-auto">
               <div className="inline-block mb-4">
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mb-2" />
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-[#243665] to-transparent mx-auto mb-2" />
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                   Bagaimana BeliRumahBareng Bekerja?
                 </h2>
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-2" />
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-[#243665] to-transparent mx-auto mt-2" />
               </div>
               <p className="mt-2 text-muted-foreground">
                 Miliki properti impian Anda melalui tiga langkah sederhana.
@@ -71,7 +71,7 @@ export default function HomePage() {
             <div className="mt-12 grid gap-8 md:grid-cols-3">
               <Card className="text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-2 hover:border-primary/30">
                 <CardHeader>
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary relative group">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#243665]/20 via-[#243665]/10 to-transparent text-primary relative group">
                     {/* Pulse effect */}
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-0 group-hover:opacity-100" />
                     <Search className="h-6 w-6 relative z-10 transition-transform duration-300 group-hover:scale-110" />
@@ -84,7 +84,7 @@ export default function HomePage() {
               </Card>
               <Card className="text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-2 hover:border-primary/30">
                 <CardHeader>
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary relative group">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#243665]/20 via-[#243665]/10 to-transparent text-primary relative group">
                     {/* Pulse effect */}
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-0 group-hover:opacity-100" />
                     <Users className="h-6 w-6 relative z-10 transition-transform duration-300 group-hover:scale-110" />
@@ -97,7 +97,7 @@ export default function HomePage() {
               </Card>
               <Card className="text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-2 hover:border-primary/30">
                 <CardHeader>
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary relative group">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#243665]/20 via-[#243665]/10 to-transparent text-primary relative group">
                     {/* Pulse effect */}
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-0 group-hover:opacity-100" />
                     <KeyRound className="h-6 w-6 relative z-10 transition-transform duration-300 group-hover:scale-110" />
@@ -117,11 +117,11 @@ export default function HomePage() {
           <div className="container mx-auto px-4">
             <div className="text-center max-w-xl mx-auto">
               <div className="inline-block mb-4">
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mb-2" />
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-[#243665] to-transparent mx-auto mb-2" />
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                   Peluang Patungan Populer
                 </h2>
-                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto mt-2" />
+                <div className="h-1 w-16 bg-gradient-to-r from-transparent via-[#243665] to-transparent mx-auto mt-2" />
               </div>
               <p className="mt-2 text-muted-foreground">
                 Lihat beberapa peluang kepemilikan properti kolektif yang sedang tren saat ini.
@@ -153,10 +153,10 @@ export default function HomePage() {
         {/* CTA Section */}
         <section id="cta" className="py-12 md:py-24 bg-background relative overflow-hidden">
           {/* Animated gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 animate-gradient" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#243665]/5 via-transparent to-[#2F457E]/10 animate-gradient" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <div className="relative isolate overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/80 px-6 py-20 text-center shadow-2xl sm:rounded-3xl sm:px-16 border border-primary/20">
+            <div className="relative isolate overflow-hidden bg-gradient-to-br from-[#243665] to-[#2F457E] px-6 py-20 text-center shadow-2xl sm:rounded-3xl sm:px-16 border border-primary/20">
               {/* Subtle pattern overlay */}
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,_white_1px,_transparent_0)] [background-size:20px_20px]" />
               

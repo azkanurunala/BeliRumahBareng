@@ -206,7 +206,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
                       {selectedProperty.type === 'co-building' ? 'Co-Building' : 'Co-Owning'}
                     </p>
                     {isFlexible && (
-                      <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary/80 px-2 py-0.5 rounded">
                         Model Fleksibel
                       </span>
                     )}
@@ -279,7 +279,7 @@ export function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
 
           <TabsContent value="units" className="space-y-4">
             {isFlexible && (
-              <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-800 dark:text-blue-300">
+              <div className="rounded-lg border p-4 bg-primary/5 dark:bg-primary/20 text-sm text-primary dark:text-primary/80">
                 <strong>Model Fleksibel:</strong> Untuk properti dengan model fleksibel, unitId digunakan sebagai nomor urut investor. 
                 Pembagian luas dan harga akan ditentukan berdasarkan jumlah investor final.
               </div>

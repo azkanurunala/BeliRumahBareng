@@ -5,7 +5,7 @@ import { Bell, CircleUser, Eye, FolderKanban, User, LogOut } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { CoBuyLogo } from '@/components/icons';
+import { LogoCompact } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -128,8 +128,7 @@ export default function Header() {
           href="/"
           className="flex items-center gap-2 text-lg font-semibold"
         >
-          <CoBuyLogo className="h-6 w-6 text-primary" />
-          <span className="hidden font-bold sm:inline-block text-primary">BeliRumahBareng</span>
+          <LogoCompact className="h-12 w-auto" />
         </Link>
 
         <nav className="hidden md:flex md:items-center md:gap-4 lg:gap-6">
@@ -146,7 +145,7 @@ export default function Header() {
             >
               {link.label}
               {isClient && pathname.startsWith(link.href) && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#243665] to-transparent" />
               )}
             </Link>
           ))}

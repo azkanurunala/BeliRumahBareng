@@ -40,7 +40,7 @@ export default function InstallmentOverview({ plans }: InstallmentOverviewProps)
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+        <CardTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
           Ringkasan Cicilan
         </CardTitle>
         <CardDescription>Overview pembayaran cicilan untuk semua unit</CardDescription>
@@ -142,7 +142,7 @@ export default function InstallmentOverview({ plans }: InstallmentOverviewProps)
             </div>
             <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-[#243665] to-[#2F457E] transition-all duration-500"
                 style={{ width: `${overallProgress}%` }}
               />
             </div>

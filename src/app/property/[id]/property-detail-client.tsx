@@ -370,10 +370,10 @@ export default function PropertyDetailClient({ property }: { property: Property 
                 </Carousel>
               </div>
               <CardHeader>
-                <Badge className="mb-2 w-fit bg-gradient-to-r from-primary/90 to-primary/70 text-white border-0 shadow-sm">
+                <Badge className="mb-2 w-fit bg-gradient-to-br from-[#243665] to-[#2F457E] text-white border-0 shadow-sm">
                   {getBadgeText()}
                 </Badge>
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                   {property.name}
                 </CardTitle>
                 <CardDescription className="flex items-center text-lg text-muted-foreground">
@@ -381,7 +381,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                   {property.location}
                 </CardDescription>
                 {/* Gradient divider */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
               </CardHeader>
               <CardContent>
                 <p className="text-base">{property.description}</p>
@@ -413,11 +413,11 @@ export default function PropertyDetailClient({ property }: { property: Property 
             {property.planningInfo && (
               <Card className="mt-8">
                 <CardHeader>
-                  <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                  <CardTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                     Perencanaan & Detail Proyek
                   </CardTitle>
                   {/* Gradient divider */}
-                  <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+                  <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="plan">
@@ -495,14 +495,14 @@ export default function PropertyDetailClient({ property }: { property: Property 
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+                <CardTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
                   {getTitle()}
                 </CardTitle>
                 <CardDescription>
                   {getDescription()}
                 </CardDescription>
                 {/* Gradient divider */}
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent mt-4" />
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-[#243665]/30 to-transparent mt-4" />
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className='border-b border-primary/20 pb-2 text-center'>
@@ -557,7 +557,7 @@ export default function PropertyDetailClient({ property }: { property: Property 
                     </AccordionItem>
                   </Accordion>
                 ) : (
-                  <div className='rounded-lg border bg-blue-50 p-4 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'>
+                  <div className='rounded-lg border bg-primary/5 p-4 text-primary dark:bg-primary/20 dark:text-primary/80'>
                       <div className='flex items-start gap-3'>
                           <Info size={20} className='mt-0.5 shrink-0' />
                           <div>

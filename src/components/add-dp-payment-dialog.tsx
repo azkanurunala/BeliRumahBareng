@@ -152,7 +152,7 @@ export default function AddDPPaymentDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent">
+          <DialogTitle className="bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent">
             Input Pembayaran DP
           </DialogTitle>
           <DialogDescription>

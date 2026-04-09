@@ -48,7 +48,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       return <Badge className="bg-green-600">Selesai</Badge>;
     }
     if (hasActiveInstallments) {
-      return <Badge className="bg-blue-600">Proses Pembayaran</Badge>;
+      return <Badge className="bg-primary">Proses Pembayaran</Badge>;
     }
     if (isClosed) {
       return <Badge className="bg-green-600">Selesai</Badge>;
@@ -120,7 +120,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <CardTitle className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent mb-2">
+                  <CardTitle className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground via-[#243665] to-foreground bg-clip-text text-transparent mb-2">
                     {project.propertyName}
                   </CardTitle>
                   <CardDescription className="flex items-center text-sm text-muted-foreground">
@@ -164,8 +164,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                   ) : hasActiveInstallments ? (
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm">
-                        <CreditCard className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-blue-600">Proses Pembayaran</span>
+                        <CreditCard className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-primary">Proses Pembayaran</span>
                       </div>
                       {paymentProgress && (
                         <div className="space-y-2">
@@ -242,7 +242,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground border-0 shadow-sm hover:shadow-md transition-all duration-300 pointer-events-none"
+                className="bg-gradient-to-br from-[#243665] to-[#2F457E] hover:opacity-90 text-primary-foreground border-0 shadow-sm hover:shadow-md transition-all duration-300 pointer-events-none"
                 onClick={(e) => e.preventDefault()}
               >
                 Lihat Detail

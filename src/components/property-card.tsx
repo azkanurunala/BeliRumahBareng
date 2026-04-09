@@ -56,7 +56,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
         </CardHeader>
         <CardContent className="flex-grow p-4">
-          <Badge className="mb-2 bg-gradient-to-r from-primary/90 to-primary/70 text-white border-0 shadow-sm">
+          <Badge className="mb-2 bg-gradient-to-br from-[#243665] to-[#2F457E] text-white border-0 shadow-sm">
             {getBadgeText()}
           </Badge>
           <CardTitle className="mb-1 text-lg font-semibold">{property.name}</CardTitle>
@@ -74,7 +74,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               <p className="text-lg font-bold text-primary">{formattedPrice}</p>
           </div>
           <Button 
-            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-primary/50 transition-all duration-300 hover:scale-105 pointer-events-none"
+            className="bg-gradient-to-br from-[#243665] to-[#2F457E] hover:opacity-90 shadow-lg hover:shadow-lg transition-all duration-300 hover:scale-105 pointer-events-none"
             onClick={(e) => e.preventDefault()}
           >
             Lihat Detail
