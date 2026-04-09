@@ -137,7 +137,7 @@ export default function Header() {
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors relative whitespace-nowrap",
+                "text-sm font-medium font-headline transition-colors relative whitespace-nowrap",
                 isClient && pathname.startsWith(link.href) 
                   ? "text-primary" 
                   : "text-muted-foreground hover:text-primary"
