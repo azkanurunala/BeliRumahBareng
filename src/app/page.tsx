@@ -170,7 +170,7 @@ export default function HomePage() {
                 <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                    <Link href="/discover">Mulai Sekarang</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <Button asChild size="lg" variant="outline" className="bg-secondary text-primary border-0 hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                    <Link href="/sell-property">Jual Properti Anda</Link>
                 </Button>
               </div>
